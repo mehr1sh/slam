@@ -1,0 +1,234 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\title{Visual SLAM --- Implementation Progress}
+% \subtitle{14 Lectures on Visual SLAM --- Chapters 6--7}
+\author{Mehrish}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Project Structure}
+  \begin{center}
+    \texttt{Camera} $\Downarrow$\\
+    \texttt{Feature Matching} $\Downarrow$\\
+    \texttt{Two-View Geometry} $\Downarrow$\\
+    \texttt{Triangulation} $\Downarrow$\\
+    \texttt{PnP / ICP} $\Downarrow$\\
+    \texttt{Nonlinear Optimization (Gauss-Newton / g2o)}
+  \end{center}
+
+  \vspace{1em}
+  \textbf{Code organization:}
+  \begin{center}
+    \begin{tabular}{ll}
+      \texttt{include/} & public headers \\
+      \texttt{src/}     & implementations \\
+      \texttt{tests/}   & one executable per component \\
+      \texttt{reference/slambook/} & book source (ch6, ch7) \\
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Camera Model}
+  Pinhole camera, intrinsic matrix $K$ (TUM Freiburg2 calibration used throughout):
+  \[
+    K =
+    \begin{pmatrix}
+      f_x & 0 & c_x \\
+      0 & f_y & c_y \\
+      0 & 0 & 1
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+      520.9 & 0 & 325.1 \\
+      0 & 521.0 & 249.7 \\
+      0 & 0 & 1
+    \end{pmatrix}
+  \]
+
+  Pixel $\to$ normalized camera coordinates (\texttt{pixel2cam()}):
+  \[
+    x = K^{-1} p
+  \]
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Feature Matching}
+  ORB keypoints + brute-force Hamming matching, filtered by
+  $\text{distance} \le \max(2 \cdot d_{\min}, 30)$.
+
+  \begin{center}
+    \begin{tabular}{lr}
+      \toprule
+      Quantity & Value \\
+      \midrule
+      Total matches (before filtering) & 500 \\
+      Good matches (after filtering) & 79 \\
+      Min / Max Hamming distance & 4 / 94 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \centering
+      All matches\\
+      \includegraphics[width=\textwidth]{../output/feature_matching/all_matches.png}
+    \column{0.5\textwidth}
+      \centering
+      Good matches\\
+      \includegraphics[width=\textwidth]{../output/feature_matching/good_matches.png}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Two-View Geometry}
+  \begin{center}
+    \texttt{Matched points} $\Downarrow$\\
+    \texttt{Fundamental Matrix} $\Downarrow$\\
+    \texttt{Essential Matrix} $\Downarrow$\\
+    \texttt{Recover Pose (R, t)}
+  \end{center}
+
+  \vspace{1em}
+  \begin{itemize}
+    \item 79 matches used
+    \item Epipolar constraint $y_2^\top [t]_\times R\, y_1 \approx 0$ for every match,
+          residuals $\sim 10^{-3}$ --- confirms $R, t$ are consistent
+    \item $t$ is a \textbf{unit vector}: monocular two-view geometry has
+          scale ambiguity, direction only
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Triangulation}
+  \begin{center}
+    \texttt{Two-view correspondences} $\Downarrow$\\
+    \texttt{Projection matrices } $P_1 = K[I|0]$\texttt{, } $P_2 = K[R|t]$ $\Downarrow$\\
+    \texttt{Triangulated 3D points}
+  \end{center}
+
+  Points kept only if positive depth in \emph{both} cameras (cheirality check).
+  Depth is in the same unit-norm-$t$ scale as the two-view pose, not metres.
+
+  \begin{columns}
+    \column{0.5\textwidth}
+      \centering
+      \includegraphics[width=0.85\linewidth]{../output/triangulation/img1_reprojection.png}
+    \column{0.5\textwidth}
+      \centering
+      \includegraphics[width=0.85\linewidth]{../output/triangulation/img2_reprojection.png}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{PnP}
+  \begin{center}
+    \texttt{3D points + 2D observations} $\Downarrow$\\
+    \texttt{PnP (OpenCV solvePnP)} $\Downarrow$\\
+    \texttt{Camera pose} $\Downarrow$\\
+    \texttt{Gauss-Newton refinement} $\Downarrow$\\
+    \texttt{g2o refinement}
+  \end{center}
+
+  \begin{itemize}
+    \item 75 of 79 matches have valid depth in frame 1 $\to$ 3D-2D pairs
+    \item Translation here is \textbf{metric} (from real depth, not unit-norm)
+    \item Cost/chi\textsuperscript{2} convergence (both solvers, same optimum):
+  \end{itemize}
+  \[
+    40518 \;\to\; 411 \;\to\; 299.76 \;\to\; 299.76
+  \]
+  All three methods (solvePnP, Gauss-Newton, g2o) agree to 6 significant figures.
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{ICP}
+  \begin{center}
+    \texttt{3D-3D correspondences} $\Downarrow$\\
+    \texttt{Closed-form SVD (R, t)} $\Downarrow$\\
+    \texttt{g2o bundle-adjustment refinement}
+  \end{center}
+
+  \begin{itemize}
+    \item 72 of 79 matches have valid depth in \emph{both} frames
+    \item Translation is metric (real depth in both point clouds)
+    \item chi\textsuperscript{2}: $1.8161 \to 1.8155$ --- the closed-form SVD
+          solution is already at (or very near) the optimum, so BA has
+          little left to improve
+    \item Check: $R\,p_2 + t \approx p_1$ verified on sample points
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------
+% \begin{frame}{Optimization}
+%   Same Gauss-Newton / g2o machinery used inside PnP and ICP above, validated
+%   independently on a synthetic curve-fitting problem
+%   ($y = e^{ax^2+bx+c}$, Ch.\ 6):
+
+%   \begin{center}
+%     \texttt{Initial estimate} $\Downarrow$\\
+%     \texttt{Gauss-Newton} $\Downarrow$\\
+%     \texttt{g2o}
+%   \end{center}
+
+%   Cost progression (identical for both solvers):
+%   \[
+%     3.20\times10^{6} \to 3.77\times10^{5} \to 3.57\times10^{4} \to 2195 \to 174.9 \to 102.8 \to 101.94
+%   \]
+%   Converged parameters: $(a,b,c) \approx (0.891,\ 2.172,\ 0.944)$, identical
+%   from both solvers.
+% \end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Current Results}
+  \begin{center}
+    \begin{tabular}{lc}
+      \toprule
+      Component & Status \\
+      \midrule
+      Feature matching (ORB + Hamming) & \checkmark \\
+      ORB from scratch (FAST + BRIEF) & \checkmark \\
+      Two-view geometry (F/E/H + recoverPose) & \checkmark \\
+      Triangulation & \checkmark \\
+      PnP & \checkmark \\
+      ICP & \checkmark \\
+      Gauss-Newton optimization & \checkmark \\
+      g2o optimization & \checkmark \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \vspace{1em}
+  \centering
+  All verified against real TUM RGB-D data, numbers reproduced above.
+\end{frame}
+
+% ---------------------------------------------------------------
+\begin{frame}{Current Progress}
+  \begin{itemize}
+    \item Book Chapters 6--7 (\emph{Visual Odometry: Part I}) core algorithms
+          are implemented and tested
+    \item Feature matching, 2D-2D pose, triangulation, PnP, ICP, and their
+          optimization backends all verified on real data
+    \item No multi-frame tracking, mapping, or backend yet --- single
+          frame-pair components only
+  \end{itemize}
+\end{frame}
+
+\end{document}
