@@ -9,9 +9,11 @@
 //   trajectory.csv / trajectory.txt   36 poses T_wc (CSV with errors; TUM format)
 //   correspondences/pair_<i>_<j>.csv  every filtered match with depth, 3D point,
 //                                     essential and PnP inlier flags, residual
+//   keypoints/frame_<k>.csv        every detected keypoint (x, y, FAST score, angle)
 //   summary.txt                    the summary printed at the end
 
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
@@ -106,6 +108,18 @@ int main(int argc, char **argv) {
             << " it, " << params.essential_ransac.threshold_px << " px\n";
 
   // ---- per pair ----
+  const fs::path out = repo / "pnp_from_scratch" / "results" / "pipeline";
+  fs::create_directories(out / "correspondences");
+  fs::create_directories(out / "keypoints");
+  auto write_keypoints = [&](int frame, const FrameFeatures &ff) {  // every detected keypoint of a frame
+    char name[48];
+    std::snprintf(name, sizeof(name), "frame_%06d.csv", frame);
+    std::ofstream f(out / "keypoints" / name);
+    f << "index,x,y,score,angle_deg\n";
+    for (size_t k = 0; k < ff.keypoints.size(); ++k)
+      f << k << "," << ff.keypoints[k].x << "," << ff.keypoints[k].y << "," << ff.keypoints[k].score << ","
+        << F(ff.keypoints[k].angle * 180.0 / M_PI, 3) << "\n";
+  };
   std::vector<PairResult> pairs;
   RgbdFrame prev_frame, cur_frame;
   FrameFeatures prev_feat, cur_feat;
@@ -115,12 +129,14 @@ int main(int argc, char **argv) {
     return 1;
   }
   prev_feat = ExtractFeatures(prev_frame.rgb, params.frontend);
+  write_keypoints(0, prev_feat);
   for (int i = 0; i + 1 < N; ++i) {
     if (!LoadRgbdFrame(ds.string(), i + 1, cur_frame, &err)) {
       std::cerr << err << "\n";
       return 1;
     }
     cur_feat = ExtractFeatures(cur_frame.rgb, params.frontend);
+    write_keypoints(i + 1, cur_feat);
     pairs.push_back(ProcessPair(i, i + 1, prev_feat, cur_feat, prev_frame, cur_frame, K, params));
     std::swap(prev_frame, cur_frame);
     std::swap(prev_feat, cur_feat);
@@ -164,8 +180,6 @@ int main(int argc, char **argv) {
   }
 
   // ---- outputs ----
-  const fs::path out = repo / "pnp_from_scratch" / "results" / "pipeline";
-  fs::create_directories(out / "correspondences");
   {
     std::ofstream f(out / "pairs.csv");
     f << "pair,frame_i,frame_j,keypoints_i,keypoints_j,raw_matches,filtered_matches,d_min,correspondences_3d2d,"

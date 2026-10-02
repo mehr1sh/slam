@@ -394,6 +394,54 @@ to 0.14° (`test_ransac`).
 | `test_pipeline_0_1` | the whole pipeline on frames 0→1: pose within 3° / 3 cm (2.31° / 0.020 m), inliers, reprojection, proper R, mask, comparison without RANSAC, determinism |
 | `milestone1/2/3_*` | the three programs exit 0 |
 
+## Figures and the comparison with the reference pipeline
+
+```bash
+python3 pnp_from_scratch/tools/make_figures.py       # after build/scratch_pipeline; NumPy + Matplotlib
+python3 pnp_from_scratch/tools/check_trajectory.py   # frame-by-frame transform-chain check
+```
+
+The tools use NumPy, Matplotlib and `tools/png_reader.py`, a PNG reader built on the
+Python standard library (`zlib`, `struct`). It is checked against an independent decoder:
+identical RGB and 16-bit depth, and 202/202 baseline depth values.
+- The tools load no vision library (`cv2` is never imported). Matplotlib imports Pillow
+  internally for writing images; the tools never decode images with it.
+- They run no reference program. The reference data is frozen in
+  `../docs/migration/baseline/`, including the ORB keypoint lists of frames 0 and 1 in
+  `reference_features/`, regenerated from the `baseline-pre-migration` tag.
+
+**Outputs** (`results/figures/`, PNG + PDF, generated):
+
+| Figure | Shows |
+|---|---|
+| `bunny_correspondences_0_1` | scratch correspondences on the real frames 0 and 1, with the same colour for the same match in both frames: RANSAC inliers (solid), outliers (magenta dashed), matches without depth (grey), other keypoints (white) |
+| `bunny_correspondences_0_1_inliers` | the 57 RANSAC inliers only |
+| `bunny_correspondences_0_1_outliers` | the 19 rejected matches, numbered. Several ear-tip features of frame 0 are matched to the same frame-1 keypoint (nearest-neighbour matching is many-to-one); RANSAC rejects them |
+| `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367, with orientation) |
+| `feature_comparison_0_1` | scratch (FAST → orientation → rotated BRIEF → Hamming → scratch RANSAC) vs reference (ORB → ORB descriptor → Hamming → library RANSAC): keypoints with orientation and the correspondence maps, on the same frame pair. The pipelines use different keypoints and matches |
+| `pnp_comparison` (+ `pnp_comparison.md`) | per-pair counts and rotation errors, and accumulated position/rotation error per frame: scratch PnP, reference PnP, reference ICP |
+
+**Scratch vs reference PnP** (all 35 pairs; different features in each):
+
+| | Scratch | Reference (baseline) |
+|---|---|---|
+| keypoints / frame (mean) | 131.4 | 430.4 |
+| filtered matches / valid 3D→2D / RANSAC inliers (means) | 94.2 / 83.6 / 56.5 | 191.7 / 142.5 / 132.0 |
+| inlier reprojection error (mean) | 2.42 px | 1.94 px |
+| per-pair rotation error, mean / median / max | 4.74° / 2.75° / 29.66° | 1.39° / 1.17° / 3.28° |
+| per-pair translation error, mean / median | 0.042 m / 0.024 m | 0.012 m / 0.011 m |
+| trajectory error, mean over 36 frames | 0.187 m / 21.0° | 0.180 m / 21.4° |
+| final error (frame 35) | 0.095 m / 9.9° | 0.277 m / 32.1° (reference ICP 0.525 m / 64.9°) |
+
+**How to read it.**
+- The reference is more accurate per pair, with more features, a nonlinear PnP
+  refinement and a larger inlier set.
+- Over the whole trajectory the two are about equal.
+- The scratch result's smaller frame-35 error is not uniform accuracy:
+  - its per-pair errors have mixed signs (19 of 35 pairs over-rotate), so they partly cancel
+  - one bad pair (10→11, 29.7°) puts it above the reference for frames 11–28
+- The reference's small errors are one-signed (under-rotation), so they accumulate steadily.
+
 ## Blender scene
 
 `visualization/scripts/build_scene.py` reads **`results/pipeline/trajectory.csv`** (milestone 3)
