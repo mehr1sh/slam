@@ -1,23 +1,33 @@
-# PnP from scratch: linear DLT (milestone 1: one pair; milestone 2: all 35 pairs)
+# PnP from scratch: a self-contained visual-odometry pipeline
 
-A self-contained Perspective-n-Point solver: projection, the linear system, its
-SVD solution and the recovery of a valid rotation are all written here.
-It links only Eigen and the C++ standard library; Eigen provides only
-matrices, vectors and SVD/QR. The solver runs on the frame 0 → 1
-correspondences of the synthetic Bunny experiment, exported by the
-repository's normal (reference) pipeline. It is checked against ground truth
-and against that pipeline's RANSAC PnP result.
+Everything in this directory is written in the project. It depends on
+**Eigen** (matrices, SVD, QR), the **C++ standard library** and the project's
+own feature modules (`../include/features`, `../src/features`, library target
+`feature_core`). No computer-vision, image or compression library is used:
+`ldd` of every binary lists only the C++ runtime.
 
-The existing pipeline in `../src`, `../tests` is untouched.
+| Milestone | Program | What it does |
+|---|---|---|
+| 1 | `pnp_from_scratch` | linear (DLT) PnP on the pair-0→1 correspondences of the frozen baseline export, checked against ground truth (sections 1–9) |
+| 2 | `pnp_full_sequence` | the same solver on all 35 pairs of the baseline export, without outlier rejection |
+| **3** | **`scratch_pipeline`** | **the complete pipeline from the RGB-D images:** PNG decoding → grayscale → FAST → orientation → rotated BRIEF → Hamming matching → correspondences → essential matrix (8-point, decomposition, cheirality) → RANSAC around the linear PnP → 36-pose trajectory |
 
-## Build and run
+The repository's normal pipeline (`../src`, `../tests`) is the **reference**.
+It is not modified by anything here.
+
+## Build, test and run
 
 ```bash
 cd pnp_from_scratch
-mkdir -p build && cd build
-cmake .. && make
-./pnp_from_scratch            # finds the repository root automatically
+cmake -S . -B build && cmake --build build -j
+ctest --test-dir build        # 12 self-checking tests (see "Tests")
+./build/scratch_pipeline      # milestone 3: images -> trajectory (about 1.5 s)
+./build/pnp_from_scratch      # milestone 1
+./build/pnp_full_sequence     # milestone 2
 ```
+
+Every program finds the repository root automatically. All outputs go to
+`results/`, which is generated and gitignored.
 
 The program writes `results/frame_0_1_pose.txt` and `results/frame_0_1_reprojection.csv`.
 The console output of the run below is saved in `results/frame_0_1_run.txt`.
@@ -251,6 +261,139 @@ weights every equation equally, so these points pull the null vector away from
 the true pose: σ₁₂/σ₁₁ is typically 0.4–0.9, against 0.098 on the clean set.
 This is the expected motivation for the next milestone, **RANSAC from scratch**.
 
+## Milestone 3: the complete scratch pipeline (`scratch_pipeline`)
+
+### Stages and modules
+
+| Stage | Module | Notes |
+|---|---|---|
+| PNG decoding | `src/png.{hpp,cpp}` | DEFLATE (RFC 1951; stored, fixed and dynamic Huffman blocks), zlib wrapper with Adler-32, chunk CRC-32, the five scanline filters; 8/16-bit grey/RGB(A) |
+| grayscale | `feature_core` `GrayFromRGB` | BT.601 luma, 14-bit fixed point |
+| FAST | `feature_core` `DetectFast` | 16-pixel circle, arc ≥ 9, **threshold 20** (configurable), corner score, 3×3 non-maximum suppression, border 16, strongest 500 |
+| orientation | `feature_core` `AssignOrientations` | intensity centroid, angle = atan2(m01, m10), radius 15 |
+| rotated BRIEF | `feature_core` `ComputeBrief` | Gaussian smoothing (σ 2, 9×9), 256 tests from a fixed Gaussian pattern (seed `0x5B21EF`), rotated by the keypoint angle |
+| matching | `feature_core` `MatchBruteForce`, `FilterMatchesByDistance` | brute-force Hamming nearest neighbour; keep distance ≤ max(2·d_min, 30) (floor configurable) |
+| correspondences | `src/frontend.{hpp,cpp}` | depth at the truncated keypoint pixel, Z = raw/5000, X = ((u−cx)/fx·Z, (v−cy)/fy·Z, Z) in camera i; project-owned `Correspondence` type |
+| essential matrix | `src/essential.{hpp,cpp}` | normalized 8-point (Hartley normalization), (s, s, 0) enforcement, four (R, t) candidates, cheirality by two-view depths; Sampson distance |
+| RANSAC | `src/ransac.{hpp,cpp}` | sample → fit → residuals of all points → inliers → score (count, then residual sum) → best → refit on inliers → final mask |
+| PnP | `src/pnp.{hpp,cpp}` (milestone 1, unchanged) | linear DLT, rotation projection by SVD, cheirality sign, translation re-solve |
+| trajectory | `src/pipeline_main.cpp` | T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i]·T_{i+1←i}⁻¹ |
+
+**Convention.** For every pair i → i+1, both the essential-matrix pose and the
+PnP pose satisfy X_{i+1} = R·X_i + t (T_{i+1←i}). The essential matrix uses
+x_{i+1}ᵀ E x_i = 0 with E = [t]× R and returns a unit t, because the scale is
+unobservable from two views.
+
+### Essential matrix
+
+With normalized coordinates x = K⁻¹(u, v, 1)ᵀ, each match gives one linear
+equation in the nine entries of E:
+
+    [x₂x₁, x₂y₁, x₂, y₂x₁, y₂y₁, y₂, x₁, y₁, 1] · e = 0
+
+1. **Estimate.** Hartley normalization; with 8 or more matches, e is the right
+   singular vector of the smallest singular value. The normalization is undone
+   with E = T₂ᵀ·Ẽ·T₁.
+2. **Constraint enforcement.** An essential matrix has two equal singular values
+   and one zero. With SVD E = U·S·Vᵀ, it is replaced by U·diag(s, s, 0)·Vᵀ with
+   s = (s₁ + s₂)/2.
+3. **Decomposition.** U and V are made proper (det = +1). With W = [[0,−1,0],[1,0,0],[0,0,1]]:
+   - R ∈ {U·W·Vᵀ, U·Wᵀ·Vᵀ}
+   - t = ±u₃, the third column of U
+
+   This gives four candidates.
+4. **Cheirality.** For each candidate, solve d₂·x₂ − d₁·R·x₁ = t in least
+   squares for the two depths of every match. The physical candidate is the
+   one with the most matches in front of both cameras (d₁, d₂ > 0).
+
+### RANSAC around PnP
+
+- **Sampling:** a minimal sample of 6 correspondences (the DLT's minimum), drawn by a
+  partial Fisher–Yates shuffle on `std::mt19937`. The generator's output sequence is
+  fixed by the C++ standard; `std::uniform_int_distribution` is avoided because its
+  algorithm is implementation-defined.
+- **Hypotheses:** the scratch DLT fits each sample. Every correspondence is
+  reprojected; points behind the camera are never inliers.
+- **Scoring:** inliers are points with error < threshold. Hypotheses are scored by inlier
+  count, and ties go to the smaller sum of inlier errors.
+- **Final model:** the best hypothesis is **refit with the same DLT on all its inliers**.
+  The exported mask and statistics are those of the refit pose.
+- **Defaults:** 300 iterations, 8 px, seed 12345, all configurable
+  (`--pnp-iterations`, `--pnp-threshold`, `--seed`).
+
+The essential stage uses the same engine: 8-point samples, Sampson distance in
+pixels, 2 px, 2000 iterations.
+
+### Result: all 35 pairs (`results/pipeline/summary.txt`)
+
+| | Value |
+|---|---|
+| keypoints per frame, filtered matches, 3D→2D correspondences (means) | 131.4, 94.2, 83.6 |
+| RANSAC PnP inliers (mean / min) | 56.5 / 30 |
+| inlier reprojection error (mean over pairs) | 2.42 px |
+| pairs solved / failed | 35 / 0 |
+| per-pair rotation error, mean / median / max | 4.74° / 2.75° / 29.7° (pair 10→11) |
+| per-pair translation error, mean / median / max | 0.042 m / 0.024 m / 0.255 m |
+| **final trajectory error (frame 35)** | **0.095 m, 9.88°** |
+| pair 0→1 | 108/107 keypoints, 86 matches, 76 3D→2D, 57 inliers; **2.31°, 0.0197 m**; inlier reprojection 1.53 / 1.28 / 4.55 px (mean / median / max) |
+
+**How it compares.**
+- The same matches of pair 0→1 without RANSAC give 47.5° (pure linear PnP).
+- The reference pipeline's baseline ends at 0.277 m / 32.1°, and its checkpoint-01 run
+  (threshold 30) at 0.357 m / 56.2°.
+- The trajectories are not expected to match: different features, and a linear
+  rather than a nonlinear PnP refinement.
+
+**Weak pairs.** Several pairs keep only 30–36 inliers and have 10–30° errors:
+- 9→10, 10→11
+- 26→27 to 29→30
+
+These are the frames where the bunny shows the least texture to FAST at
+threshold 20 (88–112 keypoints).
+
+### Essential-matrix stage: what it can and cannot do here
+
+The essential stage runs on every pair and is exported (`essential_*` columns,
+`essential_inlier` flags). Its pose is a **diagnostic only**: it is not
+accumulated into the trajectory. On this dataset it reports a rotation error of
+about 10° and a translation direction about 90° off, i.e. it returns R ≈ I.
+
+The cause is the geometry, not the code:
+- **On exact data it is exact.** Pair 0→1's real 3D points, projected with the true
+  motion, give the pose to 0.000° (`test_essential`).
+- **The motion nearly cancels in the image.** The camera orbits while looking at
+  the bunny, so the 10° rotation and the 8.7 cm translation almost cancel: the
+  points move only **4.3 px on average** between frames, against about 91 px for
+  the rotation alone.
+- **The two-view problem is therefore nearly degenerate.** With 1 px of noise, even
+  all 76 points give 3.6° of error. The minimal 8-point samples inside RANSAC are
+  dominated by noise and favour the rotation-free solution.
+
+PnP does not have this problem, because it uses the depth (3D points). On a
+scene with a wide field of view, the same RANSAC essential estimate is accurate
+to 0.14° (`test_ransac`).
+
+### Outputs (`results/pipeline/`, generated)
+
+| File | Content |
+|---|---|
+| `pairs.csv` | per pair: keypoints, raw/filtered matches, d_min, 3D→2D count, PnP ok/inliers, reprojection mean/median/max, rotation/translation error, t, estimated rotation, essential ok/inliers/errors, PnP-vs-essential rotation |
+| `trajectory.csv`, `trajectory.txt` | the 36 poses (T_wc; CSV with matrix and quaternion, absolute errors, inliers, source) |
+| `correspondences/pair_<i>_<j>.csv` | every filtered match: pixels, Hamming distance, depths, 3D point, `essential_inlier`, `pnp_used`, `pnp_inlier`, residual |
+| `summary.txt` | the summary above |
+
+### Tests (`ctest --test-dir build`: 12 tests)
+
+| Test | What it checks |
+|---|---|
+| `features_{fast,orientation,brief,matcher}_test` | the shared feature modules (built from `../tests/unit`): segment test, score, NMS, border, cap, determinism; orientation; BRIEF pattern, smoothing, **rotation invariance**, **Hamming distance**; matching and the filter |
+| `test_png` | CRC-32 and Adler-32 check values; stored, fixed and back-reference DEFLATE streams from an independent encoder; a dynamic-Huffman dataset image; RGB and depth samples equal to an independent decoder's; 202/202 depth values equal to the baseline export's |
+| `test_frontend` | frames 0→1: counts, back-projection, geometric quality of the matches against the true motion, determinism |
+| `test_essential` | exact recovery, (s, s, 0), the four candidates, cheirality, 8-point minimum, noise, Sampson distance |
+| `test_ransac` | 30 % gross outliers: linear PnP alone 28° off, RANSAC 0.47° (as good as the solver on the true inliers only); mask quality; seeds; failures; RANSAC essential on a wide scene |
+| `test_pipeline_0_1` | the whole pipeline on frames 0→1: pose within 3° / 3 cm (2.31° / 0.020 m), inliers, reprojection, proper R, mask, comparison without RANSAC, determinism |
+| `milestone1/2/3_*` | the three programs exit 0 |
+
 ## Blender scene
 
 `visualization/scripts/build_scene.py` reads `results/scratch_pnp_trajectory.csv` and adds
@@ -269,16 +412,24 @@ camera is hidden after it.
 
 ## Reproduce everything
 
+From the repository root:
+
 ```bash
-cd pnp_from_scratch && mkdir -p build && cd build && cmake .. && make
-./pnp_from_scratch                                      # milestone 1 (pair 0->1, comparison)
-./pnp_full_sequence                                     # milestone 2 (all pairs, trajectory)
-cd ../.. && blender --python visualization/scripts/build_scene.py
+cd pnp_from_scratch
+cmake -S . -B build && cmake --build build -j
+ctest --test-dir build              # 12 tests
+./build/scratch_pipeline            # milestone 3: images -> results/pipeline/
+./build/pnp_from_scratch            # milestone 1
+./build/pnp_full_sequence           # milestone 2 -> results/scratch_pnp_trajectory.csv (Blender)
+cd .. && blender --python visualization/scripts/build_scene.py
 ```
 
 ## Limitations
 
-- **No outlier rejection.** This is why milestone 2 drifts badly. Milestone 1's valid pose
-  used an inlier set borrowed from the reference pipeline's RANSAC. **Next: RANSAC from scratch.**
+- **Milestones 1–2 have no outlier rejection** (by design). Milestone 3 adds RANSAC.
+- **The PnP is linear** (DLT, algebraic error). There is no nonlinear refinement of the
+  reprojection error yet.
+- **The essential matrix is a diagnostic only** on this dataset; see "Essential-matrix stage".
 - Algebraic least squares only; there is no nonlinear (Gauss-Newton/LM) refinement.
-- The input correspondences (ORB, matching, depth lookup) are reused from the existing pipeline.
+- Milestones 1–2 read correspondences exported by the reference pipeline. Milestone 3
+  computes its own from the images.

@@ -14,8 +14,9 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 # the same single target definition the repository root uses.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/feature_core.cmake)
 
-# Scratch library: PNG decoding, front end, projection, linear PnP, essential matrix, RANSAC.
-add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp src/ransac.cpp)
+# Scratch library: PNG decoding, front end, projection, linear PnP, essential matrix,
+# RANSAC, per-pair pipeline.
+add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp src/ransac.cpp src/pipeline.cpp)
 target_include_directories(scratch_core PUBLIC src)
 target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
 target_compile_options(scratch_core PRIVATE -Wall -Wextra)
@@ -29,6 +30,11 @@ add_executable(pnp_full_sequence src/sequence_main.cpp src/pnp.cpp src/projectio
 target_link_libraries(pnp_full_sequence PRIVATE Eigen3::Eigen)
 target_compile_options(pnp_full_sequence PRIVATE -Wall -Wextra)
 
+# Milestone 3: the complete self-contained pipeline (images -> 36-pose trajectory).
+add_executable(scratch_pipeline src/pipeline_main.cpp)
+target_link_libraries(scratch_pipeline PRIVATE scratch_core)
+target_compile_options(scratch_pipeline PRIVATE -Wall -Wextra)
+
 # ---- tests (ctest --test-dir build) ----
 enable_testing()
 # the feature modules' own unit tests, built from the repository's sources
@@ -37,7 +43,7 @@ foreach(t features_fast_test features_orientation_test features_brief_test featu
   target_link_libraries(${t} PRIVATE feature_core)
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
-foreach(t test_png test_frontend test_essential test_ransac)
+foreach(t test_png test_frontend test_essential test_ransac test_pipeline_0_1)
   add_executable(${t} tests/${t}.cpp)
   target_include_directories(${t} PRIVATE tests)
   target_link_libraries(${t} PRIVATE scratch_core)
@@ -46,3 +52,4 @@ endforeach()
 # the milestone programs are self-checking too (exit status 0 = all counted checks pass)
 add_test(NAME milestone1_pnp_from_scratch COMMAND pnp_from_scratch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME milestone2_pnp_full_sequence COMMAND pnp_full_sequence WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME milestone3_scratch_pipeline COMMAND scratch_pipeline WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
