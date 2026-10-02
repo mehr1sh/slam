@@ -2,14 +2,15 @@
 // consecutive pairs of the synthetic Bunny sequence, using every raw 3D->2D
 // correspondence, then accumulated into a 36-pose trajectory.
 //
-// No OpenCV is linked or used, and no OpenCV RANSAC result is read: a
+// Standard library + Eigen only; no RANSAC result of the reference pipeline is read: a
 // correspondence is used iff the pipeline could back-project it (valid depth
 // in frame i), exactly how the existing pipeline builds its PnP input.
 //
 // Usage: pnp_full_sequence [--repo DIR] [--corr-dir DIR]
 //   --corr-dir DIR  directory with pair_<i>_<i+1>_correspondences.csv
-//                   (default: <repo>/results/data/raw_correspondences, created by
-//                    pnp_from_scratch/export_correspondences.sh)
+//                   (default: the frozen baseline export,
+//                    <repo>/docs/migration/baseline/correspondences; a fresh export
+//                    of the reference pipeline: pnp_from_scratch/export_correspondences.sh)
 
 #include <cmath>
 #include <iomanip>
@@ -87,7 +88,7 @@ int main(int argc, char **argv) {
     std::cerr << "cannot find the repository root; pass --repo DIR\n";
     return 2;
   }
-  if (corr_dir.empty()) corr_dir = repo / "results" / "data" / "raw_correspondences";
+  if (corr_dir.empty()) corr_dir = repo / "docs" / "migration" / "baseline" / "correspondences";
   const fs::path ds = repo / "data" / "synthetic_bunny";
   Intrinsics K;
   {
@@ -195,7 +196,7 @@ int main(int argc, char **argv) {
   fs::create_directories(out);
   const std::string note =
       "Pure linear (DLT) PnP on ALL raw 3D->2D correspondences of every pair (filtered ORB matches with "
-      "frame-i depth); no RANSAC, no OpenCV inlier selection, no OpenCV pose";
+      "frame-i depth); no RANSAC, no reference-pipeline inlier selection or pose";
   {
     std::ofstream f(out / "scratch_pnp_pair_results.csv");
     f << "pair,frame_i,frame_j,filtered_matches,num_correspondences,success,cheirality_ok,reason,num_positive_depth,"
@@ -284,7 +285,7 @@ int main(int argc, char **argv) {
     << "Pair 0->1: " << pairs[0].n << " correspondences, rotation error " << F(pairs[0].rot_err) << " deg, "
     << "translation error " << F(pairs[0].trans_err, 4) << " m, mean reprojection " << F(pairs[0].rp.mean) << " px\n\n"
     << "NOTE:\nThis is PURE LINEAR PNP on RAW CORRESPONDENCES.\n"
-    << "No RANSAC or OpenCV inlier selection was used.\n"
+    << "No RANSAC or reference-pipeline inlier selection was used.\n"
     << "========================================\n";
   std::cout << "pair  corr  ok  +depth  est_rot  rot_err  trans_err  reproj_mean  reproj_med  sigma12/11\n";
   for (const auto &r : pairs)

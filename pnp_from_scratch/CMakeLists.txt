@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Eigen only (matrices, vectors, SVD). OpenCV is deliberately NOT a dependency.
+# Eigen (matrices, vectors, SVD) and the C++ standard library only.
 find_package(Eigen3 REQUIRED NO_MODULE)
 
 add_executable(pnp_from_scratch src/main.cpp src/pnp.cpp src/projection.cpp)

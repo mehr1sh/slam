@@ -2,7 +2,7 @@
 // Small helpers shared by the two programs (milestone 1 and the full sequence):
 // pose type, quaternion <-> matrix (written out), the repository's error
 // metrics, repository/CSV/ground-truth readers, reprojection statistics.
-// No OpenCV.
+// Standard library + Eigen only.
 
 #include <algorithm>
 #include <cmath>

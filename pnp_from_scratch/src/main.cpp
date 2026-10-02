@@ -1,11 +1,13 @@
 // Milestone 1: from-scratch linear PnP on the existing synthetic-Bunny
-// frame 0 -> 1 correspondences. No OpenCV is linked or used.
+// frame 0 -> 1 correspondences. Standard library + Eigen only.
 //
 // Usage: pnp_from_scratch [--repo DIR] [--corr FILE]
 //   --repo DIR   repository root (default: searched upward from the current
 //                directory and from the executable's directory)
-//   --corr FILE  correspondence export of slam_trajectory_test
-//                (default: <repo>/results/data/cpp_export/pair_0_1_correspondences.csv)
+//   --corr FILE  a pair-0->1 correspondence export of the reference pipeline
+//                (default: the frozen baseline export,
+//                 <repo>/docs/migration/baseline/correspondences/pair_0_1_correspondences.csv;
+//                 its pair_metrics.csv is looked up next to it or one level up)
 
 #include <algorithm>
 #include <cmath>
@@ -126,8 +128,10 @@ int main(int argc, char **argv) {
     std::cerr << "cannot find the repository root (data/synthetic_bunny/intrinsics.txt); pass --repo DIR\n";
     return 2;
   }
-  if (corr_path.empty()) corr_path = repo / "results" / "data" / "cpp_export" / "pair_0_1_correspondences.csv";
-  const fs::path metrics_path = corr_path.parent_path() / "pair_metrics.csv";
+  if (corr_path.empty())
+    corr_path = repo / "docs" / "migration" / "baseline" / "correspondences" / "pair_0_1_correspondences.csv";
+  fs::path metrics_path = corr_path.parent_path() / "pair_metrics.csv";
+  if (!fs::exists(metrics_path)) metrics_path = corr_path.parent_path().parent_path() / "pair_metrics.csv";
   const fs::path ds = repo / "data" / "synthetic_bunny";
 
   // ---- inputs ----
@@ -140,11 +144,8 @@ int main(int argc, char **argv) {
   Csv corr;
   if (!corr.load(corr_path)) {
     std::cerr << "missing " << corr_path << "\n"
-              << "Create it (export-only flags; trajectory outputs are unchanged) with, from the repo root:\n"
-              << "  pixi run -e results results\n"
-              << "or\n"
-              << "  cd build && ./slam_trajectory_test ../data/synthetic_bunny --export-dir "
-                 "../results/data/cpp_export --export-pair 0\n";
+              << "The default input is the frozen baseline export under docs/migration/baseline/;\n"
+              << "a fresh export of the reference pipeline can be made with pnp_from_scratch/export_correspondences.sh\n";
     return 2;
   }
   // PnP correspondences exactly as the C++ pipeline built them: rows with
@@ -176,14 +177,14 @@ int main(int argc, char **argv) {
             << "GT motion 0->1    : rotation " << Fmt(RotAngleDeg(G.R)) << " deg, |t| " << Fmt(G.t.norm(), 4)
             << " m  (T_{1<-0} = T_wc[1]^-1 T_wc[0])\n"
             << "3D->2D pairs      : " << X_all.size() << " (pnp_used = 1), of which " << X_inl.size()
-            << " are inliers of the existing OpenCV RANSAC\n";
+            << " are inliers of the reference pipeline's RANSAC\n";
 
   SelfTests(K, X_all, G);
 
   // ---- the scratch solve: ALL correspondences, no RANSAC ----
   RunResult A = Run("scratch DLT, all correspondences", X_all, uv_all, K, G);
   // ---- reference subset: same scratch solver on the points the EXISTING run marked as inliers ----
-  RunResult B = Run("scratch DLT, existing-RANSAC inlier subset", X_inl, uv_inl, K, G);
+  RunResult B = Run("scratch DLT, reference-RANSAC inlier subset", X_inl, uv_inl, K, G);
 
   for (const RunResult *r : {&A, &B}) {
     std::cout << "\n== " << r->name << " ==\n";
@@ -209,7 +210,7 @@ int main(int argc, char **argv) {
               << "  DLT sigma_12 / sigma_11: " << Fmt(r->pnp.nullspace_ratio, 4) << "\n";
   }
 
-  // ---- existing OpenCV result (reference only; read from the export, not recomputed) ----
+  // ---- reference-pipeline PnP result (comparison only; read from the export, not recomputed) ----
   Csv met;
   bool have_existing = met.load(metrics_path) && !met.rows.empty();
   RunResult E;
@@ -228,7 +229,7 @@ int main(int argc, char **argv) {
 
   std::cout << "\n== Comparison (frame 0 -> 1) ==\n";
   std::cout << std::left << std::setw(26) << "" << std::setw(18) << "Scratch (all)" << std::setw(25)
-            << "Scratch (inl. subset)" << "Existing OpenCV PnP\n";
+            << "Scratch (inl. subset)" << "Reference pipeline PnP\n";
   auto row3 = [&](const std::string &label, double a, double b, double e, int prec, const std::string &unit) {
     std::cout << std::left << std::setw(26) << label << std::setw(18) << (Fmt(a, prec) + unit) << std::setw(25)
               << (Fmt(b, prec) + unit) << (have_existing ? Fmt(e, prec) + unit : "n/a") << "\n";
@@ -244,7 +245,7 @@ int main(int argc, char **argv) {
   row3("Median reproj. (all 136)", A.rp.median, B_all.median, E.rp.median, 3, " px");
   std::cout << std::left << std::setw(26) << "Inliers" << std::setw(18) << "--" << std::setw(25) << "--"
             << (have_existing ? std::to_string(existing_inliers) + " (RANSAC, 8 px)" : "n/a") << "\n";
-  std::cout << "(Inlier subset = which points the existing OpenCV RANSAC kept; the pose itself is still\n"
+  std::cout << "(Inlier subset = which points the reference pipeline's RANSAC kept; the pose itself is still\n"
                " computed only by the scratch DLT.)\n";
 
   Validate(A, baseline, /*counts=*/false);
@@ -255,7 +256,7 @@ int main(int argc, char **argv) {
   fs::create_directories(out_dir);
   {
     std::ofstream f(out_dir / "frame_0_1_reprojection.csv");
-    f << "index,X,Y,Z,u_obs,v_obs,existing_ransac_inlier,"
+    f << "index,X,Y,Z,u_obs,v_obs,reference_ransac_inlier,"
          "u_inlier_subset,v_inlier_subset,err_inlier_subset_px,u_all,v_all,err_all_px\n"
       << std::setprecision(6);
     for (size_t r = 0, k = 0; r < corr.rows.size(); ++r) {
@@ -270,7 +271,7 @@ int main(int argc, char **argv) {
   {
     std::ofstream f(out_dir / "frame_0_1_pose.txt");
     f << std::setprecision(9) << "# T_{1<-0}: X_cam1 = R * X_cam0 + t\n"
-      << "# scratch DLT on the " << B.n << " existing-RANSAC inliers (valid pose)\nR =\n" << B.T.R
+      << "# scratch DLT on the " << B.n << " reference-RANSAC inliers (valid pose)\nR =\n" << B.T.R
       << "\nt = " << B.T.t.transpose() << "\n"
       << "# scratch DLT on all " << A.n << " correspondences (no outlier rejection; fails)\nR =\n" << A.T.R
       << "\nt = " << A.T.t.transpose() << "\n"

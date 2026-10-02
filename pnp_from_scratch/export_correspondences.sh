@@ -8,7 +8,9 @@
 #   (one row per Hamming-filtered ORB match: u_i, v_i, depth_raw_i, X_i, Y_i,
 #    Z_i in camera-i coordinates, u_j, v_j in frame i+1, ...). The full-sequence
 #    scratch PnP uses every row with valid frame-i depth; it never reads the
-#    OpenCV RANSAC columns.
+#    reference pipeline's RANSAC columns. The milestone programs default to the
+#    frozen baseline export in docs/migration/baseline/correspondences/; this
+#    script exports the CURRENT reference pipeline instead.
 #
 # Run from anywhere after `pixi run build` (repository root build/).
 set -euo pipefail

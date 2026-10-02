@@ -2,10 +2,11 @@
 
 A self-contained Perspective-n-Point solver: projection, the linear system, its
 SVD solution and the recovery of a valid rotation are all written here.
-**OpenCV is not linked** (`ldd pnp_from_scratch | grep opencv` is empty); Eigen
-provides only matrices, vectors and SVD/QR. The solver runs on the **existing**
-frame 0 → 1 correspondences of the synthetic Bunny experiment and is checked
-against ground truth and against the repository's OpenCV `solvePnPRansac` result.
+It links only Eigen and the C++ standard library; Eigen provides only
+matrices, vectors and SVD/QR. The solver runs on the frame 0 → 1
+correspondences of the synthetic Bunny experiment, exported by the
+repository's normal (reference) pipeline. It is checked against ground truth
+and against that pipeline's RANSAC PnP result.
 
 The existing pipeline in `../src`, `../tests` is untouched.
 
@@ -22,9 +23,11 @@ The program writes `results/frame_0_1_pose.txt` and `results/frame_0_1_reproject
 The console output of the run below is saved in `results/frame_0_1_run.txt`.
 The exit status is 0 only if every counted sanity check passes.
 
-The input `../results/data/cpp_export/pair_0_1_correspondences.csv` is generated, not
-tracked. If it is missing, the program prints the command that creates it
-(`pixi run -e results results`, which runs `slam_trajectory_test` with export-only flags).
+The default input is the **frozen baseline export**:
+`../docs/migration/baseline/correspondences/pair_0_1_correspondences.csv` and
+`../docs/migration/baseline/pair_metrics.csv`. They are tracked, so the numbers below
+reproduce without running the reference pipeline. `--corr FILE` selects another
+export, for example one made with `export_correspondences.sh`.
 
 ## 1. What PnP solves
 
@@ -130,7 +133,7 @@ program reports the mean, median, max and RMSE = √(mean e_k²).
 
 ## 8. Result on the Bunny, frame 0 → 1
 
-| | Scratch DLT, all 136 | **Scratch DLT, 121-point subset** | Existing OpenCV PnP (RANSAC) |
+| | Scratch DLT, all 136 | **Scratch DLT, 121-point subset** | Reference pipeline PnP (RANSAC) |
 |---|---|---|---|
 | rotation error | 18.645° | **1.875°** | 0.978° |
 | translation error | 0.1626 m | **0.0163 m** | 0.0073 m |
@@ -156,44 +159,48 @@ precision floor of the acos-based metric.
   and the recovered block is far from a scaled rotation (singular values
   5.16 / 1.30 / 0.78). Outlier rejection (RANSAC) is the next milestone.
 - **121-point subset: a valid pose.** The subset is the set of points that the
-  repository's OpenCV RANSAC kept. Only this **selection** is borrowed; the pose is
+  reference pipeline's RANSAC kept. Only this **selection** is borrowed; the pose is
   computed entirely by the scratch DLT. It is within 1.9° and 1.6 cm of the truth,
-  with a reprojection error close to OpenCV's.
-- **Remaining gap to OpenCV.** OpenCV refines its pose by minimizing the
-  geometric reprojection error. The DLT minimizes an algebraic error and
+  with a reprojection error close to the reference pose's.
+- **Remaining gap to the reference.** The reference PnP refines its pose by
+  minimizing the geometric reprojection error. The DLT minimizes an algebraic error and
   estimates 11 parameters instead of 6, so it is less precise. The points span
   only about 0.13 m of depth at 0.5 m, which also limits the linear estimate.
 
-## 9. Why this is independent of OpenCV PnP
+## 9. Why this is independent of the reference pipeline's PnP
 
-- `CMakeLists.txt` links only `Eigen3::Eigen`, and the binary has no OpenCV library.
-- No `cv::` symbol appears anywhere in `src/`.
+- `CMakeLists.txt` links only Eigen and project-owned code, and the binaries depend on no
+  computer-vision library (`ldd`).
+- No third-party vision type or call appears anywhere in `src/`.
 - Projection, normalization, the DLT matrix, sign selection, rotation
   projection, the translation solve, reprojection and the error metrics are all
   implemented in `src/`.
 - Eigen is used only for matrix arithmetic, `JacobiSVD` and `colPivHouseholderQr`.
-- The OpenCV result appears only as numbers read from the existing export, for comparison.
+- The reference result appears only as numbers read from the export, for comparison.
 
 ## Milestone 2: the same solver on all 35 pairs (raw correspondences)
 
 `pnp_full_sequence` (`src/sequence_main.cpp`) runs the **unchanged** solver
 (`src/pnp.cpp`) on every consecutive pair 0→1 … 34→35. It accumulates the 35
-results into a 36-pose trajectory. **No RANSAC, no OpenCV inlier mask, no
-OpenCV pose.**
+results into a 36-pose trajectory. **No RANSAC, and no inlier mask or pose from
+the reference pipeline.**
 
 **Input.** For each pair, every Hamming-filtered ORB match whose frame-i pixel
 has depth, i.e. the pipeline's own PnP input (136 points for 0→1). The
 `pnp_inlier` column is never read. Each 3D point is re-checked against
-(u_i, v_i, depth) with `intrinsics.txt`. The input files come from the existing
-export logic:
+(u_i, v_i, depth) with `intrinsics.txt`.
+
+By default the inputs are the 35 **frozen baseline exports** in
+`../docs/migration/baseline/correspondences/` (tracked). `--corr-dir DIR` selects
+another set, for example a fresh export of the current reference pipeline:
 
 ```bash
-pnp_from_scratch/export_correspondences.sh
+pnp_from_scratch/export_correspondences.sh    # -> results/data/raw_correspondences
+./build/pnp_full_sequence --corr-dir ../results/data/raw_correspondences
 ```
 
-This runs `slam_trajectory_test --export-dir results/data/raw_correspondences --export-pair all`
-on a temporary copy of the dataset and checks that the trajectory outputs stay
-byte-identical.
+The script runs `slam_trajectory_test --export-dir … --export-pair all` on a temporary
+copy of the dataset and checks that the trajectory outputs stay byte-identical.
 
 **Accumulation.** This is the project convention:
 
@@ -220,7 +227,7 @@ A pair where the solver fails would keep the previous pose and be flagged; none 
 | final trajectory error (frame 35) | 0.477 m, 143.8° |
 | pair 0→1 (136 points) | 18.645°, 0.1626 m, 25.67 px. This is identical to the milestone-1 "all correspondences" run; the solver code is unchanged |
 
-For comparison, the existing OpenCV PnP with RANSAC ends 0.277 m and 32.1° off.
+For comparison, the reference pipeline's RANSAC PnP (baseline) ends 0.277 m and 32.1° off.
 
 **Physically invalid poses.** In 5 pairs, the returned pose puts most points
 **behind** the camera (`cheirality_ok = 0`):
@@ -255,7 +262,7 @@ Before drawing, the build checks:
 - the frame-0 anchor
 - the quaternion columns against the matrix columns
 - the stored errors against errors recomputed from the poses
-- that no frame equals OpenCV PnP
+- that no frame equals the reference PnP trajectory
 
 The scene supports partial trajectories: a prefix of frames 0..k−1 is shown, and the
 camera is hidden after it.
@@ -263,8 +270,6 @@ camera is hidden after it.
 ## Reproduce everything
 
 ```bash
-pixi run build                                          # repository C++ (for the export)
-pnp_from_scratch/export_correspondences.sh              # raw correspondences, all 35 pairs
 cd pnp_from_scratch && mkdir -p build && cd build && cmake .. && make
 ./pnp_from_scratch                                      # milestone 1 (pair 0->1, comparison)
 ./pnp_full_sequence                                     # milestone 2 (all pairs, trajectory)
@@ -274,6 +279,6 @@ cd ../.. && blender --python visualization/scripts/build_scene.py
 ## Limitations
 
 - **No outlier rejection.** This is why milestone 2 drifts badly. Milestone 1's valid pose
-  used an inlier set borrowed from OpenCV RANSAC. **Next: RANSAC from scratch.**
+  used an inlier set borrowed from the reference pipeline's RANSAC. **Next: RANSAC from scratch.**
 - Algebraic least squares only; there is no nonlinear (Gauss-Newton/LM) refinement.
 - The input correspondences (ORB, matching, depth lookup) are reused from the existing pipeline.
