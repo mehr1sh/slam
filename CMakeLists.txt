@@ -20,11 +20,9 @@ target_include_directories(camera PUBLIC include ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(camera PUBLIC ${OpenCV_LIBS})
 
 # --- feature_core: project-owned FAST, intensity-centroid orientation,
-# rotated BRIEF, brute-force Hamming matching. Standard library only. ---
-add_library(feature_core
-  src/features/types.cpp src/features/fast.cpp src/features/orientation.cpp
-  src/features/brief.cpp src/features/matcher.cpp)
-target_include_directories(feature_core PUBLIC include)
+# rotated BRIEF, brute-force Hamming matching. Standard library only.
+# Defined once in cmake/feature_core.cmake (also used by pnp_from_scratch/). ---
+include(cmake/feature_core.cmake)
 
 # --- features: find_feature_matches() (feature_core pipeline + distance filter) ---
 add_library(features src/features/features.cpp)

@@ -28,6 +28,9 @@ struct GrayImage {
 //   Y = (1868 B + 9617 G + 4899 R + 8192) >> 14
 GrayImage GrayFromInterleaved(const uint8_t *data, int width, int height, size_t row_step, int channels);
 
+// Same conversion for R, G, B (, A) channel order, e.g. pixels decoded from PNG.
+GrayImage GrayFromRGB(const uint8_t *data, int width, int height, size_t row_step, int channels);
+
 struct Keypoint {
   float x = 0, y = 0;   // pixel coordinates (column, row)
   int score = 0;        // FAST corner score (larger = stronger)

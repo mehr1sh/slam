@@ -10,6 +10,16 @@ endif()
 # Eigen (matrices, vectors, SVD) and the C++ standard library only.
 find_package(Eigen3 REQUIRED NO_MODULE)
 
+# Project-owned feature modules (FAST, orientation, rotated BRIEF, Hamming);
+# the same single target definition the repository root uses.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/feature_core.cmake)
+
+# Scratch library: PNG decoding, front end, projection, linear PnP.
+add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp)
+target_include_directories(scratch_core PUBLIC src)
+target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
+target_compile_options(scratch_core PRIVATE -Wall -Wextra)
+
 add_executable(pnp_from_scratch src/main.cpp src/pnp.cpp src/projection.cpp)
 target_link_libraries(pnp_from_scratch PRIVATE Eigen3::Eigen)
 target_compile_options(pnp_from_scratch PRIVATE -Wall -Wextra)
@@ -18,3 +28,21 @@ target_compile_options(pnp_from_scratch PRIVATE -Wall -Wextra)
 add_executable(pnp_full_sequence src/sequence_main.cpp src/pnp.cpp src/projection.cpp)
 target_link_libraries(pnp_full_sequence PRIVATE Eigen3::Eigen)
 target_compile_options(pnp_full_sequence PRIVATE -Wall -Wextra)
+
+# ---- tests (ctest --test-dir build) ----
+enable_testing()
+# the feature modules' own unit tests, built from the repository's sources
+foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test)
+  add_executable(${t} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/unit/${t}.cpp)
+  target_link_libraries(${t} PRIVATE feature_core)
+  add_test(NAME ${t} COMMAND ${t})
+endforeach()
+foreach(t test_png test_frontend)
+  add_executable(${t} tests/${t}.cpp)
+  target_include_directories(${t} PRIVATE tests)
+  target_link_libraries(${t} PRIVATE scratch_core)
+  add_test(NAME ${t} COMMAND ${t} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endforeach()
+# the milestone programs are self-checking too (exit status 0 = all counted checks pass)
+add_test(NAME milestone1_pnp_from_scratch COMMAND pnp_from_scratch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME milestone2_pnp_full_sequence COMMAND pnp_full_sequence WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
