@@ -15,7 +15,7 @@
 //   correspondences/pair_<i>_<j>.csv  every filtered match with depth, 3D point,
 //                                     essential and PnP inlier flags, residual
 //   keypoints/frame_<k>.csv        every detected keypoint (original x, y; FAST score; angle;
-//                                  pyramid level, scale, level x, y)
+//                                  pyramid level, x scale, level x, y; 256-bit descriptor in hex)
 //   summary.txt                    the summary printed at the end
 
 #include <cmath>
@@ -127,11 +127,18 @@ int main(int argc, char **argv) {
     char name[48];
     std::snprintf(name, sizeof(name), "frame_%06d.csv", frame);
     std::ofstream f(out / "keypoints" / name);
-    f << "index,x,y,score,angle_deg,level,scale,level_x,level_y\n";
-    for (size_t k = 0; k < ff.keypoints.size(); ++k)
+    f << "index,x,y,score,angle_deg,level,scale,level_x,level_y,descriptor_hex\n";
+    for (size_t k = 0; k < ff.keypoints.size(); ++k) {
       f << k << "," << F(ff.keypoints[k].x, 3) << "," << F(ff.keypoints[k].y, 3) << "," << ff.keypoints[k].score
         << "," << F(ff.keypoints[k].angle * 180.0 / M_PI, 3) << "," << ff.level[k] << "," << F(ff.scale[k], 6)
-        << "," << ff.level_x[k] << "," << ff.level_y[k] << "\n";
+        << "," << ff.level_x[k] << "," << ff.level_y[k] << ",";
+      char hex[17];
+      for (uint64_t w : ff.descriptors[k].bits) {  // 256 bits, word 0 first, each word most significant digit first
+        std::snprintf(hex, sizeof(hex), "%016llx", static_cast<unsigned long long>(w));
+        f << hex;
+      }
+      f << "\n";
+    }
   };
   std::vector<PairResult> pairs;
   RgbdFrame prev_frame, cur_frame;

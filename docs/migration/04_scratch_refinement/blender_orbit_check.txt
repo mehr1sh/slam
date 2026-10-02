@@ -1,0 +1,9 @@
+ORBIT GT_Animated_Camera           steps: min +10.00 max +10.00 mean +10.000 deg; same sign as GT on 35/35; total +350.0
+ORBIT ScratchPnP_Animated_Camera   steps: min +7.63 max +10.99 mean +9.127 deg; same sign as GT on 35/35; total +319.4
+frame | azimuth GT / scratch (deg) | step GT / scratch | forward·to-centre scratch | up·worldup GT / scratch | |dpos| scratch vs GT (m)
+    0 |    +0.00 /    +0.00 |  +0.00 /  +0.00 | 1.00000 | 0.9701 / 0.9701 | 0.0000
+    1 |   +10.00 /    +8.98 | +10.00 /  +8.98 | 1.00000 | 0.9701 / 0.9721 | 0.0103
+    2 |   +20.00 /   +17.38 | +10.00 /  +8.41 | 1.00000 | 0.9701 / 0.9750 | 0.0254
+   10 |  +100.00 /   +82.94 | +10.00 /  +8.78 | 0.99999 | 0.9701 / 0.9760 | 0.1505
+   11 |  +110.00 /   +92.34 | +10.00 /  +9.40 | 0.99999 | 0.9701 / 0.9755 | 0.1553
+   35 |   -10.00 /   -40.57 | +10.00 /  +8.34 | 0.99917 | 0.9701 / 0.9880 | 0.2835

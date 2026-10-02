@@ -20,9 +20,10 @@ It is not modified by anything here.
 ```bash
 cd pnp_from_scratch
 cmake -S . -B build && cmake --build build -j
-ctest --test-dir build        # 14 self-checking tests (see "Tests")
-./build/scratch_pipeline      # milestone 3: images -> trajectory (about 1.5 s), single scale
-./build/scratch_pipeline --pyramid-levels 8 --out pnp_from_scratch/results/pipeline_pyramid   # 8-level pyramid
+ctest --test-dir build        # 15 self-checking tests (see "Tests")
+./build/scratch_pipeline      # milestone 3: images -> trajectory; 8-level pyramid + LM refinement (default)
+./build/scratch_pipeline --no-refine --out pnp_from_scratch/results/pipeline_linear                    # linear PnP only
+./build/scratch_pipeline --pyramid-levels 1 --no-refine --out pnp_from_scratch/results/pipeline_single  # single scale
 ./build/pnp_from_scratch      # milestone 1
 ./build/pnp_full_sequence     # milestone 2
 ```
@@ -270,6 +271,7 @@ This is the expected motivation for the next milestone, **RANSAC from scratch**.
 |---|---|---|
 | PNG decoding | `src/png.{hpp,cpp}` | DEFLATE (RFC 1951; stored, fixed and dynamic Huffman blocks), zlib wrapper with Adler-32, chunk CRC-32, the five scanline filters; 8/16-bit grey/RGB(A) |
 | grayscale | `feature_core` `GrayFromRGB` | BT.601 luma, 14-bit fixed point |
+| pyramid | `feature_core` `BuildPyramid`, `ExtractMultiscale` | 8 levels × 1.2 by default (`--pyramid-levels`); detection, orientation and BRIEF per level; see "Image pyramid" |
 | FAST | `feature_core` `DetectFast` | 16-pixel circle, arc ≥ 9, **threshold 20** (configurable), corner score, 3×3 non-maximum suppression, border 16, strongest 500 |
 | orientation | `feature_core` `AssignOrientations` | intensity centroid, angle = atan2(m01, m10), radius 15 |
 | rotated BRIEF | `feature_core` `ComputeBrief` | Gaussian smoothing (σ 2, 9×9), 256 tests from a fixed Gaussian pattern (seed `0x5B21EF`), rotated by the keypoint angle |
@@ -278,6 +280,7 @@ This is the expected motivation for the next milestone, **RANSAC from scratch**.
 | essential matrix | `src/essential.{hpp,cpp}` | normalized 8-point (Hartley normalization), (s, s, 0) enforcement, four (R, t) candidates, cheirality by two-view depths; Sampson distance |
 | RANSAC | `src/ransac.{hpp,cpp}` | sample → fit → residuals of all points → inliers → score (count, then residual sum) → best → refit on inliers → final mask |
 | PnP | `src/pnp.{hpp,cpp}` (milestone 1, unchanged) | linear DLT, rotation projection by SVD, cheirality sign, translation re-solve |
+| refinement | `src/refine.{hpp,cpp}` | Levenberg–Marquardt on the reprojection error of the RANSAC inliers, from the linear pose (`--no-refine` to skip) |
 | trajectory | `src/pipeline_main.cpp` | T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i]·T_{i+1←i}⁻¹ |
 
 **Convention.** For every pair i → i+1, both the essential-matrix pose and the
@@ -325,32 +328,53 @@ equation in the nine entries of E:
 The essential stage uses the same engine: 8-point samples, Sampson distance in
 pixels, 2 px, 2000 iterations.
 
-### Result: all 35 pairs (`results/pipeline/summary.txt`)
+### Nonlinear refinement (`src/refine.cpp`)
 
-| | Value |
-|---|---|
-| keypoints per frame, filtered matches, 3D→2D correspondences (means) | 131.4, 94.2, 83.6 |
-| RANSAC PnP inliers (mean / min) | 56.5 / 30 |
-| inlier reprojection error (mean over pairs) | 2.42 px |
-| pairs solved / failed | 35 / 0 |
-| per-pair rotation error, mean / median / max | 4.74° / 2.75° / 29.7° (pair 10→11) |
-| per-pair translation error, mean / median / max | 0.042 m / 0.024 m / 0.255 m |
-| **final trajectory error (frame 35)** | **0.095 m, 9.88°** |
-| pair 0→1 | 108/107 keypoints, 86 matches, 76 3D→2D, 57 inliers; **2.31°, 0.0197 m**; inlier reprojection 1.53 / 1.28 / 4.55 px (mean / median / max) |
+The linear PnP minimises an algebraic error. The refinement then minimises the
+geometric one, over the **same RANSAC inliers** (the inlier set is not changed):
 
-**How it compares.**
-- The same matches of pair 0→1 without RANSAC give 47.5° (pure linear PnP).
-- The reference pipeline's baseline ends at 0.277 m / 32.1°, and its checkpoint-01 run
-  (threshold 30) at 0.357 m / 56.2°.
-- The trajectories are not expected to match: different features, and a linear
-  rather than a nonlinear PnP refinement.
+    cost(R, t) = ½ Σ_k ‖π(K (R X_k + t)) − u_k‖²
 
-**Weak pairs.** Several pairs keep only 30–36 inliers and have 10–30° errors:
-- 9→10, 10→11
-- 26→27 to 29→30
+- **Parameterisation:** a left perturbation on SE(3), R ← Exp(φ)·R, t ← Exp(φ)·t + ρ,
+  with Exp the Rodrigues formula. The Jacobian of one residual is
+  ∂π/∂X_c · [I | −[X_c]×], with ∂π/∂X_c = [[fx/z, 0, −fx·x/z²], [0, fy/z, −fy·y/z²]].
+- **Levenberg–Marquardt:** (JᵀJ + λI)·ξ = −Jᵀe. A step is kept only if the cost drops
+  (λ /= 3), otherwise λ ×= 4 and it is retried. It stops at |ξ| < 1e-10, after a relative
+  decrease below 1e-12, or after 50 steps. R is re-orthonormalised at the end.
+- **Failures:** fewer than 3 points, or a point behind the camera at the start: the
+  linear pose is kept.
+- `pairs.csv` keeps the linear pose's errors and reprojection statistics (`linear_*`)
+  next to the refined ones.
 
-These are the frames where the bunny shows the least texture to FAST at
-threshold 20 (88–112 keypoints).
+### Result: all 35 pairs (`results/pipeline/summary.txt`, the default)
+
+| | Single scale, linear | Pyramid, linear | **Pyramid + refinement (default)** | Reference |
+|---|---|---|---|---|
+| keypoints / filtered matches / 3D→2D (means) | 131.4 / 94.2 / 83.6 | 484.1 / 395.6 / 313.6 | 484.1 / 395.6 / 313.6 | 430.4 / 191.7 / 142.5 |
+| RANSAC inliers (mean / min) | 56.5 / 30 | 240.3 / 154 | 240.3 / 154 | 132.0 / 67 |
+| inlier reprojection error (mean) | 2.42 px | 2.28 px | 2.00 px | 1.94 px |
+| per-pair rotation error, mean / median / max | 4.74° / 2.75° / 29.66° | 2.07° / 1.83° / 5.58° | **1.16° / 1.03° / 2.56°** | 1.39° / 1.17° / 3.28° |
+| per-pair translation error, mean / median | 0.042 / 0.024 m | 0.018 / 0.015 m | **0.011 / 0.010 m** | 0.012 / 0.011 m |
+| summed signed rotation error (35 pairs) | +39.3° | +0.3° | −30.4° | −30.4° |
+| trajectory error, mean over 36 frames | 0.187 m / 21.0° | 0.076 m / 6.9° | 0.147 m / 18.2° | 0.180 m / 21.4° |
+| final error (frame 35) | 0.095 m / 9.9° | 0.106 m / 13.5° | 0.284 m / 31.9° | 0.277 m / 32.1° |
+| pair 0→1 | 2.31° / 0.020 m | 2.77° / 0.023 m | 1.30° / 0.0095 m | 0.98° / 0.0073 m |
+
+Rows 2–3 use `--pyramid-levels 1 --no-refine` and `--no-refine`; all 35 pairs are solved in every run.
+
+**How to read it.**
+- **Per pair, the refined scratch PnP is now as accurate as the reference** (mean rotation
+  error 1.16° vs 1.39°), with about twice as many inliers.
+- **Its trajectory drifts like the reference's** (frame 35: 0.284 m / 31.9° vs 0.277 m / 32.1°).
+  Both under-rotate on almost every pair (33 of 35 for scratch), summing to −30.4°.
+- **Why:** most inliers are corners on the bunny's silhouette. A silhouette point is not a
+  fixed 3D point: it slides along the surface as the camera orbits, so its image motion is
+  smaller than the scene's. Refining on interior points only (no depth discontinuity
+  within 3 px) gives +3.8° instead of −30.4°; the half-pixel sampling offset of the
+  renderer has no effect (−30.3°). See `../docs/migration/04_scratch_refinement/REPORT.md`.
+- **The linear runs' smaller trajectory errors are cancellations**, not accuracy: their
+  per-pair errors are about twice as large, with mixed signs.
+- The same matches of pair 0→1 without RANSAC give 72.0° (pure linear PnP, pyramid run).
 
 ### Essential-matrix stage: what it can and cannot do here
 
@@ -378,13 +402,13 @@ to 0.14° (`test_ransac`).
 
 | File | Content |
 |---|---|
-| `pairs.csv` | per pair: keypoints, raw/filtered matches, d_min, 3D→2D count, PnP ok/inliers, reprojection mean/median/max, rotation/translation error, t, estimated rotation, essential ok/inliers/errors, PnP-vs-essential rotation |
+| `pairs.csv` | per pair: keypoints, raw/filtered matches, d_min, 3D→2D count, PnP ok/inliers, reprojection mean/median/max, rotation/translation error, t, R, estimated rotation, essential ok/inliers/errors, PnP-vs-essential rotation; refinement: `refined`, steps, the linear pose's errors and reprojection statistics, rms before/after |
 | `trajectory.csv`, `trajectory.txt` | the 36 poses (T_wc; CSV with matrix and quaternion, absolute errors, inliers, source) |
 | `correspondences/pair_<i>_<j>.csv` | every filtered match: pixels, Hamming distance, depths, 3D point, `essential_inlier`, `pnp_used`, `pnp_inlier`, residual |
-| `keypoints/frame_<k>.csv` | every keypoint: original-image x, y, score, angle, pyramid level, scale, level x, y |
+| `keypoints/frame_<k>.csv` | every keypoint: original-image x, y, FAST score, angle, pyramid level, x scale, level x, y, 256-bit descriptor (hex) |
 | `summary.txt` | the summary above |
 
-### Tests (`ctest --test-dir build`: 14 tests)
+### Tests (`ctest --test-dir build`: 15 tests)
 
 | Test | What it checks |
 |---|---|
@@ -393,11 +417,12 @@ to 0.14° (`test_ransac`).
 | `test_frontend` | frames 0→1: counts, back-projection, geometric quality of the matches against the true motion, determinism |
 | `test_essential` | exact recovery, (s, s, 0), the four candidates, cheirality, 8-point minimum, noise, Sampson distance |
 | `test_ransac` | 30 % gross outliers: linear PnP alone 28° off, RANSAC 0.47° (as good as the solver on the true inliers only); mask quality; seeds; failures; RANSAC essential on a wide scene |
-| `test_pipeline_0_1` | the whole pipeline on frames 0→1: pose within 3° / 3 cm (2.31° / 0.020 m), inliers, reprojection, proper R, mask, comparison without RANSAC, determinism |
-| `test_multiscale_0_1` | the 8-level front end on frames 0→1: keypoints on every level, level 0 = single scale, coordinate mapping, depth fraction; pipeline pose within 3° / 3 cm (2.77° / 0.023 m), > 100 inliers (206) |
+| `test_refine` | Rodrigues exponential; one undamped step from 0.45° / 5 mm lands within 0.003° / 0.06 mm (checks the Jacobian); exact convergence from 5° / 3 cm on noise-free data; with 1 px noise the error drops in 40/40 trials (0.61° → 0.17° mean); masked-out outliers have no effect; failures; determinism |
+| `test_pipeline_0_1` | the whole default pipeline on frames 0→1: pose within 3° / 3 cm (1.30° / 0.0095 m), inliers, reprojection, proper R, mask, comparison without RANSAC; refinement lowers the inlier reprojection error (2.07 → 1.96 px) and keeps the inlier set; `--no-refine` keeps the linear pose; determinism |
+| `test_multiscale_0_1` | the 8-level front end on frames 0→1: keypoints on every level, level 0 = single scale, coordinate mapping; **level → original → depth → 3D**: every correspondence uses (level + 0.5)·scale − 0.5 per axis, depth is read from the 640×480 image at the mapped pixel, the 3D point back-projects it; coarse-level matches reproject within 1.94 px (median) under the true motion, while their level coordinates used directly would have no depth for 87/87; pipeline pose within 3° / 3 cm |
 | `milestone1/2/3_*` | the three programs exit 0 |
 
-### Image pyramid (`--pyramid-levels L`; default 1)
+### Image pyramid (`--pyramid-levels L`; default 8)
 
 The reference ORB detects on an 8-level pyramid (scale 1.2); the single-scale scratch
 detector sees level 0 only, which is why it finds 108 keypoints in frame 0 against ORB's 366.
@@ -410,10 +435,11 @@ The scratch pipeline has the same pyramid, without any library:
 - `features/multiscale`: on every level, the unchanged `DetectFast` (threshold 20, 3×3 NMS,
   border 16, strongest 500), then orientation and rotated BRIEF **on that level's image**.
 - A keypoint keeps its level, level x/y, scale, score, angle and descriptor; its original
-  position is x0 = (x + 0.5)·scale − 0.5 (same for y). Matching, depth lookup, RANSAC and PnP
-  use the original position and are unchanged.
+  position is x0 = (x + 0.5)·sx − 0.5, y0 = (y + 0.5)·sy − 0.5, with sx = 640 / level width and
+  sy = 480 / level height (they differ by up to 0.2 %). Matching, depth lookup, RANSAC and PnP
+  use the original position; the depth is read from the 640×480 depth image there.
 - No Harris ranking and no per-level quotas (the reference ORB has both).
-- `--pyramid-levels 1` (the default) reproduces the single-scale results byte for byte.
+- `--pyramid-levels 1 --no-refine` reproduces the earlier single-scale results exactly.
 
 Frame 0 keypoints per level:
 
@@ -422,7 +448,7 @@ Frame 0 keypoints per level:
 | scratch pyramid | 108 | 87 | 53 | 45 | 35 | 29 | 21 | 20 | **398** |
 | reference ORB | 97 | 73 | 50 | 46 | 36 | 22 | 23 | 19 | **366** |
 
-Single scale → pyramid (the pyramid run is `results/pipeline_pyramid/`):
+Single scale → pyramid, both with the linear PnP (`results/pipeline_single/`, `results/pipeline_linear/`):
 
 | | Single scale | Pyramid (8 × 1.2) | Reference |
 |---|---|---|---|
@@ -435,16 +461,16 @@ Single scale → pyramid (the pyramid run is `results/pipeline_pyramid/`):
 | final error (frame 35) | 0.095 m / 9.9° | 0.106 m / 13.5° | 0.277 m / 32.1° |
 
 - The pyramid removes the bad pair (worst per-pair rotation 29.7° → 5.6°) and quadruples the inliers.
-- The per-pair accuracy is still below the reference's: the PnP is linear and has no refinement.
 - The frame-35 error is slightly larger than single scale's. Single scale's small final error
   comes from errors of mixed sign cancelling; the pyramid's mean over frames is 2.5× smaller.
+- The nonlinear refinement then halves the per-pair errors; see "Result: all 35 pairs".
 
 ## Figures and the comparison with the reference pipeline
 
 ```bash
-python3 pnp_from_scratch/tools/make_figures.py       # after build/scratch_pipeline; NumPy + Matplotlib
-python3 pnp_from_scratch/tools/make_figures.py --pipeline pnp_from_scratch/results/pipeline_pyramid \
-                                               --out pnp_from_scratch/results/figures_pyramid
+python3 pnp_from_scratch/tools/make_figures.py       # after the three runs above; NumPy + Matplotlib
+python3 pnp_from_scratch/tools/make_figures.py --pipeline pnp_from_scratch/results/pipeline_single \
+                                               --out pnp_from_scratch/results/figures_single
 python3 pnp_from_scratch/tools/check_trajectory.py   # frame-by-frame transform-chain check
 ```
 
@@ -459,7 +485,7 @@ identical RGB and 16-bit depth, and 202/202 baseline depth values.
 
 **Outputs** (`--out`, default `results/figures/`, PNG + PDF, generated). The correspondence
 and keypoint figures show the run given by `--pipeline`; the PnP comparison shows every
-scratch run that exists (`results/pipeline`, `results/pipeline_pyramid`). Keypoints are drawn
+scratch run that exists (`results/pipeline_single`, `results/pipeline_linear`, `results/pipeline`). Keypoints are drawn
 as small dots, colour = pyramid level (the dot grows only slightly with the level), with a
 fixed-length tick along the orientation; the
 correspondence maps show positions only (no orientation ticks).
@@ -467,14 +493,14 @@ correspondence maps show positions only (no orientation ticks).
 | Figure | Shows |
 |---|---|
 | `bunny_correspondences_0_1` | scratch correspondences on the real frames 0 and 1, with the same colour for the same match in both frames: RANSAC inliers (solid), outliers (magenta dashed), matches without depth (grey), other keypoints (white) |
-| `bunny_correspondences_0_1_inliers` | the 57 RANSAC inliers only |
-| `bunny_correspondences_0_1_outliers` | the 19 rejected matches, numbered. Several ear-tip features of frame 0 are matched to the same frame-1 keypoint (nearest-neighbour matching is many-to-one); RANSAC rejects them |
-| `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367) with level, scale and orientation |
-| `feature_comparison_0_1` | scratch (FAST → orientation → rotated BRIEF → Hamming → scratch RANSAC) vs reference (ORB → ORB descriptor → Hamming → library RANSAC): keypoints with level, scale and orientation, and the correspondence maps, on the same frame pair. The pipelines use different keypoints and matches |
+| `bunny_correspondences_0_1_inliers` | the RANSAC inliers only (206 of 249 in the default run) |
+| `bunny_correspondences_0_1_outliers` | the rejected matches, numbered. Several ear-tip features of frame 0 are matched to the same frame-1 keypoint (nearest-neighbour matching is many-to-one); RANSAC rejects them |
+| `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367) with pyramid level and orientation |
+| `feature_comparison_0_1` | scratch (own pyramid → FAST with its own score, no Harris, no quotas → orientation → rotated BRIEF → Hamming → scratch RANSAC → LM refinement) vs reference (library ORB with Harris ranking and per-level quotas → ORB descriptor → Hamming → library RANSAC): keypoints with level and orientation, and the correspondence maps, on the same frame pair. The detectors differ, so the keypoints and matches differ |
 | `pyramid_levels_0` | (pyramid run only) frame-0 keypoints per pyramid level, scratch vs reference ORB |
-| `pnp_comparison` (+ `pnp_comparison.md`) | per-pair counts and rotation errors, and accumulated position/rotation error per frame: scratch single scale, scratch pyramid, reference PnP, reference ICP |
+| `pnp_comparison` (+ `pnp_comparison.md`) | per-pair counts and rotation errors, and accumulated position/rotation error per frame: scratch single scale, pyramid linear, pyramid + refinement, reference PnP, reference ICP; the `.md` adds the refinement table for pairs 0→1, 1→2, 10→11 |
 
-**Scratch (single scale) vs reference PnP** (all 35 pairs; different features in each; the pyramid run is in the table above):
+**Scratch single scale (checkpoint 02) vs reference PnP** (all 35 pairs; the current default is compared in "Result: all 35 pairs"):
 
 | | Scratch | Reference (baseline) |
 |---|---|---|
@@ -486,7 +512,7 @@ correspondence maps show positions only (no orientation ticks).
 | trajectory error, mean over 36 frames | 0.187 m / 21.0° | 0.180 m / 21.4° |
 | final error (frame 35) | 0.095 m / 9.9° | 0.277 m / 32.1° (reference ICP 0.525 m / 64.9°) |
 
-**How to read it.**
+**How to read it** (single scale).
 - The reference is more accurate per pair, with more features, a nonlinear PnP
   refinement and a larger inlier set.
 - Over the whole trajectory the two are about equal.
@@ -499,16 +525,18 @@ correspondence maps show positions only (no orientation ticks).
 
 `visualization/scripts/build_scene.py` reads **`results/pipeline/trajectory.csv`** (milestone 3)
 and adds `ScratchPnP_Animated_Camera` (36 keyframes) and `ScratchPnP_Trajectory` (36 points),
-in cyan. The HUD label is "Scratch PnP", with the note "own features + RANSAC + linear PnP".
-It still shows the single-scale run; the pyramid run (`results/pipeline_pyramid/`) is not
-wired into the scene yet.
+in cyan. The HUD label is "Scratch PnP", with the note taken from the CSV
+("own features + RANSAC + linear PnP + refinement" for the default run). The scene shows
+whichever run is in `results/pipeline/`: by default the 8-level pyramid with refinement.
 
 The pose goes through the same `trajectory_to_blender_pose()` (R_FIX) and `WorldRoot`
 path as the GT, PnP and ICP cameras. `scripts/check_blender_consistency.py` verifies,
 from the saved scene:
 - the camera matches its data: position within 3e-8 m, rotation exactly
-- it looks at the bunny: maximum look-at error 5.61°, equal to the value
-  computed from the data to within 8e-4°
+- it looks at the bunny: maximum look-at error 3.81° for the default run (5.61° for the
+  single-scale run), equal to the value computed from the data to within 8e-4°
+- it orbits the same way as GT on every one of the 35 steps (7.6°–11.0° per step against
+  10°; 319.4° in total against 350°, the estimate's under-rotation)
 
 Until this was fixed, the scene loaded the milestone-2 file
 `results/scratch_pnp_trajectory.csv` (no RANSAC), whose camera looks up to 141.7° away from
@@ -531,9 +559,10 @@ From the repository root:
 ```bash
 cd pnp_from_scratch
 cmake -S . -B build && cmake --build build -j
-ctest --test-dir build              # 14 tests
-./build/scratch_pipeline            # milestone 3: images -> results/pipeline/
-./build/scratch_pipeline --pyramid-levels 8 --out pnp_from_scratch/results/pipeline_pyramid
+ctest --test-dir build              # 15 tests
+./build/scratch_pipeline            # milestone 3: images -> results/pipeline/ (pyramid + refinement)
+./build/scratch_pipeline --no-refine --out pnp_from_scratch/results/pipeline_linear
+./build/scratch_pipeline --pyramid-levels 1 --no-refine --out pnp_from_scratch/results/pipeline_single
 ./build/pnp_from_scratch            # milestone 1
 ./build/pnp_full_sequence           # milestone 2 -> results/scratch_pnp_trajectory.csv
 python3 tools/check_trajectory.py   # transform-chain check of the trajectories (NumPy)
@@ -543,9 +572,10 @@ cd .. && blender --python visualization/scripts/build_scene.py
 ## Limitations
 
 - **Milestones 1–2 have no outlier rejection** (by design). Milestone 3 adds RANSAC.
-- **The PnP is linear** (DLT, algebraic error). There is no nonlinear refinement of the
-  reprojection error yet.
+- **The refinement is plain least squares** on the RANSAC inliers (no robust loss, no
+  re-selection of inliers).
+- **Silhouette features bias the rotation** (about −0.87° per pair); the front end does
+  not yet reject points at depth discontinuities. See "How to read it" above.
 - **The essential matrix is a diagnostic only** on this dataset; see "Essential-matrix stage".
-- Algebraic least squares only; there is no nonlinear (Gauss-Newton/LM) refinement.
 - Milestones 1–2 read correspondences exported by the reference pipeline. Milestone 3
   computes its own from the images.

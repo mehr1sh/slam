@@ -1,0 +1,52 @@
+== text: OpenCV|opencv|cv::|cv2|find_package(OpenCV) in the scratch path ==
+pnp_from_scratch/README.md:454:- The tools load no vision library (`cv2` is never imported). Matplotlib imports Pillow
+== includes of the scratch sources (non-std) ==
+#include "check.hpp"
+#include "common.hpp"
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <Eigen/SVD>
+#include "essential.hpp"
+#include "features/brief.hpp"
+#include "features/fast.hpp"
+#include "features/matcher.hpp"
+#include "features/multiscale.hpp"
+#include "features/orientation.hpp"
+#include "features/pyramid.hpp"
+#include "features/types.hpp"
+#include "frontend.hpp"
+#include "pipeline.hpp"
+#include "png.hpp"
+#include "pnp.hpp"
+#include "projection.hpp"
+#include "ransac.hpp"
+#include "refine.hpp"
+== CMake: link libraries of the scratch build ==
+pnp_from_scratch/CMakeLists.txt:11:find_package(Eigen3 REQUIRED NO_MODULE)
+pnp_from_scratch/CMakeLists.txt:21:target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
+pnp_from_scratch/CMakeLists.txt:25:target_link_libraries(pnp_from_scratch PRIVATE Eigen3::Eigen)
+pnp_from_scratch/CMakeLists.txt:30:target_link_libraries(pnp_full_sequence PRIVATE Eigen3::Eigen)
+pnp_from_scratch/CMakeLists.txt:35:target_link_libraries(scratch_pipeline PRIVATE scratch_core)
+pnp_from_scratch/CMakeLists.txt:44:  target_link_libraries(${t} PRIVATE feature_core)
+pnp_from_scratch/CMakeLists.txt:51:  target_link_libraries(${t} PRIVATE scratch_core)
+== ldd: OpenCV libraries linked by each scratch binary ==
+pnp_from_scratch/build/scratch_pipeline          0
+pnp_from_scratch/build/pnp_from_scratch          0
+pnp_from_scratch/build/pnp_full_sequence         0
+pnp_from_scratch/build/test_png                  0
+pnp_from_scratch/build/test_frontend             0
+pnp_from_scratch/build/test_essential            0
+pnp_from_scratch/build/test_ransac               0
+pnp_from_scratch/build/test_pipeline_0_1         0
+pnp_from_scratch/build/test_multiscale_0_1       0
+pnp_from_scratch/build/test_refine               0
+pnp_from_scratch/build/features_fast_test        0
+pnp_from_scratch/build/features_orientation_test 0
+pnp_from_scratch/build/features_brief_test       0
+pnp_from_scratch/build/features_matcher_test     0
+pnp_from_scratch/build/features_pyramid_test     0
+== Python tools: cv2 loaded at runtime ==
+cv2 loaded: False | PIL used for decoding: no (png_reader.py)
+== Blender scene builder imports ==
+(no OpenCV import)
