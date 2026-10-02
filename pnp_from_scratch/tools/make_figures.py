@@ -6,7 +6,7 @@ reference program is run.
 
 Inputs
   scratch    a scratch_pipeline output directory (--pipeline; default
-             pnp_from_scratch/results/pipeline, the single-scale default run):
+             pnp_from_scratch/results/pipeline, the default run: 8-level pyramid + refinement):
              keypoints/frame_*.csv, correspondences/pair_0_1.csv, pairs.csv, trajectory.csv
   reference  docs/migration/baseline/  (frozen, tracked):
              reference_features/pair_0_1_{keypoints,raw_matches}.csv,
@@ -20,15 +20,20 @@ Outputs (generated, gitignored): --out (default pnp_from_scratch/results/figures
   feature_comparison_0_1.png                           scratch vs reference: keypoints (level/scale/orientation)
                                                        and correspondences
   pyramid_levels_0.png                                 keypoints per pyramid level, scratch vs reference, frame 0
-  pnp_comparison.png, pnp_comparison.md                scratch single scale / scratch pyramid (whichever runs
-                                                       exist: results/pipeline, results/pipeline_pyramid) vs
-                                                       reference PnP and ICP, all pairs
+  pnp_comparison.png, pnp_comparison.md                scratch runs (whichever exist: results/pipeline_single,
+                                                       results/pipeline_linear, results/pipeline) vs reference
+                                                       PnP and ICP, all pairs; refinement table for pairs
+                                                       0->1, 1->2, 10->11
 (+ .pdf of every figure)
 
-Usage (from the repository root):
-  python3 pnp_from_scratch/tools/make_figures.py                                    # single-scale run
-  python3 pnp_from_scratch/tools/make_figures.py --pipeline pnp_from_scratch/results/pipeline_pyramid \
-                                                 --out pnp_from_scratch/results/figures_pyramid
+Usage (from the repository root), after
+  pnp_from_scratch/build/scratch_pipeline                                            # results/pipeline
+  pnp_from_scratch/build/scratch_pipeline --no-refine --out pnp_from_scratch/results/pipeline_linear
+  pnp_from_scratch/build/scratch_pipeline --pyramid-levels 1 --no-refine --out pnp_from_scratch/results/pipeline_single
+run
+  python3 pnp_from_scratch/tools/make_figures.py          # figures of the default run
+  python3 pnp_from_scratch/tools/make_figures.py --pipeline pnp_from_scratch/results/pipeline_single \
+                                                 --out pnp_from_scratch/results/figures_single
 """
 
 import argparse
@@ -67,8 +72,11 @@ STROKE = [pe.withStroke(linewidth=2.2, foreground="black")]
 INK = "0.12"
 SCRATCH_PYR = (0.12, 0.38, 0.95)
 LEVEL_COLOURS = [plt.get_cmap("plasma")(0.15 + 0.115 * l) for l in range(8)]  # pyramid level 0 .. 7
-RUNS = {"single": ROOT / "pnp_from_scratch" / "results" / "pipeline",
-        "pyramid": ROOT / "pnp_from_scratch" / "results" / "pipeline_pyramid"}
+SCRATCH_REF = (0.05, 0.10, 0.45)
+RES = ROOT / "pnp_from_scratch" / "results"
+RUNS = {"single scale": (SCRATCH, RES / "pipeline_single"),          # --pyramid-levels 1 --no-refine
+        "pyramid, linear": (SCRATCH_PYR, RES / "pipeline_linear"),    # --no-refine
+        "pyramid + refinement": (SCRATCH_REF, RES / "pipeline")}      # default
 
 
 def rows(path):
@@ -296,10 +304,11 @@ def feature_comparison(rgb, box, s, r, pair):
     fig = plt.figure(figsize=(fig_w, fig_h))
     nlev = int(s["kp"][0][:, 4].max()) + 1
     scale_txt = f"{nlev}-level pyramid (scale 1.2)" if nlev > 1 else "single scale"
-    rows_ = ((s, SCRATCH_PYR if nlev > 1 else SCRATCH, "Scratch", f"own {scale_txt} → FAST (threshold 20) → "
-              "intensity-centroid orientation → rotated BRIEF (own Gaussian pattern) → Hamming → scratch RANSAC"),
-             (r, REF_PNP, "Reference (baseline)", "ORB detector (pyramid) → ORB descriptor → Hamming → "
-              "library RANSAC (frozen baseline)"))
+    rows_ = ((s, SCRATCH_PYR if nlev > 1 else SCRATCH, "Scratch", f"own {scale_txt} → FAST (threshold 20, FAST score, no Harris, no quotas) → "
+              "intensity-centroid orientation → rotated BRIEF (own Gaussian pattern) → Hamming → scratch RANSAC"
+              + (" → LM refinement" if pair.get("refined") == "1" else "")),
+             (r, REF_PNP, "Reference (baseline)", "library ORB: 8-level pyramid (scale 1.2), FAST threshold 20, Harris ranking, "
+              "per-level quotas → ORB descriptor → Hamming → library RANSAC PnP (frozen baseline)"))
     for row, (m, colr, name, chain) in enumerate(rows_):
         y_top = fig_h - row * (row_h + head)  # inches from the bottom
         y0 = (y_top - head - row_h) / fig_h
@@ -360,7 +369,13 @@ def pnp_comparison(runs, base, ref_traj):
     ax = axs[0, 0]
     ax.plot(x, [p["pnp_inliers"] for p in bp], "-", color=REF_PNP, lw=1.8, label="reference: RANSAC inliers")
     ax.plot(x, [p["pnp_correspondences"] for p in bp], ":", color=REF_PNP, lw=1.6, label="reference: valid 3D→2D")
+    seen = {}  # runs with the same front end and RANSAC (linear / refined) share their counts: draw them once
     for name, (colr, pairs, traj) in runs.items():
+        key = tuple(p["pnp_inliers"] for p in pairs) + tuple(p["correspondences_3d2d"] for p in pairs)
+        seen.setdefault(key, []).append((name, colr, pairs))
+    for group in seen.values():
+        name = group[0][0] if len(group) == 1 else " / ".join(g[0] for g in group).replace("pyramid, linear / pyramid + refinement", "pyramid (linear and refined)")
+        colr, pairs = group[-1][1], group[-1][2]
         ax.plot(x, [fl(p["pnp_inliers"]) for p in pairs], "-", color=colr, lw=1.8, label=f"scratch {name}: RANSAC inliers")
         ax.plot(x, [fl(p["correspondences_3d2d"]) for p in pairs], ":", color=colr, lw=1.6,
                 label=f"scratch {name}: valid 3D→2D")
@@ -389,7 +404,7 @@ def pnp_comparison(runs, base, ref_traj):
         ax.legend(fontsize=8, frameon=False)
     for a in axs.flat:
         a.spines[["top", "right"]].set_visible(False)
-    fig.suptitle("Scratch PnP (own features + RANSAC + linear PnP) vs reference PnP (ORB + library RANSAC PnP)",
+    fig.suptitle("Scratch PnP (own features + RANSAC + linear PnP, ± LM refinement) vs reference PnP (ORB + library RANSAC PnP)",
                  fontsize=12, weight="bold", x=0.01, ha="left")
     fig.tight_layout()
     save(fig, "pnp_comparison")
@@ -412,9 +427,10 @@ def comparison_table(runs, base, ref_traj):
         "# Scratch PnP vs reference PnP (synthetic Bunny, 36 frames)", "",
         "Generated by `pnp_from_scratch/tools/make_figures.py`.",
         "",
-        "- **Scratch single:** project-owned FAST (threshold 20) at one scale.",
-        "- **Scratch pyramid:** the same FAST on an own 8-level pyramid (scale 1.2).",
-        "- Both scratch runs then use rotated BRIEF, Hamming matching and RANSAC (300 iterations, 8 px) around the linear PnP.",
+        "- **Scratch single scale:** project-owned FAST (threshold 20) at one scale; linear PnP (`--pyramid-levels 1 --no-refine`).",
+        "- **Scratch pyramid, linear:** the same FAST on an own 8-level pyramid (scale 1.2); linear PnP (`--no-refine`).",
+        "- **Scratch pyramid + refinement:** the default: pyramid, then Levenberg–Marquardt reprojection-error refinement of the RANSAC pose on its inliers.",
+        "- All scratch runs use rotated BRIEF, Hamming matching and RANSAC (300 iterations, 8 px) around the linear PnP.",
         "- **Reference:** the baseline pipeline (ORB on an 8-level pyramid + ORB descriptor + Hamming; library RANSAC PnP), frozen in `docs/migration/baseline/`.",
         "- **Different features:** the pipelines use different keypoints and correspondences.", "",
         head, sep,
@@ -448,6 +464,14 @@ def comparison_table(runs, base, ref_traj):
         "",
         "Read the final-frame row together with the mean over frames: the single-scale run's small frame-35 error "
         "comes partly from errors of mixed sign cancelling, after a large 29.7° error at pair 10→11 (see `pnp_comparison.png`).",
+        "",
+        "The refined run has the best per-pair errors, but a larger trajectory error than the linear pyramid run. The "
+        "refinement removes the random part of each pair's error and leaves a systematic under-rotation of the same "
+        "size as the reference's (summed −30.4° in both). Its cause is the silhouette features: a corner on the "
+        "occluding contour is not a fixed 3D point, and it slides along the surface as the camera orbits. Refining "
+        "on interior points only (no depth discontinuity within 3 px) gives +3.8° instead "
+        "(`docs/migration/04_scratch_refinement/REPORT.md`). The linear run's near-zero sum is a cancellation, not "
+        "an absence of bias.",
         "", "## Pair 0 → 1", "", head, sep,
         row("keypoints frame 0 / 1", lambda p, t: f"{p[0]['keypoints_i']} / {p[0]['keypoints_j']}",
             f"{b0['keypoints_i']} / {b0['keypoints_j']}"),
@@ -460,6 +484,28 @@ def comparison_table(runs, base, ref_traj):
         row("inlier reprojection error (mean)", lambda p, t: f"{fl(p[0]['reproj_inlier_mean_px']):.2f} px",
             f"{b0['reproj_inlier_mean_px']:.2f} px"),
     ]
+    if "pyramid + refinement" in runs:
+        p = runs["pyramid + refinement"][1]
+        lines += ["", "## Nonlinear refinement (pyramid run): linear RANSAC pose → LM refinement on the same inliers", "",
+                  "Reprojection errors are over the RANSAC inliers. The frozen baseline does not record the reference's "
+                  "maximum inlier reprojection error (—).", "",
+                  "| pair | estimate | rotation error | translation error | reprojection mean / median / max | inliers |",
+                  "|---|---|---|---|---|---|"]
+        for k in (0, 1, 10):
+            q, b = p[k], base["pairs"][k]
+            lines += [
+                f"| {k}→{k + 1} | scratch linear | {fl(q['linear_rot_err_deg']):.3f}° | {fl(q['linear_trans_err_m']):.4f} m | "
+                f"{fl(q['linear_reproj_inlier_mean_px']):.2f} / {fl(q['linear_reproj_inlier_median_px']):.2f} / "
+                f"{fl(q['linear_reproj_inlier_max_px']):.2f} px | {q['pnp_inliers']} |",
+                f"| | scratch refined | {fl(q['rot_err_deg']):.3f}° | {fl(q['trans_err_m']):.4f} m | "
+                f"{fl(q['reproj_inlier_mean_px']):.2f} / {fl(q['reproj_inlier_median_px']):.2f} / "
+                f"{fl(q['reproj_inlier_max_px']):.2f} px | {q['pnp_inliers']} |",
+                f"| | reference | {b['pnp_rot_err_deg']:.3f}° | {b['pnp_trans_err_m']:.4f} m | "
+                f"{b['reproj_inlier_mean_px']:.2f} / {b['reproj_inlier_median_px']:.2f} / — | {b['pnp_inliers']} |"]
+        lin_sum = sum(fl(q["linear_rot_err_deg"]) for q in p)
+        lines += ["", f"All 35 pairs: mean per-pair rotation error linear {lin_sum / len(p):.3f}° → refined "
+                  f"{mean(col(p, 'rot_err_deg')):.3f}° (reference {bs['pnp_rel_rot_err_deg']['mean']:.3f}°); see the "
+                  "first table for the trajectory."]
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "pnp_comparison.md").write_text("\n".join(lines) + "\n")
     print(f"[table]  {OUT.relative_to(ROOT)}/pnp_comparison.md")
@@ -485,8 +531,8 @@ def main():
     pairs = rows(PIPE / "pairs.csv")
     base = json.loads((BASE / "metrics.json").read_text())
     ref_traj = rows(BASE / "slam_trajectory.csv")
-    runs = {name: (SCRATCH if name == "single" else SCRATCH_PYR, rows(d / "pairs.csv"), rows(d / "trajectory.csv"))
-            for name, d in RUNS.items() if (d / "pairs.csv").exists()}
+    runs = {name: (colr, rows(d / "pairs.csv"), rows(d / "trajectory.csv"))
+            for name, (colr, d) in RUNS.items() if (d / "pairs.csv").exists()}
     correspondence_maps(rgb, box, s, pairs[0])
     orb_keypoints(rgb, box, r)
     feature_comparison(rgb, box, s, r, pairs[0])
