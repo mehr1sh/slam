@@ -35,6 +35,12 @@ add_executable(scratch_pipeline src/pipeline_main.cpp)
 target_link_libraries(scratch_pipeline PRIVATE scratch_core)
 target_compile_options(scratch_pipeline PRIVATE -Wall -Wextra)
 
+# Read-only experiment (not part of the pipeline): the geometric stage with and
+# without depth-edge correspondences (docs/migration/05_depth_edges).
+add_executable(depth_edge_experiment experiments/depth_edge_experiment.cpp)
+target_link_libraries(depth_edge_experiment PRIVATE scratch_core)
+target_compile_options(depth_edge_experiment PRIVATE -Wall -Wextra)
+
 # ---- tests (ctest --test-dir build) ----
 enable_testing()
 # the feature modules' own unit tests, built from the repository's sources
