@@ -136,9 +136,10 @@ bias appears because about 70 % of the points share it, and the orbit geometry t
 image errors into rotation errors (checkpoint 02: the motion is mostly cancelled in the
 image).
 
-**Phrasing.** This does not show that the matches are "bad matches": most edge
-correspondences describe the same RGB corner in both frames. They are geometrically
-unstable observations for PnP.
+**Phrasing.** This does not show that the matches are "bad matches": the edge
+correspondences match by descriptor and pass RANSAC at 8 px, and 77.5 % of them stay within
+5 mm under the true motion. They are geometrically less stable observations for PnP, whose
+small shared offset biases the rotation.
 
 ### Experiment: all depth correspondences vs interior only (`depth_edge_experiment`)
 
