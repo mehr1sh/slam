@@ -52,6 +52,7 @@ run features_fast_test          self-check
 run features_orientation_test   self-check
 run features_brief_test         self-check
 run features_matcher_test       self-check
+run features_pyramid_test       self-check
 # demonstrations (print results; exit status only says they ran)
 run gauss_newton_curve_fit_test demo
 run g2o_curve_fit_test          demo

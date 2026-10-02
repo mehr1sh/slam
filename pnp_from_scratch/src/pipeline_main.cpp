@@ -3,13 +3,18 @@
 // Standard library + Eigen + the project-owned feature modules only.
 //
 // Usage: scratch_pipeline [--repo DIR] [--frames N] [--fast-threshold T]
+//                         [--pyramid-levels L] [--out DIR]
 //                         [--pnp-iterations I] [--pnp-threshold PX] [--seed S]
-// Output (generated, gitignored): pnp_from_scratch/results/pipeline/
+//   --pyramid-levels L  1 = single scale (default), 8 = the reference ORB's pyramid (scale 1.2)
+//   --out DIR           output directory (default pnp_from_scratch/results/pipeline;
+//                       relative paths are relative to the repository root)
+// Output (generated, gitignored): pnp_from_scratch/results/pipeline/ (or --out)
 //   pairs.csv                      one row per pair (counts, inliers, poses, errors)
 //   trajectory.csv / trajectory.txt   36 poses T_wc (CSV with errors; TUM format)
 //   correspondences/pair_<i>_<j>.csv  every filtered match with depth, 3D point,
 //                                     essential and PnP inlier flags, residual
-//   keypoints/frame_<k>.csv        every detected keypoint (x, y, FAST score, angle)
+//   keypoints/frame_<k>.csv        every detected keypoint (original x, y; FAST score; angle;
+//                                  pyramid level, scale, level x, y)
 //   summary.txt                    the summary printed at the end
 
 #include <cmath>
@@ -68,7 +73,7 @@ Stat Stats(std::vector<double> v) {
 
 int main(int argc, char **argv) {
   PipelineParams params;
-  fs::path repo;
+  fs::path repo, out_arg;
   int max_frames = 0;
   for (int a = 1; a < argc; ++a) {
     const std::string s = argv[a];
@@ -76,6 +81,8 @@ int main(int argc, char **argv) {
     if (s == "--repo") repo = next();
     else if (s == "--frames") max_frames = std::stoi(next());
     else if (s == "--fast-threshold") params.frontend.fast.threshold = std::stoi(next());
+    else if (s == "--pyramid-levels") params.frontend.pyramid.levels = std::stoi(next());
+    else if (s == "--out") out_arg = next();
     else if (s == "--pnp-iterations") params.pnp_ransac.iterations = std::stoi(next());
     else if (s == "--pnp-threshold") params.pnp_ransac.threshold_px = std::stod(next());
     else if (s == "--seed") params.pnp_ransac.seed = uint32_t(std::stoul(next()));
@@ -101,24 +108,27 @@ int main(int argc, char **argv) {
   int N = int(Twc_gt.size());
   if (max_frames > 1) N = std::min(N, max_frames);
 
-  std::cout << "scratch pipeline: FAST threshold " << params.frontend.fast.threshold << ", strongest "
-            << params.frontend.fast.max_keypoints << ", match filter max(2 d_min, " << params.frontend.match_floor
+  std::cout << "scratch pipeline: pyramid " << params.frontend.pyramid.levels << " level(s) x "
+            << params.frontend.pyramid.scale_factor << ", FAST threshold " << params.frontend.fast.threshold
+            << ", strongest " << params.frontend.fast.max_keypoints << " per level, match filter max(2 d_min, " << params.frontend.match_floor
             << "); PnP RANSAC " << params.pnp_ransac.iterations << " it, " << params.pnp_ransac.threshold_px
             << " px, seed " << params.pnp_ransac.seed << "; essential RANSAC " << params.essential_ransac.iterations
             << " it, " << params.essential_ransac.threshold_px << " px\n";
 
   // ---- per pair ----
-  const fs::path out = repo / "pnp_from_scratch" / "results" / "pipeline";
+  const fs::path out = out_arg.empty() ? repo / "pnp_from_scratch" / "results" / "pipeline"
+                                       : (out_arg.is_absolute() ? out_arg : repo / out_arg);
   fs::create_directories(out / "correspondences");
   fs::create_directories(out / "keypoints");
   auto write_keypoints = [&](int frame, const FrameFeatures &ff) {  // every detected keypoint of a frame
     char name[48];
     std::snprintf(name, sizeof(name), "frame_%06d.csv", frame);
     std::ofstream f(out / "keypoints" / name);
-    f << "index,x,y,score,angle_deg\n";
+    f << "index,x,y,score,angle_deg,level,scale,level_x,level_y\n";
     for (size_t k = 0; k < ff.keypoints.size(); ++k)
-      f << k << "," << ff.keypoints[k].x << "," << ff.keypoints[k].y << "," << ff.keypoints[k].score << ","
-        << F(ff.keypoints[k].angle * 180.0 / M_PI, 3) << "\n";
+      f << k << "," << F(ff.keypoints[k].x, 3) << "," << F(ff.keypoints[k].y, 3) << "," << ff.keypoints[k].score
+        << "," << F(ff.keypoints[k].angle * 180.0 / M_PI, 3) << "," << ff.level[k] << "," << F(ff.scale[k], 6)
+        << "," << ff.level_x[k] << "," << ff.level_y[k] << "\n";
   };
   std::vector<PairResult> pairs;
   RgbdFrame prev_frame, cur_frame;
@@ -130,6 +140,7 @@ int main(int argc, char **argv) {
   }
   prev_feat = ExtractFeatures(prev_frame.rgb, params.frontend);
   write_keypoints(0, prev_feat);
+  const std::vector<int> frame0_levels = prev_feat.per_level_count;
   for (int i = 0; i + 1 < N; ++i) {
     if (!LoadRgbdFrame(ds.string(), i + 1, cur_frame, &err)) {
       std::cerr << err << "\n";
@@ -202,14 +213,15 @@ int main(int argc, char **argv) {
         << "," << p.essential_in_front << "," << F(e_rot[k], 6) << "," << F(e_dir[k], 6) << ","
         << (p.pnp_ok && p.essential_ok ? F(RotErrDeg(p.R, p.R_essential), 6) : "") << "\n";
       std::ofstream c(out / "correspondences" / ("pair_" + std::to_string(p.i) + "_" + std::to_string(p.j) + ".csv"));
-      c << "match,query,train,hamming,u_i,v_i,u_j,v_j,depth_raw_i,depth_raw_j,X_i,Y_i,Z_i,essential_inlier,"
-           "pnp_used,pnp_inlier,pnp_residual_px\n";
+      c << "match,query,train,hamming,level_i,level_j,u_i,v_i,u_j,v_j,depth_raw_i,depth_raw_j,X_i,Y_i,Z_i,"
+           "essential_inlier,pnp_used,pnp_inlier,pnp_residual_px\n";
       std::vector<int> pnp_of(p.correspondences.size(), -1);
       for (size_t q = 0; q < p.pnp_index.size(); ++q) pnp_of[p.pnp_index[q]] = int(q);
       for (size_t m = 0; m < p.correspondences.size(); ++m) {
         const Correspondence &cc = p.correspondences[m];
         const int q = pnp_of[m];
-        c << m << "," << cc.query << "," << cc.train << "," << cc.hamming << "," << cc.uv_i.x() << "," << cc.uv_i.y()
+        c << m << "," << cc.query << "," << cc.train << "," << cc.hamming << "," << cc.level_i << "," << cc.level_j
+          << "," << cc.uv_i.x() << "," << cc.uv_i.y()
           << "," << cc.uv_j.x() << "," << cc.uv_j.y() << "," << cc.depth_raw_i << "," << cc.depth_raw_j << ",";
         if (cc.has_3d) c << F(cc.X_i.x(), 6) << "," << F(cc.X_i.y(), 6) << "," << F(cc.X_i.z(), 6) << ",";
         else c << ",,,";
@@ -272,7 +284,13 @@ int main(int argc, char **argv) {
     << "Pairs: " << pairs.size() << " attempted, " << pairs.size() - failed << " solved by RANSAC PnP, " << failed
     << " failed (previous pose held)\n"
     << "Poses: " << N << "\n\n"
-    << "Front end (per frame / pair, mean): keypoints " << F(Stats(kp).mean, 1) << ", filtered matches "
+    << "Pyramid: " << params.frontend.pyramid.levels << " level(s); frame 0 keypoints per level:";
+  {
+    int tot = 0;
+    for (int c : frame0_levels) o << " " << c, tot += c;
+    o << " (total " << tot << ")\n";
+  }
+  o << "Front end (per frame / pair, mean): keypoints " << F(Stats(kp).mean, 1) << ", filtered matches "
     << F(Stats(filt).mean, 1) << ", 3D->2D correspondences " << F(Stats(c3).mean, 1) << "\n"
     << "RANSAC PnP inliers (mean / min): " << F(Stats(inl).mean, 1) << " / "
     << F(*std::min_element(inl.begin(), inl.end()), 0) << "; inlier reprojection error mean " << F(Stats(rep).mean, 2)
@@ -305,7 +323,7 @@ int main(int argc, char **argv) {
   }
   std::cout << "\n" << o.str();
   std::ofstream(out / "summary.txt") << o.str();
-  std::cout << "wrote pnp_from_scratch/results/pipeline/{pairs.csv,trajectory.csv,trajectory.txt,correspondences/,"
-               "summary.txt}\n";
+  std::cout << "wrote " << (out.lexically_relative(repo).empty() ? out : out.lexically_relative(repo)).string()
+            << "/{pairs.csv,trajectory.csv,trajectory.txt,correspondences/,keypoints/,summary.txt}\n";
   return failed == int(pairs.size()) ? 1 : 0;
 }

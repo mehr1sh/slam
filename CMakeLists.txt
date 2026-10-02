@@ -103,7 +103,8 @@ add_test_exe(trajectory_validation_test synthetic)
 add_test_exe(trajectory_diagnostics_test synthetic)
 
 # Unit tests of the project-owned feature modules: they link feature_core only.
-foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test)
+foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test
+        features_pyramid_test)
   add_executable(${t} tests/unit/${t}.cpp)
   target_link_libraries(${t} PRIVATE feature_core)
 endforeach()

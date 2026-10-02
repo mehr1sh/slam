@@ -2,9 +2,8 @@
 
 #include <cstdio>
 
-#include "features/brief.hpp"
 #include "features/matcher.hpp"
-#include "features/orientation.hpp"
+#include "features/multiscale.hpp"
 
 namespace scratch {
 
@@ -32,9 +31,21 @@ FrameFeatures ExtractFeatures(const PngImage &rgb, const FrontendParams &params)
   const std::vector<uint8_t> bytes(rgb.samples.begin(), rgb.samples.end());  // 8-bit samples
   FrameFeatures f;
   f.gray = features::GrayFromRGB(bytes.data(), rgb.width, rgb.height, size_t(rgb.width) * rgb.channels, rgb.channels);
-  f.keypoints = features::DetectFast(f.gray, params.fast);
-  features::AssignOrientations(f.gray, f.keypoints);
-  f.descriptors = features::ComputeBrief(features::GaussianSmooth(f.gray), f.keypoints);
+  // per pyramid level: FAST -> orientation -> rotated BRIEF on that level's image
+  const features::MultiscaleFeatures m =
+      features::ExtractMultiscale(features::BuildPyramid(f.gray, params.pyramid), params.fast);
+  f.descriptors = m.descriptors;
+  f.per_level_count = m.per_level_count;
+  for (const features::MultiscaleKeypoint &k : m.keypoints) {
+    features::Keypoint o = k.level_kp;
+    o.x = k.x;  // original-image coordinates (identical to the level ones at level 0)
+    o.y = k.y;
+    f.keypoints.push_back(o);
+    f.level.push_back(k.level);
+    f.scale.push_back(k.scale);
+    f.level_x.push_back(k.level_kp.x);
+    f.level_y.push_back(k.level_kp.y);
+  }
   return f;
 }
 
@@ -49,6 +60,8 @@ PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj, const 
     c.query = m.query;
     c.train = m.train;
     c.hamming = m.distance;
+    c.level_i = fi.level[m.query];
+    c.level_j = fj.level[m.train];
     c.uv_i = Eigen::Vector2d(a.x, a.y);
     c.uv_j = Eigen::Vector2d(b.x, b.y);
     // depth at the truncated pixel, as in the reference pipeline

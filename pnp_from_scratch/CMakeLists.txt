@@ -38,12 +38,13 @@ target_compile_options(scratch_pipeline PRIVATE -Wall -Wextra)
 # ---- tests (ctest --test-dir build) ----
 enable_testing()
 # the feature modules' own unit tests, built from the repository's sources
-foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test)
+foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test
+        features_pyramid_test)
   add_executable(${t} ${CMAKE_CURRENT_SOURCE_DIR}/../tests/unit/${t}.cpp)
   target_link_libraries(${t} PRIVATE feature_core)
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
-foreach(t test_png test_frontend test_essential test_ransac test_pipeline_0_1)
+foreach(t test_png test_frontend test_essential test_ransac test_pipeline_0_1 test_multiscale_0_1)
   add_executable(${t} tests/${t}.cpp)
   target_include_directories(${t} PRIVATE tests)
   target_link_libraries(${t} PRIVATE scratch_core)
