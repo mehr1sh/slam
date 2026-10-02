@@ -26,12 +26,11 @@ namespace scratch {
 
 struct FrontendParams {
   features::FastParams fast;        // threshold set to 20 below; border 16; strongest 500 (per level)
-  features::PyramidParams pyramid;  // levels set to 1 below (single scale); scale factor 1.2
+  features::PyramidParams pyramid;  // 8 levels x 1.2 (the reference ORB's structure); 1 = single scale
   int match_floor = 30;             // keep matches with distance <= max(2 * d_min, match_floor)
   double depth_scale = 5000.0;      // depth PNG value = metres * depth_scale (TUM convention); 0 = no depth
   FrontendParams() {
     fast.threshold = 20;
-    pyramid.levels = 1;  // single scale by default; 8 = the reference ORB's pyramid
   }
 };
 

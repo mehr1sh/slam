@@ -8,6 +8,8 @@
 //                          -> cheirality -> (R, t/|t|)       [two-view estimate]
 //     -> 3D->2D correspondences (frame-i depth)
 //                       -> RANSAC around the scratch linear PnP -> refit on inliers
+//                          -> Levenberg-Marquardt reprojection-error refinement
+//                             on the same inliers (refine.hpp)
 //                          -> (R, t) = T_{i+1<-i}           [metric pose]
 //
 // Both estimates use the same convention X_{i+1} = R X_i + t. The metric PnP
@@ -21,12 +23,15 @@
 
 #include "frontend.hpp"
 #include "ransac.hpp"
+#include "refine.hpp"
 
 namespace scratch {
 
 struct PipelineParams {
-  FrontendParams frontend;  // FAST threshold 20, strongest 500, match floor 30
+  FrontendParams frontend;  // FAST threshold 20, strongest 500, match floor 30, 8-level pyramid
   RansacParams pnp_ransac;  // 300 iterations, 8 px, seed 12345
+  bool refine = true;       // nonlinear refinement of the RANSAC pose on its inliers
+  RefineParams refine_params;
   RansacParams essential_ransac;
   PipelineParams() {
     essential_ransac.iterations = 2000;  // the minimal 8-point sample is noise-sensitive: more samples
@@ -59,6 +64,14 @@ struct PairResult {
   std::vector<bool> pnp_mask;          // per PnP input
   std::vector<double> pnp_residual_px; // per PnP input, under the final pose
   double reproj_inlier_mean = 0, reproj_inlier_median = 0, reproj_inlier_max = 0, reproj_all_median = 0;
+
+  // the linear RANSAC pose before refinement (equal to R, t when refinement is off or failed)
+  Eigen::Matrix3d R_linear = Eigen::Matrix3d::Identity();
+  Eigen::Vector3d t_linear = Eigen::Vector3d::Zero();
+  double linear_reproj_inlier_mean = 0, linear_reproj_inlier_median = 0, linear_reproj_inlier_max = 0;
+  bool refined = false;     // the refinement ran and its pose is R, t
+  int refine_iterations = 0;
+  double refine_rms_initial_px = 0, refine_rms_final_px = 0;  // over the RANSAC inliers
 };
 
 PairResult ProcessPair(int i, int j, const FrameFeatures &fi, const FrameFeatures &fj, const RgbdFrame &frame_i,

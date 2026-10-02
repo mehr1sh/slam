@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace scratch {
 
@@ -12,6 +13,20 @@ double Median(std::vector<double> v) {
   std::sort(v.begin(), v.end());
   const size_t m = v.size() / 2;
   return v.size() % 2 ? v[m] : 0.5 * (v[m - 1] + v[m]);
+}
+
+// mean / median / max of the residuals selected by the mask
+void InlierStats(const std::vector<double> &res, const std::vector<bool> &mask, double &mean, double &median,
+                 double &max) {
+  std::vector<double> v;
+  for (size_t k = 0; k < res.size(); ++k)
+    if (mask[k]) v.push_back(res[k]);
+  if (v.empty()) return;
+  double s = 0;
+  for (double x : v) s += x;
+  mean = s / v.size();
+  median = Median(v);
+  max = *std::max_element(v.begin(), v.end());
 }
 
 }  // namespace
@@ -60,24 +75,34 @@ PairResult ProcessPair(int i, int j, const FrameFeatures &fi, const FrameFeature
   r.pnp_ok = p.ok;
   r.pnp_reason = p.reason;
   if (!p.ok) return r;
-  r.R = p.R;
-  r.t = p.t;
+  r.R = r.R_linear = p.R;
+  r.t = r.t_linear = p.t;
   r.pnp_inliers = p.num_inliers;
   r.pnp_best_sample_inliers = p.best_sample_inliers;
-  r.pnp_mask = p.inlier_mask;
+  r.pnp_mask = p.inlier_mask;  // the inlier set; the refinement does not change it
   r.pnp_residual_px = p.residual_px;
-  std::vector<double> inl, all;
-  for (size_t k = 0; k < X.size(); ++k) {
-    if (std::isfinite(p.residual_px[k])) all.push_back(p.residual_px[k]);
-    if (p.inlier_mask[k]) inl.push_back(p.residual_px[k]);
+  InlierStats(p.residual_px, p.inlier_mask, r.linear_reproj_inlier_mean, r.linear_reproj_inlier_median,
+              r.linear_reproj_inlier_max);
+  if (params.refine) {
+    const RefineResult f = RefinePnP(X, uv, p.inlier_mask, K, p.R, p.t, params.refine_params);
+    r.refine_rms_initial_px = f.rms_initial_px;
+    r.refine_rms_final_px = f.rms_final_px;
+    if (f.ok) {
+      r.refined = true;
+      r.refine_iterations = f.iterations;
+      r.R = f.R;
+      r.t = f.t;
+      for (size_t k = 0; k < X.size(); ++k) {
+        double z;
+        const Eigen::Vector2d q = projectPoint(X[k], r.R, r.t, K, &z);
+        r.pnp_residual_px[k] = z > 0 ? (q - uv[k]).norm() : std::numeric_limits<double>::infinity();
+      }
+    }
   }
-  if (!inl.empty()) {
-    double s = 0;
-    for (double v : inl) s += v;
-    r.reproj_inlier_mean = s / inl.size();
-    r.reproj_inlier_median = Median(inl);
-    r.reproj_inlier_max = *std::max_element(inl.begin(), inl.end());
-  }
+  InlierStats(r.pnp_residual_px, r.pnp_mask, r.reproj_inlier_mean, r.reproj_inlier_median, r.reproj_inlier_max);
+  std::vector<double> all;
+  for (double v : r.pnp_residual_px)
+    if (std::isfinite(v)) all.push_back(v);
   r.reproj_all_median = Median(all);
   return r;
 }

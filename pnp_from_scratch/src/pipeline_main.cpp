@@ -4,8 +4,9 @@
 //
 // Usage: scratch_pipeline [--repo DIR] [--frames N] [--fast-threshold T]
 //                         [--pyramid-levels L] [--out DIR]
-//                         [--pnp-iterations I] [--pnp-threshold PX] [--seed S]
-//   --pyramid-levels L  1 = single scale (default), 8 = the reference ORB's pyramid (scale 1.2)
+//                         [--pnp-iterations I] [--pnp-threshold PX] [--seed S] [--no-refine]
+//   --pyramid-levels L  8 = the reference ORB's pyramid structure, scale 1.2 (default); 1 = single scale
+//   --no-refine         keep the linear RANSAC pose (no nonlinear reprojection-error refinement)
 //   --out DIR           output directory (default pnp_from_scratch/results/pipeline;
 //                       relative paths are relative to the repository root)
 // Output (generated, gitignored): pnp_from_scratch/results/pipeline/ (or --out)
@@ -86,6 +87,7 @@ int main(int argc, char **argv) {
     else if (s == "--pnp-iterations") params.pnp_ransac.iterations = std::stoi(next());
     else if (s == "--pnp-threshold") params.pnp_ransac.threshold_px = std::stod(next());
     else if (s == "--seed") params.pnp_ransac.seed = uint32_t(std::stoul(next()));
+    else if (s == "--no-refine") params.refine = false;
     else {
       std::cerr << "unknown option " << s << "\n";
       return 2;
@@ -112,7 +114,8 @@ int main(int argc, char **argv) {
             << params.frontend.pyramid.scale_factor << ", FAST threshold " << params.frontend.fast.threshold
             << ", strongest " << params.frontend.fast.max_keypoints << " per level, match filter max(2 d_min, " << params.frontend.match_floor
             << "); PnP RANSAC " << params.pnp_ransac.iterations << " it, " << params.pnp_ransac.threshold_px
-            << " px, seed " << params.pnp_ransac.seed << "; essential RANSAC " << params.essential_ransac.iterations
+            << " px, seed " << params.pnp_ransac.seed << (params.refine ? " + LM refinement" : " (no refinement)")
+            << "; essential RANSAC " << params.essential_ransac.iterations
             << " it, " << params.essential_ransac.threshold_px << " px\n";
 
   // ---- per pair ----
@@ -172,12 +175,14 @@ int main(int argc, char **argv) {
 
   // ---- errors vs ground truth ----
   std::vector<double> rot_err(pairs.size(), NAN), trans_err(pairs.size(), NAN), e_rot(pairs.size(), NAN),
-      e_dir(pairs.size(), NAN);
+      e_dir(pairs.size(), NAN), lin_rot_err(pairs.size(), NAN), lin_trans_err(pairs.size(), NAN);
   for (size_t k = 0; k < pairs.size(); ++k) {
     const Pose G = Compose(Inverse(Twc_gt[k + 1]), Twc_gt[k]);  // T_{k+1<-k}
     if (pairs[k].pnp_ok) {
       rot_err[k] = RotErrDeg(G.R, pairs[k].R);
       trans_err[k] = (G.t - pairs[k].t).norm();
+      lin_rot_err[k] = RotErrDeg(G.R, pairs[k].R_linear);
+      lin_trans_err[k] = (G.t - pairs[k].t_linear).norm();
     }
     if (pairs[k].essential_ok) {
       e_rot[k] = RotErrDeg(G.R, pairs[k].R_essential);
@@ -198,7 +203,9 @@ int main(int argc, char **argv) {
          "reproj_inlier_max_px,reproj_all_median_px,rot_err_deg,trans_err_m,tx,ty,tz,"
          "r00,r01,r02,r10,r11,r12,r20,r21,r22,est_rotation_deg,"
          "essential_ok,essential_inliers,essential_in_front,essential_rot_err_deg,essential_t_dir_err_deg,"
-         "pnp_vs_essential_rot_deg\n";
+         "pnp_vs_essential_rot_deg,refined,refine_iterations,linear_rot_err_deg,linear_trans_err_m,"
+         "linear_reproj_inlier_mean_px,linear_reproj_inlier_median_px,linear_reproj_inlier_max_px,"
+         "refine_rms_initial_px,refine_rms_final_px\n";
     for (size_t k = 0; k < pairs.size(); ++k) {
       const PairResult &p = pairs[k];
       f << k << "," << p.i << "," << p.j << "," << p.keypoints_i << "," << p.keypoints_j << "," << p.raw_matches
@@ -211,7 +218,11 @@ int main(int argc, char **argv) {
         for (int b = 0; b < 3; ++b) f << F(p.R(a, b), 9) << ",";
       f << F(RotAngleDeg(p.R), 6) << "," << int(p.essential_ok) << "," << p.essential_inliers
         << "," << p.essential_in_front << "," << F(e_rot[k], 6) << "," << F(e_dir[k], 6) << ","
-        << (p.pnp_ok && p.essential_ok ? F(RotErrDeg(p.R, p.R_essential), 6) : "") << "\n";
+        << (p.pnp_ok && p.essential_ok ? F(RotErrDeg(p.R, p.R_essential), 6) : "") << "," << int(p.refined) << ","
+        << p.refine_iterations << "," << F(lin_rot_err[k], 6) << "," << F(lin_trans_err[k], 6) << ","
+        << F(p.linear_reproj_inlier_mean) << "," << F(p.linear_reproj_inlier_median) << ","
+        << F(p.linear_reproj_inlier_max) << "," << F(p.refine_rms_initial_px) << "," << F(p.refine_rms_final_px)
+        << "\n";
       std::ofstream c(out / "correspondences" / ("pair_" + std::to_string(p.i) + "_" + std::to_string(p.j) + ".csv"));
       c << "match,query,train,hamming,level_i,level_j,u_i,v_i,u_j,v_j,depth_raw_i,depth_raw_j,X_i,Y_i,Z_i,"
            "essential_inlier,pnp_used,pnp_inlier,pnp_residual_px\n";
@@ -233,16 +244,19 @@ int main(int argc, char **argv) {
   }
   {
     std::ofstream f(out / "trajectory.csv"), t(out / "trajectory.txt");
+    const std::string refine_txt = params.refine ? " + LM reprojection refinement" : "";
     f << "# Scratch pipeline trajectory, T_wc (camera -> world); FAST + rotated BRIEF + Hamming + "
-         "RANSAC(linear PnP), all project-owned\n"
-      << "# note: Scratch pipeline: project-owned FAST (threshold " << params.frontend.fast.threshold
+         "RANSAC(linear PnP)" << refine_txt << ", all project-owned\n"
+      << "# note: Scratch pipeline: " << params.frontend.pyramid.levels << "-level pyramid, project-owned FAST "
+      << "(threshold " << params.frontend.fast.threshold
       << ") + rotated BRIEF + Hamming matching + RANSAC (" << params.pnp_ransac.iterations << " it, "
-      << params.pnp_ransac.threshold_px << " px) around the scratch linear PnP; essential matrix as a diagnostic\n"
-      << "# hud_note: own features + RANSAC + linear PnP\n"
+      << params.pnp_ransac.threshold_px << " px) around the scratch linear PnP" << refine_txt
+      << "; essential matrix as a diagnostic\n"
+      << "# hud_note: own features + RANSAC + linear PnP" << (params.refine ? " + refinement" : "") << "\n"
       << "# accumulation: T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i] * T_{i+1<-i}^-1 (failed pair: previous pose held)\n"
       << "frame,tx,ty,tz,r00,r01,r02,r10,r11,r12,r20,r21,r22,qx,qy,qz,qw,rotation_error_deg,translation_error_m,"
          "pnp_inliers,pose_source\n";
-    t << "# Scratch pipeline trajectory (FAST + rotated BRIEF + Hamming + RANSAC linear PnP)\n"
+    t << "# Scratch pipeline trajectory (FAST + rotated BRIEF + Hamming + RANSAC linear PnP" << refine_txt << ")\n"
       << "# timestamp tx ty tz qx qy qz qw  (T_wc: camera -> world)\n";
     for (int k = 0; k < N; ++k) {
       const Eigen::Vector4d q = RToQuat(Twc[k].R);
@@ -270,7 +284,11 @@ int main(int argc, char **argv) {
   }
   kp.push_back(pairs.back().keypoints_j);
   const Stat sr = Stats(std::vector<double>(rot_err.begin(), rot_err.end())),
-             st = Stats(std::vector<double>(trans_err.begin(), trans_err.end()));
+             st = Stats(std::vector<double>(trans_err.begin(), trans_err.end())),
+             lr = Stats(lin_rot_err), lt = Stats(lin_trans_err);
+  std::vector<double> lin_rep;
+  for (const auto &p : pairs)
+    if (p.pnp_ok) lin_rep.push_back(p.linear_reproj_inlier_mean);
   std::vector<double> er, ed;
   for (size_t k = 0; k < pairs.size(); ++k)
     if (pairs[k].essential_ok) er.push_back(e_rot[k]), ed.push_back(e_dir[k]);
@@ -299,8 +317,12 @@ int main(int argc, char **argv) {
     << "  rotation    mean " << F(sr.mean, 3) << " deg, median " << F(sr.median, 3) << " deg, max " << F(sr.max, 3)
     << " deg (pair " << worst << "->" << worst + 1 << ")\n"
     << "  translation mean " << F(st.mean, 4) << " m, median " << F(st.median, 4) << " m, max " << F(st.max, 4)
-    << " m\n"
-    << "Per-pair essential-matrix estimate (scale-free, diagnostic): " << pairs.size() - e_failed << " solved;\n"
+    << " m\n";
+  if (params.refine)
+    o << "  before refinement (linear RANSAC pose): rotation mean " << F(lr.mean, 3) << " deg, median "
+      << F(lr.median, 3) << " deg, max " << F(lr.max, 3) << " deg; translation mean " << F(lt.mean, 4)
+      << " m; inlier reprojection error mean " << F(Stats(lin_rep).mean, 2) << " px\n";
+  o << "Per-pair essential-matrix estimate (scale-free, diagnostic): " << pairs.size() - e_failed << " solved;\n"
     << "  rotation error mean " << F(Stats(er).mean, 3) << " deg, median " << F(Stats(er).median, 3)
     << " deg; translation-direction error median " << F(Stats(ed).median, 2) << " deg\n\n"
     << "Trajectory (frame " << N - 1 << "): position error " << F(abs_t[N - 1], 4) << " m, rotation error "
@@ -309,7 +331,11 @@ int main(int argc, char **argv) {
     << pairs[0].filtered_matches << " filtered matches, " << pairs[0].pnp_index.size() << " 3D->2D, "
     << pairs[0].pnp_inliers << " RANSAC inliers; rotation error " << F(rot_err[0], 3) << " deg, translation error "
     << F(trans_err[0], 4) << " m, inlier reprojection mean/median/max " << F(pairs[0].reproj_inlier_mean, 2) << "/"
-    << F(pairs[0].reproj_inlier_median, 2) << "/" << F(pairs[0].reproj_inlier_max, 2) << " px\n"
+    << F(pairs[0].reproj_inlier_median, 2) << "/" << F(pairs[0].reproj_inlier_max, 2) << " px"
+    << (params.refine ? " (linear: " + F(lin_rot_err[0], 3) + " deg, " + F(lin_trans_err[0], 4) + " m, " +
+                            F(pairs[0].linear_reproj_inlier_mean, 2) + " px)"
+                      : std::string())
+    << "\n"
     << "========================================\n";
   std::cout << "\npair   kp_i kp_j filt 3d2d inl  rot_err  trans_err  reproj  | E: inl rot_err t_dir_err\n";
   for (size_t k = 0; k < pairs.size(); ++k) {

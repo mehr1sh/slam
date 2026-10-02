@@ -1,6 +1,6 @@
 // End-to-end self-checking test of the scratch pipeline on the real frame
 // pair 0 -> 1: PNG decoding, project-owned features, essential-matrix stage,
-// RANSAC around the scratch linear PnP. The ground-truth motion is only used
+// RANSAC around the scratch linear PnP, nonlinear refinement. The ground-truth motion is only used
 // to measure the result.
 
 #include <cmath>
@@ -59,6 +59,16 @@ int main() {
         "essential stage ran on all %d filtered matches (ok %d, %d inliers, rotation error %.2f deg)",
         int(r.correspondences.size()), int(r.essential_ok), r.essential_inliers,
         r.essential_ok ? RotErrDeg(R, r.R_essential) : -1.0);
+
+  // nonlinear refinement (default): runs on the RANSAC inliers, lowers their reprojection error
+  CHECK(params.refine && r.refined && r.refine_iterations > 0 && r.reproj_inlier_mean < r.linear_reproj_inlier_mean,
+        "refinement: %d steps, inlier reprojection mean %.2f -> %.2f px; rotation error %.3f -> %.3f deg",
+        r.refine_iterations, r.linear_reproj_inlier_mean, r.reproj_inlier_mean, RotErrDeg(R, r.R_linear), re);
+  PipelineParams lin = params;
+  lin.refine = false;
+  const PairResult rl = ProcessPair(0, 1, a, b, f0, f1, K, lin);
+  CHECK(!rl.refined && rl.R == r.R_linear && rl.pnp_mask == r.pnp_mask,
+        "--no-refine keeps the linear pose; the inlier set is the same with and without refinement");
 
   const PairResult r2 = ProcessPair(0, 1, a, b, f0, f1, K, params);
   CHECK(r2.R == r.R && r2.t == r.t && r2.pnp_mask == r.pnp_mask, "deterministic: identical result on a second run");

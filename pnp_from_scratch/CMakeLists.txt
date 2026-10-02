@@ -16,7 +16,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/feature_core.cmake)
 
 # Scratch library: PNG decoding, front end, projection, linear PnP, essential matrix,
 # RANSAC, per-pair pipeline.
-add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp src/ransac.cpp src/pipeline.cpp)
+add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp src/ransac.cpp src/refine.cpp src/pipeline.cpp)
 target_include_directories(scratch_core PUBLIC src)
 target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
 target_compile_options(scratch_core PRIVATE -Wall -Wextra)
@@ -44,7 +44,8 @@ foreach(t features_fast_test features_orientation_test features_brief_test featu
   target_link_libraries(${t} PRIVATE feature_core)
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
-foreach(t test_png test_frontend test_essential test_ransac test_pipeline_0_1 test_multiscale_0_1)
+foreach(t test_png test_frontend test_essential test_ransac test_pipeline_0_1 test_multiscale_0_1
+        test_refine)
   add_executable(${t} tests/${t}.cpp)
   target_include_directories(${t} PRIVATE tests)
   target_link_libraries(${t} PRIVATE scratch_core)
