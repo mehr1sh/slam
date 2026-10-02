@@ -460,7 +460,8 @@ identical RGB and 16-bit depth, and 202/202 baseline depth values.
 **Outputs** (`--out`, default `results/figures/`, PNG + PDF, generated). The correspondence
 and keypoint figures show the run given by `--pipeline`; the PnP comparison shows every
 scratch run that exists (`results/pipeline`, `results/pipeline_pyramid`). Keypoints are drawn
-with colour = pyramid level, circle radius ∝ scale and a tick along the orientation; the
+as small dots, colour = pyramid level (the dot grows only slightly with the level), with a
+fixed-length tick along the orientation; the
 correspondence maps show positions only (no orientation ticks).
 
 | Figure | Shows |

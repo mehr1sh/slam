@@ -16,7 +16,7 @@ Inputs
 Outputs (generated, gitignored): --out (default pnp_from_scratch/results/figures/)
   bunny_correspondences_0_1{,_inliers,_outliers}.png   scratch correspondences, RANSAC inliers/outliers
   fig03_orb_keypoints.png                              reference ORB keypoints, frames 0 and 1
-                                                       (colour = pyramid level, size = scale, tick = orientation)
+                                                       (colour = pyramid level, tick = orientation)
   feature_comparison_0_1.png                           scratch vs reference: keypoints (level/scale/orientation)
                                                        and correspondences
   pyramid_levels_0.png                                 keypoints per pyramid level, scratch vs reference, frame 0
@@ -66,7 +66,7 @@ NODEPTH = (0.70, 0.70, 0.70)
 STROKE = [pe.withStroke(linewidth=2.2, foreground="black")]
 INK = "0.12"
 SCRATCH_PYR = (0.12, 0.38, 0.95)
-LEVEL_COLOURS = [plt.get_cmap("plasma")(0.08 + 0.12 * l) for l in range(8)]  # pyramid level 0 .. 7
+LEVEL_COLOURS = [plt.get_cmap("plasma")(0.15 + 0.115 * l) for l in range(8)]  # pyramid level 0 .. 7
 RUNS = {"single": ROOT / "pnp_from_scratch" / "results" / "pipeline",
         "pyramid": ROOT / "pnp_from_scratch" / "results" / "pipeline_pyramid"}
 
@@ -209,26 +209,35 @@ def header(fig, title, line):
     fig.text(0.01, 0.955, line, fontsize=9.5, va="top", color="0.35")
 
 
+KP_TICK = 6.0  # orientation tick length, crop pixels (the same for every level)
+
+
+def kp_area(level):
+    """Marker area in points^2: small and nearly constant (level 0: 10, level 7: 18), so the
+    pyramid level reads from the colour and the scale never dominates the figure."""
+    return 10.0 + 8.0 * np.asarray(level) / 7.0
+
+
 def draw_keypoints(ax, kp, box, xoff=0.0):
-    """Keypoints with their scale and orientation: circle radius 3 * scale crop
-    pixels, tick of length 5 * scale along the orientation, colour = pyramid level."""
+    """Keypoints as small dots, colour = pyramid level, with a fixed-length orientation
+    tick. Coarse levels are drawn first, fine levels on top."""
     W, H = box[1] - box[0], box[3] - box[2]
     u, v = kp[:, 0] - box[0], kp[:, 1] - box[2]
     ok = (u >= 0) & (u < W) & (v >= 0) & (v < H)
-    for idx in np.argsort(-kp[:, 4])[::1]:  # coarse levels first, fine levels on top
-        if not ok[idx]:
-            continue
-        x, y, a, sc, lv = u[idx] + xoff, v[idx], math.radians(kp[idx, 2]), kp[idx, 3], int(kp[idx, 4])
-        c = LEVEL_COLOURS[lv]
-        ax.add_patch(plt.Circle((x, y), 3.0 * sc, fill=False, ec=c, lw=0.8, zorder=3 + (8 - lv) * 0.01))
-        ax.plot([x, x + 5.0 * sc * math.cos(a)], [y, y + 5.0 * sc * math.sin(a)], color=c, lw=0.8, zorder=3)
+    order = [i for i in np.argsort(-kp[:, 4], kind="stable") if ok[i]]
+    lv = kp[order, 4].astype(int)
+    x, y, a = u[order] + xoff, v[order], np.radians(kp[order, 2])
+    cols = [LEVEL_COLOURS[l] for l in lv]
+    ax.add_collection(LineCollection([[(xi, yi), (xi + KP_TICK * math.cos(ai), yi + KP_TICK * math.sin(ai))]
+                                      for xi, yi, ai in zip(x, y, a)], colors=cols, linewidths=0.7, zorder=3))
+    ax.scatter(x, y, s=kp_area(lv), c=cols, edgecolors="black", linewidths=0.35, zorder=4)
 
 
 def level_legend(fig, x, y, levels):
-    handles = [Line2D([], [], ls="none", marker="o", mfc="none", mec=LEVEL_COLOURS[l], ms=4 + 1.6 * l,
-                      label=f"{l}") for l in range(levels)]
+    handles = [Line2D([], [], ls="none", marker="o", mfc=LEVEL_COLOURS[l], mec="black", mew=0.35,
+                      ms=math.sqrt(kp_area(l)), label=f"{l}") for l in range(levels)]
     fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(x, y), ncol=levels, frameon=False, fontsize=7.5,
-               title="pyramid level (circle size = scale)", title_fontsize=7.5, handletextpad=0.2, columnspacing=0.8)
+               title="pyramid level (tick = orientation)", title_fontsize=7.5, handletextpad=0.2, columnspacing=0.8)
 
 
 # --------------------------------------------------------------- figures ---
@@ -273,7 +282,7 @@ def orb_keypoints(rgb, box, r):
     header(fig, "Reference ORB keypoints  ·  Frame 0 and Frame 1",
            f"{len(r['kp'][0])} / {len(r['kp'][1])} keypoints (baseline pipeline: ORB on an 8-level pyramid, scale 1.2)  ·  "
            f"frozen data: docs/migration/baseline/reference_features")
-    level_legend(fig, 0.60, 0.985, 8)
+    level_legend(fig, 0.755, 0.985, 8)
     save(fig, "fig03_orb_keypoints")
 
 
@@ -314,7 +323,7 @@ def feature_comparison(rgb, box, s, r, pair):
                  f"keypoints, {n_f} filtered matches, {n_u} valid 3D→2D, {n_i} RANSAC inliers", fontsize=8.6,
                  color="0.3", va="top")
     level_legend(fig, 0.60, 1.0, 8)
-    fig.text(0.99, 0.002, "left: keypoints (colour = pyramid level, circle = scale, tick = orientation)  ·  right: "
+    fig.text(0.99, 0.002, "left: keypoints (colour = pyramid level, tick = orientation)  ·  right: "
              "correspondences (colour = correspondence identity within each row; solid = RANSAC inlier, magenta dashed "
              "= outlier, grey ◇ = no depth)  ·  different detectors → different keypoints and matches",
              fontsize=7, color="0.45", ha="right")

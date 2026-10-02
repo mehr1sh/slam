@@ -18,7 +18,7 @@ against 366 for the reference ORB. The difference is the reference's 8-level pyr
 | `include/features/multiscale.hpp`, `src/features/multiscale.cpp` | `ExtractMultiscale`: per level, the unchanged `DetectFast` (threshold 20, same NMS, border, cap), `AssignOrientations` and `ComputeBrief`, all on the level image. Keypoints keep level, level x/y, scale, score, angle and descriptor |
 | `pnp_from_scratch/src/frontend.*` | `FrontendParams::pyramid` (default 1 level = single scale). `FrameFeatures` gains level, scale and level x/y; keypoint x/y are original coordinates. `Correspondence` gains the levels of both keypoints |
 | `pnp_from_scratch/src/pipeline_main.cpp` | `--pyramid-levels L`, `--out DIR`. The keypoint and correspondence CSVs gain level columns; the summary prints the per-level counts |
-| `pnp_from_scratch/tools/make_figures.py` | `--pipeline`, `--out`. Keypoints are drawn with colour = level, circle ∝ scale and an orientation tick. New `pyramid_levels_0` figure. The PnP comparison covers single scale, pyramid and reference. The correspondence maps are unchanged (no orientation ticks) |
+| `pnp_from_scratch/tools/make_figures.py` | `--pipeline`, `--out`. Keypoints are drawn as small dots (colour = level; size grows only slightly with level) with a fixed-length orientation tick. New `pyramid_levels_0` figure. The PnP comparison covers single scale, pyramid and reference. The correspondence maps are unchanged (no orientation ticks) |
 
 There is no Harris ranking and no per-level quota. RANSAC, PnP, trajectory accumulation,
 the Blender scene and the coordinate conventions are unchanged.
