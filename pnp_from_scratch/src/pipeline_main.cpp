@@ -170,7 +170,8 @@ int main(int argc, char **argv) {
     std::ofstream f(out / "pairs.csv");
     f << "pair,frame_i,frame_j,keypoints_i,keypoints_j,raw_matches,filtered_matches,d_min,correspondences_3d2d,"
          "pnp_ok,pnp_inliers,pnp_best_sample_inliers,reproj_inlier_mean_px,reproj_inlier_median_px,"
-         "reproj_inlier_max_px,reproj_all_median_px,rot_err_deg,trans_err_m,tx,ty,tz,est_rotation_deg,"
+         "reproj_inlier_max_px,reproj_all_median_px,rot_err_deg,trans_err_m,tx,ty,tz,"
+         "r00,r01,r02,r10,r11,r12,r20,r21,r22,est_rotation_deg,"
          "essential_ok,essential_inliers,essential_in_front,essential_rot_err_deg,essential_t_dir_err_deg,"
          "pnp_vs_essential_rot_deg\n";
     for (size_t k = 0; k < pairs.size(); ++k) {
@@ -180,7 +181,10 @@ int main(int argc, char **argv) {
         << p.pnp_inliers << "," << p.pnp_best_sample_inliers << "," << F(p.reproj_inlier_mean) << ","
         << F(p.reproj_inlier_median) << "," << F(p.reproj_inlier_max) << "," << F(p.reproj_all_median) << ","
         << F(rot_err[k], 6) << "," << F(trans_err[k], 6) << "," << F(p.t.x(), 9) << "," << F(p.t.y(), 9) << ","
-        << F(p.t.z(), 9) << "," << F(RotAngleDeg(p.R), 6) << "," << int(p.essential_ok) << "," << p.essential_inliers
+        << F(p.t.z(), 9) << ",";
+      for (int a = 0; a < 3; ++a)
+        for (int b = 0; b < 3; ++b) f << F(p.R(a, b), 9) << ",";
+      f << F(RotAngleDeg(p.R), 6) << "," << int(p.essential_ok) << "," << p.essential_inliers
         << "," << p.essential_in_front << "," << F(e_rot[k], 6) << "," << F(e_dir[k], 6) << ","
         << (p.pnp_ok && p.essential_ok ? F(RotErrDeg(p.R, p.R_essential), 6) : "") << "\n";
       std::ofstream c(out / "correspondences" / ("pair_" + std::to_string(p.i) + "_" + std::to_string(p.j) + ".csv"));
