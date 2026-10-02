@@ -193,7 +193,7 @@ def main():
     out = Path(a.out_dir).resolve()
     res = run(out)
     s = res["summary"]
-    print(f"[metrics] {out.relative_to(ROOT)}: PnP final {s['pnp_final_trans_err_m']:.4f} m / "
+    print(f"[metrics] {out.name}: PnP final {s['pnp_final_trans_err_m']:.4f} m / "
           f"{s['pnp_final_rot_err_deg']:.2f} deg, ICP final {s['icp_final_trans_err_m']:.4f} m / "
           f"{s['icp_final_rot_err_deg']:.2f} deg, failed pairs PnP {s['pnp_failed_pairs']} ICP {s['icp_failed_pairs']}, "
           f"identical to committed: {s['trajectory_files_identical_to_committed']}")

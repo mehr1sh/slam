@@ -19,10 +19,17 @@ add_library(camera src/camera/camera.cpp)
 target_include_directories(camera PUBLIC include ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(camera PUBLIC ${OpenCV_LIBS})
 
-# --- features: ORB extraction + BF-Hamming matching + filter ---
+# --- feature_core: project-owned FAST, intensity-centroid orientation,
+# rotated BRIEF, brute-force Hamming matching. Standard library only. ---
+add_library(feature_core
+  src/features/types.cpp src/features/fast.cpp src/features/orientation.cpp
+  src/features/brief.cpp src/features/matcher.cpp)
+target_include_directories(feature_core PUBLIC include)
+
+# --- features: find_feature_matches() (feature_core pipeline + distance filter) ---
 add_library(features src/features/features.cpp)
 target_include_directories(features PUBLIC include ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(features PUBLIC ${OpenCV_LIBS})
+target_link_libraries(features PUBLIC ${OpenCV_LIBS} PRIVATE feature_core)
 
 # --- geometry: 2D-2D pose (F/E/H + recoverPose), triangulation ---
 # camera is PRIVATE: pixel2cam() is used inside geometry.cpp only, not part
@@ -96,6 +103,12 @@ add_test_exe(icp_synthetic_test synthetic)
 add_test_exe(slam_trajectory_test synthetic)
 add_test_exe(trajectory_validation_test synthetic)
 add_test_exe(trajectory_diagnostics_test synthetic)
+
+# Unit tests of the project-owned feature modules: they link feature_core only.
+foreach(t features_fast_test features_orientation_test features_brief_test features_matcher_test)
+  add_executable(${t} tests/unit/${t}.cpp)
+  target_link_libraries(${t} PRIVATE feature_core)
+endforeach()
 
 # Self-contained book demos: no dependency on src/, so they don't link the
 # library targets above.

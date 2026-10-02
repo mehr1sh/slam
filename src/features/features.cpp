@@ -1,43 +1,78 @@
 #include "features/features.hpp"
 
-using namespace std;
-using namespace cv;
+#include <cmath>
+#include <cstdio>
+#include <stdexcept>
 
-// Book code starts
-void find_feature_matches(const Mat &img_1, const Mat &img_2,
-                          std::vector<KeyPoint> &keypoints_1,
-                          std::vector<KeyPoint> &keypoints_2,
-                          std::vector<DMatch> &matches,
-                          std::vector<DMatch> *all_matches) {
-  Mat descriptors_1, descriptors_2;
-  Ptr<FeatureDetector> detector = ORB::create();
-  Ptr<DescriptorExtractor> descriptor = ORB::create();
-  Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
-  detector->detect(img_1, keypoints_1);
-  detector->detect(img_2, keypoints_2);
+#include "features/brief.hpp"
+#include "features/fast.hpp"
+#include "features/matcher.hpp"
+#include "features/orientation.hpp"
 
-  descriptor->compute(img_1, keypoints_1, descriptors_1);
-  descriptor->compute(img_2, keypoints_2, descriptors_2);
+// find_feature_matches(): the signature and the final distance filter come
+// from the book (slambook2 ch7); the detection, description and matching in
+// between are the project-owned feature_core modules:
+//   grayscale -> FAST (threshold 30, score, 3x3 NMS, border 16, strongest 500)
+//   -> intensity-centroid orientation -> Gaussian-smoothed rotated BRIEF
+//   -> brute-force Hamming nearest neighbour -> distance <= max(2 d_min, 30).
+//
+// Transitional boundary (vision-library migration, docs/library_removal_audit.md):
+// the images arrive and the keypoints/matches leave in the existing library
+// types, so the 11 callers are unchanged in this checkpoint. Only buffer
+// access and the final type conversion touch those types; the conversion is
+// removed in the types-migration stage.
 
-  vector<DMatch> match;
-  matcher->match(descriptors_1, descriptors_2, match);
-  if (all_matches) *all_matches = match;  // see header: not book text
+namespace {
 
-  double min_dist = 10000, max_dist = 0;
-
-  for (int i = 0; i < descriptors_1.rows; i++) {
-    double dist = match[i].distance;
-    if (dist < min_dist) min_dist = dist;
-    if (dist > max_dist) max_dist = dist;
-  }
-
-  printf("-- Max dist : %f \n", max_dist);
-  printf("-- Min dist : %f \n", min_dist);
-
-  for (int i = 0; i < descriptors_1.rows; i++) {
-    if (match[i].distance <= max(2 * min_dist, 30.0)) {
-      matches.push_back(match[i]);
-    }
-  }
+features::GrayImage ToGray(const cv::Mat &img) {
+  if (img.depth() != CV_8U) throw std::invalid_argument("find_feature_matches: 8-bit images expected");
+  return features::GrayFromInterleaved(img.data, img.cols, img.rows, img.step, img.channels());
 }
-// Book code ends
+
+void Extract(const cv::Mat &img, std::vector<features::Keypoint> &kps, std::vector<features::BriefDescriptor> &desc) {
+  const features::GrayImage gray = ToGray(img);
+  kps = features::DetectFast(gray, features::FastParams());
+  features::AssignOrientations(gray, kps);
+  desc = features::ComputeBrief(features::GaussianSmooth(gray), kps);
+}
+
+std::vector<cv::KeyPoint> ToLibraryKeypoints(const std::vector<features::Keypoint> &kps) {
+  std::vector<cv::KeyPoint> out;
+  out.reserve(kps.size());
+  for (const auto &k : kps) {
+    float deg = float(k.angle * 180.0 / M_PI);
+    if (deg < 0) deg += 360.0f;
+    // size = descriptor patch diameter (31), response = FAST score, octave 0 (single scale)
+    out.emplace_back(k.x, k.y, float(2 * features::kBriefPatchRadius + 1), deg, float(k.score), 0);
+  }
+  return out;
+}
+
+std::vector<cv::DMatch> ToLibraryMatches(const std::vector<features::Match> &m) {
+  std::vector<cv::DMatch> out;
+  out.reserve(m.size());
+  for (const auto &x : m) out.emplace_back(x.query, x.train, float(x.distance));
+  return out;
+}
+
+}  // namespace
+
+void find_feature_matches(const cv::Mat &img_1, const cv::Mat &img_2, std::vector<cv::KeyPoint> &keypoints_1,
+                          std::vector<cv::KeyPoint> &keypoints_2, std::vector<cv::DMatch> &matches,
+                          std::vector<cv::DMatch> *all_matches) {
+  std::vector<features::Keypoint> k1, k2;
+  std::vector<features::BriefDescriptor> d1, d2;
+  Extract(img_1, k1, d1);
+  Extract(img_2, k2, d2);
+
+  const std::vector<features::Match> raw = features::MatchBruteForce(d1, d2);
+  int d_min = 0, d_max = 0;
+  const std::vector<features::Match> kept = features::FilterMatchesByDistance(raw, 30, &d_min, &d_max);
+  printf("-- Max dist : %f \n", double(d_max));
+  printf("-- Min dist : %f \n", double(d_min));
+
+  keypoints_1 = ToLibraryKeypoints(k1);
+  keypoints_2 = ToLibraryKeypoints(k2);
+  matches = ToLibraryMatches(kept);
+  if (all_matches) *all_matches = ToLibraryMatches(raw);
+}
