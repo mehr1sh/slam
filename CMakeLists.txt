@@ -95,6 +95,7 @@ add_test_exe(pnp_multiframe_test synthetic)
 add_test_exe(icp_synthetic_test synthetic)
 add_test_exe(slam_trajectory_test synthetic)
 add_test_exe(trajectory_validation_test synthetic)
+add_test_exe(trajectory_diagnostics_test synthetic)
 
 # Self-contained book demos: no dependency on src/, so they don't link the
 # library targets above.

@@ -17,6 +17,11 @@ row i and written into the scene verbatim.
 
 Frame mapping: Blender frame f shows pose index i = clamp(f, 0, N-1)
 (scene.frame_start = 0, scene.frame_end = N-1, one Blender frame per pose).
+
+A method may have fewer poses than the dataset (method["n_poses"]; the
+Scratch PnP trajectory of milestone 1 has frames 0-1 only). Its line then
+ends at its last pose, and its camera is hidden at frames without a pose
+instead of standing still at the last one.
 """
 
 import bpy
@@ -37,9 +42,20 @@ def trajectory_rows(scene):
 
 def methods(scene):
     """List of plain dicts: key, label, short, prefix, color (sRGB),
-    color_name, error_prefix. Order = legend order (GT, PnP, ICP)."""
+    color_name, error_prefix, n_poses, note. Order = legend order
+    (GT, PnP, ICP, ScratchPnP)."""
     raw = scene.get("slam_viz_methods") or []
     return [m.to_dict() if hasattr(m, "to_dict") else dict(m) for m in raw]
+
+
+def pose_count(scene, method):
+    """Number of leading frames that have a pose for `method`."""
+    rows = trajectory_rows(scene) or []
+    return min(int(method.get("n_poses", len(rows))), len(rows))
+
+
+def has_pose(scene, method, i):
+    return 0 <= i < pose_count(scene, method)
 
 
 def settings(scene):
@@ -59,7 +75,8 @@ def method_visible(scene, key):
     s = settings(scene)
     if s is None:
         return True
-    return {"GT": s.show_groundtruth, "PnP": s.show_pnp, "ICP": s.show_icp}.get(key, True)
+    return {"GT": s.show_groundtruth, "PnP": s.show_pnp, "ICP": s.show_icp,
+            "ScratchPnP": getattr(s, "show_scratch_pnp", True)}.get(key, True)
 
 
 def presentation(scene):
@@ -68,8 +85,8 @@ def presentation(scene):
 
 
 def animated_cameras(key=None):
-    """The three keyframed GT/PnP/ICP Camera objects (or the one of `key`)."""
-    order = {"GT": 0, "PnP": 1, "ICP": 2}
+    """The keyframed GT/PnP/ICP/ScratchPnP Camera objects (or the one of `key`)."""
+    order = {"GT": 0, "PnP": 1, "ICP": 2, "ScratchPnP": 3}
     cams = [o for o in bpy.data.objects
             if o.get("slam_role") == ROLE_ANIMATED_CAMERA and (key is None or o.get("slam_method") == key)]
     return sorted(cams, key=lambda o: order.get(o["slam_method"], 9))
@@ -165,8 +182,13 @@ def _render_stamp_note(scene, i):
         if not method_visible(scene, m["key"]):
             continue
         err = error_at(scene, m, i)
-        legend.append(f"{m['short']} ({m['color_name']})"
-                      + (f" {err[0]:.3f}m {err[1]:.1f}deg" if err is not None else " reference"))
+        if m["key"] == "GT":
+            tail = " reference"
+        elif not has_pose(scene, m, i):
+            tail = " no pose"
+        else:
+            tail = f" {err[0]:.3f}m {err[1]:.1f}deg" if err is not None else " n/a"
+        legend.append(f"{m['short']} ({m['color_name']}){tail}")
     return "STANFORD BUNNY - TRAJECTORY COMPARISON | " + " | ".join(legend)
 
 
@@ -185,7 +207,8 @@ def update_animation(scene):
     reveal = i if progressive else n - 1
 
     by_key = {m["key"]: m for m in methods(scene)}
-    positions = {key: [pose_from_row(r, m["prefix"])[0] for r in rows] for key, m in by_key.items()}
+    positions = {key: [pose_from_row(r, m["prefix"])[0] for r in rows[:pose_count(scene, m)]]
+                 for key, m in by_key.items()}
 
     for obj in bpy.data.objects:
         role = obj.get("slam_role")
@@ -203,7 +226,10 @@ def update_animation(scene):
         elif role == ROLE_ANIMATED_CAMERA:
             # Moved by its own keyframes, never here; only visibility. The
             # active scene camera is never hidden.
-            _set_hidden(obj, not (shown and show_cameras) and obj != scene.camera)
+            # Hidden at frames without a pose (partial trajectories) rather
+            # than left standing at the last keyframe.
+            exists = has_pose(scene, by_key[key], i)
+            _set_hidden(obj, not (shown and show_cameras and exists) and obj != scene.camera)
         elif role == ROLE_HISTORY_CAMERA:
             k = obj.get("slam_frame", 0)
             _set_hidden(obj, not (shown and show_history and k <= reveal) and obj != scene.camera)

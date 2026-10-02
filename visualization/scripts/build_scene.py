@@ -60,6 +60,7 @@ the previous frustum visualization).
 import csv
 import math
 import os
+import re
 import sys
 
 import bpy
@@ -83,6 +84,9 @@ GROUNDTRUTH_PATH = os.path.join(DATASET_DIR, "groundtruth.txt")
 PNP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "pnp_trajectory.txt")
 ICP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "icp_trajectory.txt")
 TRAJECTORY_CSV_PATH = os.path.join(DATASET_DIR, "slam_trajectory.csv")
+# Written by pnp_from_scratch/ (the from-scratch PnP). May hold fewer poses than
+# the dataset (milestone 1: frames 0-1 only); only the poses it contains are shown.
+SCRATCH_TRAJECTORY_CSV_PATH = os.path.join(REPO_ROOT, "pnp_from_scratch", "results", "scratch_pnp_trajectory.csv")
 SAVE_PATH = os.path.join(VISUALIZATION_ROOT, "scenes", "bunny_slam_demo.blend")
 RENDER_OUTPUT_PATH = os.path.join(VISUALIZATION_ROOT, "output", "render", "frame_")
 # Stored in the .blend relative to the .blend itself (visualization/scenes/),
@@ -97,8 +101,9 @@ RENDER_OUTPUT_BLEND_PATH = "//../output/render/frame_"
 SHOW_GROUND_TRUTH = True
 SHOW_PNP = True
 SHOW_ICP = True
+SHOW_SCRATCH_PNP = True           # 4th trajectory, if pnp_from_scratch/results/ has one
 
-SHOW_CAMERAS = True               # the three animated GT/PnP/ICP cameras
+SHOW_CAMERAS = True               # the animated GT/PnP/ICP(/Scratch PnP) cameras
 SHOW_WORLD_AXES = True            # small X/Y/Z triad of the C++ world frame
 SHOW_HUD = True                   # top-left viewport HUD
 
@@ -122,7 +127,7 @@ ANIMATION_FPS = 8                 # one Blender frame per pose; 8 fps -> 36 pose
 # --- Purely visual/display sizes, all as a fraction of the bunny's bounding
 # radius (~0.125 m) -- independent of camera calibration and trajectory math.
 LINE_THICKNESS_SCALE = 0.008      # trajectory tube radius (x per-method thickness below)
-ANIMATED_CAMERA_DISPLAY_SCALE = 0.45   # camera.display_size of the three animated cameras
+ANIMATED_CAMERA_DISPLAY_SCALE = 0.45   # camera.display_size of the animated cameras
 HISTORY_CAMERA_DISPLAY_SCALE = 0.25    # camera.display_size of the optional historical cameras
 AXES_LENGTH_SCALE = 0.45          # world-axes arrow length
 
@@ -145,8 +150,10 @@ METHOD_STYLES = {
                 color_name="orange", thickness=1.0),
     "ICP": dict(label="ICP", short="ICP", prefix="icp", color=(0.85, 0.40, 0.95),
                 color_name="magenta", thickness=1.0),
+    "ScratchPnP": dict(label="Scratch Linear PnP", short="Scratch PnP", prefix="scratch", color=(0.10, 0.78, 1.00),
+                       color_name="cyan", thickness=1.0),
 }
-METHOD_COLLECTIONS = {"GT": "GroundTruth", "PnP": "PnP", "ICP": "ICP"}
+METHOD_COLLECTIONS = {"GT": "GroundTruth", "PnP": "PnP", "ICP": "ICP", "ScratchPnP": "ScratchPnP"}
 DRIFT_COLOR = (0.95, 0.15, 0.12)
 AXIS_COLORS = {"X": (0.80, 0.36, 0.36), "Y": (0.42, 0.72, 0.42), "Z": (0.40, 0.52, 0.85)}  # muted
 AUTOLOAD_TEXT_NAME = "slam_viz_autoload.py"
@@ -191,19 +198,107 @@ def read_slam_trajectory_csv(path):
     return rows
 
 
-def resolve_methods(rows):
-    """Legend-ordered method table (GT, PnP, ICP) stored as
-    scene["slam_viz_methods"]: labels, CSV column prefix, color, and which
-    C++ error columns exist. No pose math."""
+def resolve_methods(rows, scratch=None):
+    """Legend-ordered method table (GT, PnP, ICP[, ScratchPnP]) stored as
+    scene["slam_viz_methods"]: labels, CSV column prefix, color, which error
+    columns exist, n_poses (how many leading frames have a pose) and an
+    optional note. No pose math."""
     columns = set(rows[0].keys())
     has_err = lambda p: {f"{p}_translation_error", f"{p}_rotation_error"} <= columns
     table = []
-    for key in ("GT", "PnP", "ICP"):
+    keys = ("GT", "PnP", "ICP") + (("ScratchPnP",) if scratch else ())
+    for key in keys:
         st = METHOD_STYLES[key]
         table.append(dict(key=key, label=st["label"], short=st["short"], prefix=st["prefix"],
                           color=list(st["color"]), color_name=st["color_name"],
-                          error_prefix=st["prefix"] if (key != "GT" and has_err(st["prefix"])) else ""))
+                          error_prefix=st["prefix"] if (key != "GT" and has_err(st["prefix"])) else "",
+                          n_poses=scratch["n_poses"] if key == "ScratchPnP" else len(rows),
+                          note=scratch["note"] if key == "ScratchPnP" else "",
+                          note_short=scratch["note_short"] if key == "ScratchPnP" else ""))
     return table
+
+
+def read_scratch_trajectory(path, rows):
+    """Reads pnp_from_scratch's T_wc trajectory (scratch_pnp_trajectory.csv:
+    frame, tx, ty, tz, r00..r22, qx..qw, rotation_error_deg,
+    translation_error_m, per-pair stats, success, cheirality_ok, pose_source;
+    '#' lines = provenance notes) and checks it before anything is drawn:
+      - frames are 0, 1, ..., k-1 (a prefix of the dataset; nothing is filled in)
+      - frame 0 is the GT anchor (same convention as PnP/ICP)
+      - the quaternion columns equal the rotation-matrix columns
+      - the stored errors equal errors recomputed here from the poses vs GT
+        (same definitions as slam_trajectory.csv)
+      - it is not a copy of the OpenCV PnP trajectory
+    Returns dict(rows=..., n_poses=k, note=..., note_short=...) or None."""
+    from slam_coords import pose_from_row
+
+    if not SHOW_SCRATCH_PNP:
+        return None
+    if not os.path.isfile(path):
+        print(f"[build_scene] no scratch PnP trajectory at {os.path.relpath(path, REPO_ROOT)} -- "
+              "run pnp_from_scratch first; scene built without it")
+        return None
+    note, hud_note, lines = "", "", []
+    with open(path, newline="") as f:
+        for line in f:
+            if line.startswith("# note:"):
+                note = line[len("# note:"):].strip()
+            elif line.startswith("# hud_note:"):
+                hud_note = line[len("# hud_note:"):].strip()
+            elif not line.startswith("#"):
+                lines.append(line)
+
+    def num(v):
+        try:
+            return float(v)
+        except ValueError:
+            return v
+
+    data = [{k: (int(v) if k == "frame" else num(v)) for k, v in r.items()} for r in csv.DictReader(lines)]
+    frames = [d["frame"] for d in data]
+    if frames != list(range(len(data))) or not 1 <= len(data) <= len(rows):
+        raise ValueError(f"scratch trajectory frames {frames} are not 0..k-1 within the {len(rows)} dataset frames")
+    print("\n=== SCRATCH PNP TRAJECTORY CHECK ===")
+    print(f"{len(data)} pose(s) (frames 0..{len(data) - 1}) of {len(rows)}; note: {note}")
+    worst_err = worst_q = 0.0
+    same_as_pnp = 0
+    for d in data:
+        i = d["frame"]
+        pos = mathutils.Vector((d["tx"], d["ty"], d["tz"]))
+        q = mathutils.Quaternion((d["qw"], d["qx"], d["qy"], d["qz"]))
+        Rm = mathutils.Matrix([[d[f"r{a}{b}"] for b in range(3)] for a in range(3)])
+        worst_q = max(worst_q, math.degrees(Rm.to_quaternion().rotation_difference(q).angle))
+        gpos, gq = pose_from_row(rows[i], "gt")
+        te = (gpos - pos).length
+        rot_e = math.degrees(gq.rotation_difference(q).angle)
+        rot_e = min(rot_e, 360.0 - rot_e)  # quaternion angle may take the long way round; the metric is in [0, 180]
+        worst_err = max(worst_err, abs(te - d["translation_error_m"]), abs(rot_e - d["rotation_error_deg"]) / 100)
+        if i > 0 and (pose_from_row(rows[i], "pnp")[0] - pos).length < 1e-6:
+            same_as_pnp += 1
+    d0 = (pose_from_row(rows[0], "gt")[0] - mathutils.Vector((data[0]["tx"], data[0]["ty"], data[0]["tz"]))).length
+    invalid = [d["frame"] for d in data if d.get("cheirality_ok") == 0.0]
+    print(f"quaternion vs matrix columns: max {worst_q:.2e} deg; stored vs recomputed errors: max {worst_err:.2e}")
+    print(f"frame 0: GT vs SCRATCH position diff: {d0:.6f} m "
+          f"({'OK, common anchor confirmed' if d0 < 1e-4 else 'MISMATCH -- not anchored to GT!'})")
+    print(f"frames identical to OpenCV PnP: {same_as_pnp} (of {len(data) - 1})")
+    print(f"frames reached through a physically invalid pair (most points behind the camera): {invalid}")
+    if worst_q > 1e-2 or worst_err > 1e-4 or d0 > 1e-4:
+        raise ValueError("scratch trajectory failed its consistency checks (see above)")
+    print("=== END SCRATCH PNP TRAJECTORY CHECK ===\n")
+    for d in data:  # the column names pose_from_row() / error_at() expect
+        d.update(x=d["tx"], y=d["ty"], z=d["tz"], translation_error=d["translation_error_m"],
+                 rotation_error=d["rotation_error_deg"])
+    return dict(rows=data, n_poses=len(data), note=note, note_short=hud_note or note[:60])
+
+
+def merge_scratch(rows, scratch):
+    """Adds scratch_* columns to the first n_poses rows only (later rows get
+    none: there is no scratch pose there)."""
+    for d in scratch["rows"]:
+        row = rows[d["frame"]]
+        for k in ("x", "y", "z", "qx", "qy", "qz", "qw", "translation_error", "rotation_error"):
+            row[f"scratch_{k}"] = d[k]
+        row["scratch_valid"] = 0.0 if d.get("cheirality_ok") == 0.0 else 1.0
 
 
 def verify_trajectory_conventions(rows):
@@ -240,9 +335,9 @@ def verify_trajectory_conventions(rows):
     print("=== END TRAJECTORY CONVENTION CHECK ===\n")
 
 
-def native_poses(rows, prefix):
+def native_poses(rows, prefix, n=None):
     from slam_coords import pose_from_row
-    return [dict(zip(("pos", "quat_cv"), pose_from_row(r, prefix))) for r in rows]
+    return [dict(zip(("pos", "quat_cv"), pose_from_row(r, prefix))) for r in rows[:n]]
 
 
 # =========================================================================
@@ -253,6 +348,7 @@ OWNED_COLLECTIONS = (
     # current layout
     "Bunny", "GroundTruth", "PnP", "ICP", "Visualization",
     "GT_Historical_Cameras", "PnP_Historical_Cameras", "ICP_Historical_Cameras",
+    "ScratchPnP", "ScratchPnP_Historical_Cameras",
     "WorldAxes", "Error Vectors", "Lighting",
     # previous layouts (so rebuilding on top of an old .blend leaves no leftovers,
     # including the removed SLAM / Interactive_Camera parts)
@@ -278,7 +374,7 @@ def clear_previous_scene_objects():
     # Current objects plus everything earlier versions created (SLAM_*,
     # Interactive_Camera, *_Marker dots, *_History_Camera_### / *_Current_Camera
     # curve frustums and their *_Center dots, Presentation_Camera, ...).
-    names_prefixes = ("Bunny", "GT_", "PnP_", "ICP_", "SLAM_", "Interactive_Camera",
+    names_prefixes = ("Bunny", "GT_", "PnP_", "ICP_", "ScratchPnP_", "SLAM_", "Interactive_Camera",
                       "Frustum_", "WorldAxes", "GazeLine", "WorldRoot", "GroundPlane",
                       "Visualization_Camera", "Presentation_Camera",
                       "Key_Light", "Fill_Light", "Rim_Light", "FillLight")
@@ -814,10 +910,13 @@ def main():
     n = len(rows)
     print(f"[build_scene] {n} frames, intrinsics: {intr}")
     verify_trajectory_conventions(rows)
-    methods = resolve_methods(rows)
+    scratch = read_scratch_trajectory(SCRATCH_TRAJECTORY_CSV_PATH, rows)
+    if scratch:
+        merge_scratch(rows, scratch)
+    methods = resolve_methods(rows, scratch)
     for m in methods:
-        print(f"[build_scene] {m['key']:<4} <- CSV columns {m['prefix']}_*")
-    poses = {m["key"]: native_poses(rows, m["prefix"]) for m in methods}
+        print(f"[build_scene] {m['key']:<10} <- {m['prefix']}_* columns, {m['n_poses']} pose(s)")
+    poses = {m["key"]: native_poses(rows, m["prefix"], m["n_poses"]) for m in methods}
 
     scene = bpy.context.scene
     scene_coll = scene.collection

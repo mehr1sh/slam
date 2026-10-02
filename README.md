@@ -11,8 +11,8 @@ SLAM* (slambook2). It contains:
    - **ICP:** 3D–3D alignment of matched points.
 3. **Trajectory accumulation** of the 35 relative motions into global
    camera trajectories, compared with ground truth.
-4. **A Blender visualization** in which three real, animated Blender cameras
-   (GT, PnP, ICP) move along their trajectories around the bunny.
+4. **A Blender visualization** in which real, animated Blender cameras
+   (GT, PnP, ICP, and the from-scratch linear PnP) move along their trajectories around the bunny.
 
 The feature-based two-view frontend from the book (ORB matching, 2D-2D pose,
 triangulation, PnP/ICP on a real TUM RGB-D frame pair) and some from-scratch
@@ -48,6 +48,8 @@ data/
   synthetic_bunny/       generated dataset + reference trajectories (see its README)
   tum_sample/            one real TUM RGB-D frame pair (+ depth)
 visualization/           Blender scene builder (see visualization/README.md)
+scripts/                 generate_results.py: figures, CSVs and tables for results/
+results/                 README.md (tracked) + generated figures/, data/, tables/
 presentation/            progress slides (LaTeX source + PDF)
 docs/                    reference numbers for the chapter 6/7 programs
 COMMANDS.md              every command in one place
@@ -64,6 +66,8 @@ CSVs written by the programs) and the Blender scene
   Linux x86-64.
 - [Blender](https://www.blender.org) **5.x**, for the visualization only
   (tested with 5.2). It is not managed by pixi.
+- A second pixi environment, `results` (Python, NumPy, matplotlib), runs only
+  the figure pipeline. It is kept separate from the C++ environment.
 
 ## Build
 
@@ -162,6 +166,18 @@ Outputs, reproduced byte-for-byte from the dataset above:
 cd build && ./slam_trajectory_test ../data/synthetic_bunny
 ```
 
+## Results and figures
+
+```bash
+pixi run -e results results
+```
+
+This re-runs the trajectory program (unchanged outputs) with export flags,
+cross-checks every number, and writes 15 figures plus per-frame and per-pair
+CSVs and a summary table to `results/`. Examples: the experiment setup, ORB
+matches, the correspondence funnel, the 3D trajectories, the error per frame,
+local vs global error, and a one-slide summary. See `results/README.md`.
+
 ## Coordinate conventions
 
 - **Pose files** store **T_wc** (camera → world). The translation is the
@@ -190,6 +206,9 @@ The scene contains:
 - the three full trajectory lines: GT green, PnP orange, ICP magenta
 - `GT_Animated_Camera`, `PnP_Animated_Camera`, `ICP_Animated_Camera`: real
   Blender cameras, keyframed so that frame *i* = pose *i*
+- `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the
+  from-scratch linear PnP of `pnp_from_scratch/`. It runs on raw matches with no
+  RANSAC, so it drifts badly by design; see `pnp_from_scratch/README.md`
 - a HUD with the per-frame errors
 
 To look through one camera, run this in Blender's Python console and then

@@ -96,7 +96,24 @@ Sophus::SE3d CvToSE3(const Mat &R, const Mat &t) {
   return Sophus::SE3d(Eigen::Quaterniond(Re), te);
 }
 
+// Optional, export-only record of one frame pair's intermediate data, filled
+// by RunPnpPair/RunIcpPair when a non-null pointer is passed (see
+// --export-dir / --export-pair in main()). It only COPIES values the two
+// functions already compute; the estimation itself is unchanged.
+struct PairDetail {
+  vector<KeyPoint> keypoints_i, keypoints_j;
+  vector<DMatch> raw_matches;       // one best match per frame-i descriptor
+  vector<DMatch> matches;           // after the distance filter (what PnP/ICP use)
+  vector<int> depth_i, depth_j;     // raw 16-bit depth at each filtered match (0 = none)
+  vector<int> pnp_match_of_corr;    // filtered-match index of each PnP correspondence
+  vector<Point3f> pnp_pts_3d;       // PnP 3D points (camera i)
+  vector<int> pnp_inliers;          // RANSAC inlier indices into the PnP correspondences
+  vector<int> icp_match_of_corr;    // filtered-match index of each ICP correspondence
+  vector<Point3f> icp_pts1, icp_pts2;  // ICP 3D points (camera i, camera i+1)
+};
+
 struct PairwisePnpResult {
+  int keypoints_i = 0, keypoints_j = 0, raw_matches = 0;
   int matches = 0, corr = 0, inliers = -1;
   double rot_err = -1, trans_err = -1;
   bool ok = false;
@@ -104,7 +121,8 @@ struct PairwisePnpResult {
 };
 
 PairwisePnpResult RunPnpPair(const string &dataset_dir, const Mat &K,
-                              const vector<Sophus::SE3d> &T_gt, int i, int j) {
+                              const vector<Sophus::SE3d> &T_gt, int i, int j,
+                              PairDetail *detail = nullptr) {
   PairwisePnpResult res;
   Mat img_i = imread(dataset_dir + "/" + PadIndex(i) + ".png", CV_LOAD_IMAGE_COLOR);
   Mat img_j = imread(dataset_dir + "/" + PadIndex(j) + ".png", CV_LOAD_IMAGE_COLOR);
@@ -112,16 +130,30 @@ PairwisePnpResult RunPnpPair(const string &dataset_dir, const Mat &K,
   if (img_i.empty() || img_j.empty() || depth_i.empty()) return res;
 
   vector<KeyPoint> keypoints_i, keypoints_j;
-  vector<DMatch> matches;
-  find_feature_matches(img_i, img_j, keypoints_i, keypoints_j, matches);
+  vector<DMatch> matches, raw_matches;
+  // raw_matches: the optional all-matches output of the same call (not used
+  // by the estimation; recorded for the correspondence statistics only).
+  find_feature_matches(img_i, img_j, keypoints_i, keypoints_j, matches, &raw_matches);
+  res.keypoints_i = (int)keypoints_i.size();
+  res.keypoints_j = (int)keypoints_j.size();
+  res.raw_matches = (int)raw_matches.size();
   res.matches = (int)matches.size();
+  if (detail) {
+    detail->keypoints_i = keypoints_i;
+    detail->keypoints_j = keypoints_j;
+    detail->raw_matches = raw_matches;
+    detail->matches = matches;
+  }
 
   vector<Point3f> pts_3d;
   vector<Point2f> pts_2d;
-  for (const DMatch &m : matches) {
+  for (size_t mi = 0; mi < matches.size(); ++mi) {
+    const DMatch &m = matches[mi];
     ushort d = depth_i.ptr<unsigned short>((int)keypoints_i[m.queryIdx].pt.y)
                       [(int)keypoints_i[m.queryIdx].pt.x];
+    if (detail) detail->depth_i.push_back(d);
     if (d == 0) continue;
+    if (detail) detail->pnp_match_of_corr.push_back((int)mi);
     float dd = d / 5000.0f;
     Point2d p = pixel2cam(keypoints_i[m.queryIdx].pt, K);
     pts_3d.push_back(Point3f(p.x * dd, p.y * dd, dd));
@@ -137,6 +169,10 @@ PairwisePnpResult RunPnpPair(const string &dataset_dir, const Mat &K,
   Rodrigues(r, R_cv);
   res.inliers = (int)inliers.size();
   res.T_rel = CvToSE3(R_cv, t_cv);
+  if (detail) {
+    detail->pnp_pts_3d = pts_3d;
+    detail->pnp_inliers = inliers;
+  }
 
   Sophus::SE3d T_gt_rel = T_gt[j].inverse() * T_gt[i];
   res.rot_err = RotationAngleDeg(EigenRotToCv(T_gt_rel.rotationMatrix()), R_cv);
@@ -153,7 +189,8 @@ struct PairwiseIcpResult {
 };
 
 PairwiseIcpResult RunIcpPair(const string &dataset_dir, const Mat &K,
-                              const vector<Sophus::SE3d> &T_gt, int i, int j) {
+                              const vector<Sophus::SE3d> &T_gt, int i, int j,
+                              PairDetail *detail = nullptr) {
   PairwiseIcpResult res;
   Mat img_i = imread(dataset_dir + "/" + PadIndex(i) + ".png", CV_LOAD_IMAGE_COLOR);
   Mat img_j = imread(dataset_dir + "/" + PadIndex(j) + ".png", CV_LOAD_IMAGE_COLOR);
@@ -167,12 +204,15 @@ PairwiseIcpResult RunIcpPair(const string &dataset_dir, const Mat &K,
   res.matches = (int)matches.size();
 
   vector<Point3f> pts1, pts2;
-  for (const DMatch &m : matches) {
+  for (size_t mi = 0; mi < matches.size(); ++mi) {
+    const DMatch &m = matches[mi];
     ushort d1 = depth_i.ptr<unsigned short>((int)keypoints_i[m.queryIdx].pt.y)
                        [(int)keypoints_i[m.queryIdx].pt.x];
     ushort d2 = depth_j.ptr<unsigned short>((int)keypoints_j[m.trainIdx].pt.y)
                        [(int)keypoints_j[m.trainIdx].pt.x];
+    if (detail) detail->depth_j.push_back(d2);
     if (d1 == 0 || d2 == 0) continue;
+    if (detail) detail->icp_match_of_corr.push_back((int)mi);
     Point2d p1 = pixel2cam(keypoints_i[m.queryIdx].pt, K);
     Point2d p2 = pixel2cam(keypoints_j[m.trainIdx].pt, K);
     float dd1 = float(d1) / 5000.0f;
@@ -181,6 +221,10 @@ PairwiseIcpResult RunIcpPair(const string &dataset_dir, const Mat &K,
     pts2.push_back(Point3f(p2.x * dd2, p2.y * dd2, dd2));
   }
   res.corr = (int)pts1.size();
+  if (detail) {
+    detail->icp_pts1 = pts1;
+    detail->icp_pts2 = pts2;
+  }
   if (res.corr < 3) return res;
 
   Mat R_icp, t_icp;
@@ -213,10 +257,117 @@ void WriteTrajectoryTUM(const string &path, const string &convention_comment,
   }
 }
 
+void WriteSE3Columns(ofstream &f, const Sophus::SE3d &T) {
+  Eigen::Vector3d t = T.translation();
+  Eigen::Quaterniond q = T.unit_quaternion();
+  f << "," << t.x() << "," << t.y() << "," << t.z() << "," << q.x() << "," << q.y() << ","
+    << q.z() << "," << q.w();
+}
+
+// Export-only: one row per frame pair with the counts and errors computed
+// above (the same numbers printed in the PER-PAIR table).
+void WritePairMetrics(const string &path, const vector<Sophus::SE3d> &T_gt,
+                      const vector<PairwisePnpResult> &pnp, const vector<PairwiseIcpResult> &icp) {
+  ofstream f(path);
+  f << "pair,frame_i,frame_j,orb_keypoints_i,orb_keypoints_j,raw_matches,filtered_matches,"
+       "pnp_correspondences,pnp_inliers,pnp_ok,icp_correspondences,icp_ok,"
+       "pnp_relative_translation_error_m,pnp_relative_rotation_error_deg,"
+       "icp_relative_translation_error_m,icp_relative_rotation_error_deg,"
+       "gt_rel_tx,gt_rel_ty,gt_rel_tz,gt_rel_qx,gt_rel_qy,gt_rel_qz,gt_rel_qw,"
+       "pnp_rel_tx,pnp_rel_ty,pnp_rel_tz,pnp_rel_qx,pnp_rel_qy,pnp_rel_qz,pnp_rel_qw,"
+       "icp_rel_tx,icp_rel_ty,icp_rel_tz,icp_rel_qx,icp_rel_qy,icp_rel_qz,icp_rel_qw\n";
+  f << fixed << setprecision(9);
+  for (size_t k = 0; k < pnp.size(); ++k) {
+    const auto &p = pnp[k];
+    const auto &c = icp[k];
+    f << k << "," << k << "," << k + 1 << "," << p.keypoints_i << "," << p.keypoints_j << ","
+      << p.raw_matches << "," << p.matches << "," << p.corr << "," << p.inliers << ","
+      << (int)p.ok << "," << c.corr << "," << (int)c.ok << "," << p.trans_err << ","
+      << p.rot_err << "," << c.trans_err << "," << c.rot_err;
+    WriteSE3Columns(f, T_gt[k + 1].inverse() * T_gt[k]);  // T_{k+1<-k}, same as the errors use
+    WriteSE3Columns(f, p.T_rel);
+    WriteSE3Columns(f, c.T_rel);
+    f << "\n";
+  }
+}
+
+// Export-only: keypoints, matches and 3D correspondences of one pair.
+void WritePairDetail(const string &prefix, const PairDetail &d, int pnp_inliers) {
+  {
+    ofstream f(prefix + "_keypoints.csv");
+    f << "frame,index,u,v,size,angle,response,octave\n";
+    f << fixed << setprecision(4);
+    for (int which = 0; which < 2; ++which) {
+      const auto &kps = which == 0 ? d.keypoints_i : d.keypoints_j;
+      for (size_t k = 0; k < kps.size(); ++k)
+        f << (which == 0 ? "i" : "j") << "," << k << "," << kps[k].pt.x << "," << kps[k].pt.y
+          << "," << kps[k].size << "," << kps[k].angle << "," << kps[k].response << ","
+          << kps[k].octave << "\n";
+    }
+  }
+  {
+    // raw matches; `filtered` marks the ones kept by the distance filter.
+    ofstream f(prefix + "_raw_matches.csv");
+    f << "query_index,train_index,hamming_distance,filtered\n";
+    for (const auto &m : d.raw_matches) {
+      bool kept = false;
+      for (const auto &k : d.matches)
+        if (k.queryIdx == m.queryIdx && k.trainIdx == m.trainIdx) { kept = true; break; }
+      f << m.queryIdx << "," << m.trainIdx << "," << m.distance << "," << (int)kept << "\n";
+    }
+  }
+  {
+    // one row per FILTERED match: depths and whether/how PnP and ICP used it.
+    vector<int> pnp_corr(d.matches.size(), -1), icp_corr(d.matches.size(), -1);
+    for (size_t c = 0; c < d.pnp_match_of_corr.size(); ++c) pnp_corr[d.pnp_match_of_corr[c]] = (int)c;
+    for (size_t c = 0; c < d.icp_match_of_corr.size(); ++c) icp_corr[d.icp_match_of_corr[c]] = (int)c;
+    vector<char> inlier(d.pnp_match_of_corr.size(), 0);
+    for (int idx : d.pnp_inliers) inlier[idx] = 1;
+    ofstream f(prefix + "_correspondences.csv");
+    f << "match,query_index,train_index,u_i,v_i,u_j,v_j,hamming_distance,depth_raw_i,depth_raw_j,"
+         "pnp_used,pnp_inlier,icp_used,X_i,Y_i,Z_i,X_j,Y_j,Z_j\n";
+    f << fixed << setprecision(6);
+    for (size_t mi = 0; mi < d.matches.size(); ++mi) {
+      const auto &m = d.matches[mi];
+      const auto &a = d.keypoints_i[m.queryIdx].pt;
+      const auto &b = d.keypoints_j[m.trainIdx].pt;
+      int pc = pnp_corr[mi], ic = icp_corr[mi];
+      f << mi << "," << m.queryIdx << "," << m.trainIdx << "," << a.x << "," << a.y << "," << b.x
+        << "," << b.y << "," << m.distance << "," << d.depth_i[mi] << "," << d.depth_j[mi] << ","
+        << (pc >= 0) << "," << (pc >= 0 && pnp_inliers >= 0 ? (int)inlier[pc] : 0) << ","
+        << (ic >= 0);
+      if (ic >= 0) {
+        const auto &p = d.icp_pts1[ic], &q = d.icp_pts2[ic];
+        f << "," << p.x << "," << p.y << "," << p.z << "," << q.x << "," << q.y << "," << q.z;
+      } else if (pc >= 0) {
+        const auto &p = d.pnp_pts_3d[pc];
+        f << "," << p.x << "," << p.y << "," << p.z << ",,,";
+      } else {
+        f << ",,,,,,";
+      }
+      f << "\n";
+    }
+  }
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
   string dataset_dir = argc > 1 ? argv[1] : "../data/synthetic_bunny";
+  // Optional, export-only flags (default: off -- outputs unchanged):
+  //   --export-dir DIR   write DIR/pair_metrics.csv and DIR/pair_<i>_<j>_*.csv
+  //   --export-pair K    which pair (K -> K+1) gets the detailed dump (default 0);
+  //                      "all" dumps every pair
+  string export_dir;
+  int export_pair = 0;
+  for (int a = 2; a < argc; ++a) {
+    string arg = argv[a];
+    if (arg == "--export-dir" && a + 1 < argc) export_dir = argv[++a];
+    else if (arg == "--export-pair" && a + 1 < argc) {
+      string v = argv[++a];
+      export_pair = (v == "all") ? -1 : atoi(v.c_str());
+    }
+  }
 
   Intrinsics intr = ReadIntrinsics(dataset_dir + "/intrinsics.txt");
   Mat K = (Mat_<double>(3, 3) << intr.fx, 0, intr.cx, 0, intr.fy, intr.cy, 0, 0, 1);
@@ -226,10 +377,13 @@ int main(int argc, char **argv) {
 
   vector<PairwisePnpResult> pnp_pairs(N - 1);
   vector<PairwiseIcpResult> icp_pairs(N - 1);
+  vector<PairDetail> export_details(N - 1);  // only filled for exported pairs
   for (int i = 0; i < N - 1; ++i) {
     cout << "processing pair " << i << " -> " << i + 1 << "..." << endl;
-    pnp_pairs[i] = RunPnpPair(dataset_dir, K, T_gt, i, i + 1);
-    icp_pairs[i] = RunIcpPair(dataset_dir, K, T_gt, i, i + 1);
+    bool dump = !export_dir.empty() && (export_pair == -1 || i == export_pair);
+    PairDetail *detail = dump ? &export_details[i] : nullptr;
+    pnp_pairs[i] = RunPnpPair(dataset_dir, K, T_gt, i, i + 1, detail);
+    icp_pairs[i] = RunIcpPair(dataset_dir, K, T_gt, i, i + 1, detail);
   }
 
   cout << "\n=== PER-PAIR RELATIVE POSE RESULTS ===\n" << endl;
@@ -366,6 +520,17 @@ int main(int argc, char **argv) {
         << pnp_r_err[k] << "," << icp_t_err[k] << "," << icp_r_err[k] << "\n";
   }
   cout << "wrote " << dataset_dir << "/slam_trajectory.csv" << endl;
+
+  if (!export_dir.empty()) {
+    WritePairMetrics(export_dir + "/pair_metrics.csv", T_gt, pnp_pairs, icp_pairs);
+    cout << "wrote " << export_dir << "/pair_metrics.csv" << endl;
+    for (int k = 0; k < N - 1; ++k) {
+      if (export_pair != -1 && k != export_pair) continue;
+      string prefix = export_dir + "/pair_" + to_string(k) + "_" + to_string(k + 1);
+      WritePairDetail(prefix, export_details[k], pnp_pairs[k].inliers);
+      cout << "wrote " << prefix << "_{keypoints,raw_matches,correspondences}.csv" << endl;
+    }
+  }
 
   return 0;
 }

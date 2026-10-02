@@ -1,11 +1,17 @@
-# Blender visualization — GT vs PnP vs ICP
+# Blender visualization — GT vs PnP vs ICP vs Scratch PnP
 
-An animated Blender scene that compares three camera trajectories around the
+An animated Blender scene that compares camera trajectories around the
 Stanford Bunny:
 
 - **Ground truth (green):** where the camera actually was.
-- **PnP (orange):** where PnP (RANSAC) thinks the camera was.
+- **PnP (orange):** where PnP (OpenCV RANSAC) thinks the camera was.
 - **ICP (magenta):** where ICP thinks the camera was.
+- **Scratch Linear PnP (cyan):** where the from-scratch linear PnP in
+  `pnp_from_scratch/` thinks the camera was.
+  - It is run on the **raw** correspondences of all 35 pairs, with no RANSAC, so it drifts badly by design.
+  - Frames reached through a physically invalid pair (most points behind the camera) are flagged in the HUD.
+  - It appears only if `pnp_from_scratch/results/scratch_pnp_trajectory.csv` exists (run `pnp_full_sequence` first).
+  - If that file holds only a prefix of the frames, the line ends there and the camera is hidden afterwards; nothing is filled in.
 
 Blender is only a viewer. No trajectory, pose-estimation or pose-composition
 maths lives here. Everything is computed in C++
@@ -46,14 +52,20 @@ whenever the files in `data/synthetic_bunny/` change.
 
 ## What you see
 
-- **Data source:** all three trajectories come from `slam_trajectory.csv`. The
-  build checks them against `groundtruth.txt`, `pnp_trajectory.txt` and
+- **Data source:** GT, PnP and ICP come from `slam_trajectory.csv`. The build
+  checks them against `groundtruth.txt`, `pnp_trajectory.txt` and
   `icp_trajectory.txt`.
+- **Scratch PnP data:** it comes from `scratch_pnp_trajectory.csv`. The build checks:
+  - that frame 0 is the GT anchor
+  - its stored errors against errors it recomputes from the poses
+  - that it differs from OpenCV PnP
+
 - **Lines:** a thin line in the method's colour shows its full trajectory
   (all 36 poses) for the whole animation.
-- **Cameras:** exactly **three real Blender Camera objects** move along those
-  lines: `GT_Animated_Camera`, `PnP_Animated_Camera` and `ICP_Animated_Camera`,
-  in the GroundTruth / PnP / ICP collections. Each is keyframed at every frame:
+- **Cameras:** exactly **four real Blender Camera objects** move along those
+  lines: `GT_Animated_Camera`, `PnP_Animated_Camera`, `ICP_Animated_Camera` and
+  `ScratchPnP_Animated_Camera`, in the GroundTruth / PnP / ICP / ScratchPnP
+  collections. Each is keyframed at every frame where its trajectory has a pose:
   Blender frame *i* = that trajectory's pose *i* (frames 0–35), exact at whole
   frames, with LINEAR interpolation in between. Blender draws their frustums.
   The viewport overlay re-draws each camera's own frustum in its trajectory
@@ -102,7 +114,8 @@ Set the options at the top of `build_scene.py`, or change them live in the
 sidebar (N) > **Trajectories**:
 
 - `SHOW_GROUND_TRUTH`, `SHOW_PNP`, `SHOW_ICP`
-- `SHOW_CAMERAS` (the three animated cameras)
+- `SHOW_SCRATCH_PNP` (the 4th trajectory, if its file exists)
+- `SHOW_CAMERAS` (the animated cameras)
 - `SHOW_HISTORICAL_CAMERAS` (default `False`) and `CAMERA_SAMPLE_STEP`: an
   optional debug extra that adds static, smaller cameras at every Nth pose.
   These are build-time settings: rerun `build_scene.py` after changing them.

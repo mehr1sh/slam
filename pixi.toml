@@ -16,3 +16,18 @@ cxx-compiler = ">=2.0.0,<3"
 eigen = ">=5.0.1,<6"
 g2o = ">=2019.11.23,<2020"
 sophus = ">=1!1.24.6,<1!2"
+
+# Python environment for the figure/metrics pipeline (scripts/generate_results.py).
+# Independent of the C++ build environment (no shared solve-group), so adding it
+# does not change any package of the default environment.
+[feature.results]
+dependencies = { python = "3.12.*", numpy = ">=2", matplotlib-base = ">=3.9" }
+
+[feature.results.tasks]
+results = { cmd = "python scripts/generate_results.py", env = { PYTHONNOUSERSITE = "1" } }
+diagnostics = { cmd = "python scripts/run_diagnostics.py", env = { PYTHONNOUSERSITE = "1" } }
+correspondences = { cmd = "python scripts/generate_correspondence_figure.py", env = { PYTHONNOUSERSITE = "1" } }
+correspondence-map = { cmd = "python scripts/generate_correspondence_map.py", env = { PYTHONNOUSERSITE = "1" } }
+
+[environments]
+results = { features = ["results"], no-default-feature = true }

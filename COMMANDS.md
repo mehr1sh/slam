@@ -45,6 +45,55 @@ cd build
 ./trajectory_validation_test ../data/synthetic_bunny
 ```
 
+## Results: figures, CSVs and tables
+
+This writes to `results/`; see `results/README.md` for details.
+
+```bash
+pixi run build                # once, for the C++ programs
+pixi run -e results results   # = python scripts/generate_results.py (Python environment with matplotlib)
+pixi run -e results results --skip-cpp   # reuse results/data/cpp_export/
+```
+
+Behind the scenes, the script runs the C++ trajectory program with its
+export-only flags. These don't change any trajectory output:
+
+```bash
+cd build
+./slam_trajectory_test ../data/synthetic_bunny --export-dir <dir> --export-pair 0
+# writes <dir>/pair_metrics.csv and <dir>/pair_0_1_{keypoints,raw_matches,correspondences}.csv
+# --export-pair all writes the per-pair files for every pair
+```
+
+## Correspondence figures
+
+```bash
+# correspondence maps: results/figures/bunny_correspondences_<i>_<j>{,_inliers,_outliers}.{png,pdf,svg}
+pixi run -e results correspondence-map              # pair 0 -> 1
+pixi run -e results correspondence-map --pair 17    # pair 17 -> 18
+
+# annotated explanatory versions: bunny_correspondences_annotated_<i>_<j>.*, bunny_pnp_icp_correspondences*.*
+pixi run -e results correspondences [--pair K]
+```
+
+## Trajectory error diagnostics
+
+This writes to `diagnostics/`; the findings are in `diagnostics/REPORT.md`.
+It is diagnostic only: no algorithm, parameter or dataset is changed.
+
+```bash
+pixi run build
+pixi run -e results diagnostics              # = python scripts/run_diagnostics.py
+pixi run -e results diagnostics --skip-cpp   # reuse diagnostics/cpp/
+
+# the C++ part on its own (same solver calls, measured against ground truth)
+cd build && ./trajectory_diagnostics_test ../data/synthetic_bunny <out_dir>
+
+# read-only check that the Blender scene shows exactly the CSV poses and errors
+blender -b visualization/scenes/bunny_slam_demo.blend \
+    --python scripts/check_blender_consistency.py -- diagnostics/blender_consistency.csv
+```
+
 ## Real TUM RGB-D frame pair (book chapter 7 programs)
 
 Images are written to `../output/`.
@@ -72,6 +121,11 @@ cd build
 ## Blender visualization (Blender 5.x)
 
 ```bash
+# optional 4th trajectory (Scratch Linear PnP, all 36 poses): export the raw
+# correspondences, then run the from-scratch PnP on every pair
+pnp_from_scratch/export_correspondences.sh
+(cd pnp_from_scratch && mkdir -p build && cd build && cmake .. && make && ./pnp_full_sequence)
+
 # build the scene, save it to visualization/scenes/bunny_slam_demo.blend, and open it
 blender --python visualization/scripts/build_scene.py
 

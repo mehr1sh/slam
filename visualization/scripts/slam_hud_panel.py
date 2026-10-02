@@ -64,9 +64,10 @@ class SLAMVizSettings(bpy.types.PropertyGroup):
     show_groundtruth: bpy.props.BoolProperty(name="Ground Truth", default=True, update=_on_setting_changed)
     show_pnp: bpy.props.BoolProperty(name="PnP", default=True, update=_on_setting_changed)
     show_icp: bpy.props.BoolProperty(name="ICP", default=True, update=_on_setting_changed)
+    show_scratch_pnp: bpy.props.BoolProperty(name="Scratch PnP", default=True, update=_on_setting_changed)
     show_cameras: bpy.props.BoolProperty(
         name="Cameras", default=True, update=_on_setting_changed,
-        description="The three animated GT/PnP/ICP Blender cameras")
+        description="The animated GT/PnP/ICP/Scratch PnP Blender cameras")
     show_historical_cameras: bpy.props.BoolProperty(
         name="Historical cameras", default=False, update=_on_setting_changed,
         description="Optional static cameras at sampled poses (only if built with "
@@ -88,8 +89,8 @@ class SLAMVizSettings(bpy.types.PropertyGroup):
 # ---------------------------------------------------------------------------
 
 def get_camera(method):
-    """The animated real Blender Camera of `method` ("GT", "PnP" or "ICP"):
-    <method>_Animated_Camera."""
+    """The animated real Blender Camera of `method` ("GT", "PnP", "ICP" or
+    "ScratchPnP"): <method>_Animated_Camera."""
     obj = bpy.data.objects.get(f"{method}_Animated_Camera")
     if obj is None or obj.type != "CAMERA":
         raise KeyError(f"No camera {method}_Animated_Camera in this scene")
@@ -106,6 +107,10 @@ def get_pnp_camera():
 
 def get_icp_camera():
     return get_camera("ICP")
+
+
+def get_scratch_pnp_camera():
+    return get_camera("ScratchPnP")
 
 
 def set_active_camera(camera_obj, view=False):
@@ -223,7 +228,7 @@ class SLAM_PT_trajectories(bpy.types.Panel):
             box.label(text="DISPLAY", icon="HIDE_OFF")
             box.prop(s, "presentation_mode")
             row = box.row(align=True)
-            for prop in ("show_groundtruth", "show_pnp", "show_icp"):
+            for prop in ("show_groundtruth", "show_pnp", "show_icp", "show_scratch_pnp"):
                 row.prop(s, prop, toggle=True)
             grid = box.grid_flow(columns=2, align=True)
             for prop in ("show_cameras", "show_world_axes", "show_hud", "progressive"):
@@ -265,8 +270,11 @@ class SLAM_PT_trajectories(bpy.types.Panel):
             box = layout.box()
             box.label(text=f"{m['label'].upper()}  ({m['color_name']})",
                       icon="CHECKMARK" if m["key"] == "GT" else "OUTLINER_OB_CAMERA")
-            pos, _ = pose_from_row(row, m["prefix"])
             col = box.column(align=True)
+            if not slam_animation.has_pose(scene, m, i):
+                col.label(text=f"No pose at this frame (poses 0..{slam_animation.pose_count(scene, m) - 1} only)")
+                continue
+            pos, _ = pose_from_row(row, m["prefix"])
             col.label(text=f"X = {pos.x:.4f}")
             col.label(text=f"Y = {pos.y:.4f}")
             col.label(text=f"Z = {pos.z:.4f}")
@@ -275,6 +283,10 @@ class SLAM_PT_trajectories(bpy.types.Panel):
                 col.separator()
                 col.label(text=f"Translation Error: {err[0]:.4f} m")
                 col.label(text=f"Rotation Error: {err[1]:.3f} deg")
+            if row.get(f"{m['prefix']}_valid", 1.0) == 0.0:
+                col.label(text="Pair into this frame: most points behind the camera", icon="ERROR")
+            if m.get("note_short"):
+                col.label(text=m["note_short"])
 
         layout.separator()
         box = layout.box()
@@ -283,6 +295,8 @@ class SLAM_PT_trajectories(bpy.types.Panel):
         col.label(text="Green = where the camera actually was (GT)")
         col.label(text="Orange = where PnP thinks the camera was")
         col.label(text="Magenta = where ICP thinks the camera was")
+        if any(m["key"] == "ScratchPnP" for m in slam_animation.methods(scene)):
+            col.label(text="Cyan = where the own scratch linear PnP thinks it was")
         col.label(text="Camera = real Blender camera, moving along its line")
         col.label(text="Debug mode: red lines = position error (GT -> estimate)")
 
@@ -344,6 +358,8 @@ def _draw_labels(scene, project, s, ui, font):
         for cam in slam_animation.animated_cameras(key=key):
             if cam == scene.camera and _viewing_through(scene, cam):
                 continue
+            if not cam.visible_get():  # e.g. a partial trajectory past its last pose
+                continue
             p2 = project(cam.matrix_world.translation)
             if p2 is None:
                 continue
@@ -375,12 +391,13 @@ def _draw_hud_panel(scene, s, region_height, ui, font):
     debug = not s.presentation_mode
     line = 17 * ui
     x0 = 58 * ui
-    col_t = x0 + 130 * ui
-    col_r = x0 + 215 * ui
+    col_t = x0 + 165 * ui
+    col_r = x0 + 250 * ui
     dim = (0.58, 0.58, 0.62, 1.0)
 
-    lines = 3.3 + len(ms) + (1.2 + len(ms) if debug else 0)
-    width = 312 * ui
+    notes = [m for m in ms if m.get("note")]
+    lines = 3.3 + len(ms) + 1.6 * len(notes) + (1.2 + len(ms) if debug else 0)
+    width = 345 * ui
     top = region_height - 28 * ui
     height = lines * line + 8 * ui
     _draw_rect(x0 - 12 * ui, top - height, width, height + 6 * ui, (0.02, 0.022, 0.028, 0.62))
@@ -401,17 +418,31 @@ def _draw_hud_panel(scene, s, region_height, ui, font):
         err = slam_animation.error_at(scene, m, i)
         if m["key"] == "GT":
             _text(font, col_t, y, int(10 * ui), dim, "reference")
+        elif not slam_animation.has_pose(scene, m, i):
+            _text(font, col_t, y, int(10 * ui), dim, "no pose")
         elif err is not None:
             grey = (0.85, 0.85, 0.88, alpha)
             _text(font, col_t, y, int(10 * ui), grey, f"{err[0]:.3f} m")
             _text(font, col_r, y, int(10 * ui), grey, f"{err[1]:.1f}°")
         else:
             _text(font, col_t, y, int(10 * ui), dim, "n/a")
+    for m in notes:
+        y -= line * 0.95
+        n_m = slam_animation.pose_count(scene, m)
+        partial = f" (poses 0..{n_m - 1} only)" if n_m < len(rows) else ""
+        _text(font, x0, y, int(8.5 * ui), dim, f"{m['short']}: {m.get('note_short', '')}{partial}")
+        y -= line * 0.65
+        if slam_animation.has_pose(scene, m, i) and rows[i].get(f"{m['prefix']}_valid", 1.0) == 0.0:
+            _text(font, x0, y, int(8.5 * ui), (1.0, 0.45, 0.35, 1.0),
+                  "this frame: its pair put most points behind the camera")
     if debug:
         y -= line * 1.2
         _text(font, x0, y, int(9 * ui), dim, "CAMERA CENTER (C++ world, m)")
         for m in ms:
             y -= line
+            if not slam_animation.has_pose(scene, m, i):
+                _text(font, x0, y, int(9 * ui), (*m["color"], 0.9), f"{m['short']:<4} no pose")
+                continue
             p, _ = pose_from_row(rows[i], m["prefix"])
             _text(font, x0, y, int(9 * ui), (*m["color"], 0.9),
                   f"{m['short']:<4} {p.x:+.3f} {p.y:+.3f} {p.z:+.3f}")
