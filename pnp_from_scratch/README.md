@@ -20,8 +20,9 @@ It is not modified by anything here.
 ```bash
 cd pnp_from_scratch
 cmake -S . -B build && cmake --build build -j
-ctest --test-dir build        # 12 self-checking tests (see "Tests")
-./build/scratch_pipeline      # milestone 3: images -> trajectory (about 1.5 s)
+ctest --test-dir build        # 14 self-checking tests (see "Tests")
+./build/scratch_pipeline      # milestone 3: images -> trajectory (about 1.5 s), single scale
+./build/scratch_pipeline --pyramid-levels 8 --out pnp_from_scratch/results/pipeline_pyramid   # 8-level pyramid
 ./build/pnp_from_scratch      # milestone 1
 ./build/pnp_full_sequence     # milestone 2
 ```
@@ -380,24 +381,70 @@ to 0.14° (`test_ransac`).
 | `pairs.csv` | per pair: keypoints, raw/filtered matches, d_min, 3D→2D count, PnP ok/inliers, reprojection mean/median/max, rotation/translation error, t, estimated rotation, essential ok/inliers/errors, PnP-vs-essential rotation |
 | `trajectory.csv`, `trajectory.txt` | the 36 poses (T_wc; CSV with matrix and quaternion, absolute errors, inliers, source) |
 | `correspondences/pair_<i>_<j>.csv` | every filtered match: pixels, Hamming distance, depths, 3D point, `essential_inlier`, `pnp_used`, `pnp_inlier`, residual |
+| `keypoints/frame_<k>.csv` | every keypoint: original-image x, y, score, angle, pyramid level, scale, level x, y |
 | `summary.txt` | the summary above |
 
-### Tests (`ctest --test-dir build`: 12 tests)
+### Tests (`ctest --test-dir build`: 14 tests)
 
 | Test | What it checks |
 |---|---|
-| `features_{fast,orientation,brief,matcher}_test` | the shared feature modules (built from `../tests/unit`): segment test, score, NMS, border, cap, determinism; orientation; BRIEF pattern, smoothing, **rotation invariance**, **Hamming distance**; matching and the filter |
+| `features_{fast,orientation,brief,matcher,pyramid}_test` | the shared feature modules (built from `../tests/unit`): segment test, score, NMS, border, cap, determinism; orientation; BRIEF pattern, smoothing, **rotation invariance**, **Hamming distance**; matching and the filter; pyramid level sizes (640x480 … 179x134) and scales, constant/linear-ramp resampling, coordinate mapping, own-level orientation and descriptor, 1 level = single-scale path bit for bit |
 | `test_png` | CRC-32 and Adler-32 check values; stored, fixed and back-reference DEFLATE streams from an independent encoder; a dynamic-Huffman dataset image; RGB and depth samples equal to an independent decoder's; 202/202 depth values equal to the baseline export's |
 | `test_frontend` | frames 0→1: counts, back-projection, geometric quality of the matches against the true motion, determinism |
 | `test_essential` | exact recovery, (s, s, 0), the four candidates, cheirality, 8-point minimum, noise, Sampson distance |
 | `test_ransac` | 30 % gross outliers: linear PnP alone 28° off, RANSAC 0.47° (as good as the solver on the true inliers only); mask quality; seeds; failures; RANSAC essential on a wide scene |
 | `test_pipeline_0_1` | the whole pipeline on frames 0→1: pose within 3° / 3 cm (2.31° / 0.020 m), inliers, reprojection, proper R, mask, comparison without RANSAC, determinism |
+| `test_multiscale_0_1` | the 8-level front end on frames 0→1: keypoints on every level, level 0 = single scale, coordinate mapping, depth fraction; pipeline pose within 3° / 3 cm (2.77° / 0.023 m), > 100 inliers (206) |
 | `milestone1/2/3_*` | the three programs exit 0 |
+
+### Image pyramid (`--pyramid-levels L`; default 1)
+
+The reference ORB detects on an 8-level pyramid (scale 1.2); the single-scale scratch
+detector sees level 0 only, which is why it finds 108 keypoints in frame 0 against ORB's 366.
+The scratch pipeline has the same pyramid, without any library:
+
+- `features/pyramid` (`../include/features/pyramid.hpp`): level l is resampled from level
+  l−1 with centre-aligned bilinear interpolation to round(640/1.2^l) × round(480/1.2^l):
+  640x480, 533x400, 444x333, 370x278, 309x231, 257x193, 214x161, 179x134.
+  Scale per axis = original size / level size.
+- `features/multiscale`: on every level, the unchanged `DetectFast` (threshold 20, 3×3 NMS,
+  border 16, strongest 500), then orientation and rotated BRIEF **on that level's image**.
+- A keypoint keeps its level, level x/y, scale, score, angle and descriptor; its original
+  position is x0 = (x + 0.5)·scale − 0.5 (same for y). Matching, depth lookup, RANSAC and PnP
+  use the original position and are unchanged.
+- No Harris ranking and no per-level quotas (the reference ORB has both).
+- `--pyramid-levels 1` (the default) reproduces the single-scale results byte for byte.
+
+Frame 0 keypoints per level:
+
+| level | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | total |
+|---|---|---|---|---|---|---|---|---|---|
+| scratch pyramid | 108 | 87 | 53 | 45 | 35 | 29 | 21 | 20 | **398** |
+| reference ORB | 97 | 73 | 50 | 46 | 36 | 22 | 23 | 19 | **366** |
+
+Single scale → pyramid (the pyramid run is `results/pipeline_pyramid/`):
+
+| | Single scale | Pyramid (8 × 1.2) | Reference |
+|---|---|---|---|
+| pair 0→1: keypoints / filtered matches / 3D→2D / inliers | 108 / 86 / 76 / 57 | 398 / 346 / 249 / 206 | 366 / 202 / 136 / 121 |
+| pair 0→1: rotation / translation error | 2.31° / 0.020 m | 2.77° / 0.023 m | 0.98° / 0.007 m |
+| mean inliers per pair (min) | 56.5 (30) | 240.3 (154) | 132.0 (67) |
+| per-pair rotation error, mean / median / max | 4.74° / 2.75° / 29.66° | 2.07° / 1.83° / 5.58° | 1.39° / 1.17° / 3.28° |
+| per-pair translation error, mean | 0.042 m | 0.018 m | 0.012 m |
+| trajectory error, mean over 36 frames | 0.187 m / 21.0° | **0.076 m / 6.9°** | 0.180 m / 21.4° |
+| final error (frame 35) | 0.095 m / 9.9° | 0.106 m / 13.5° | 0.277 m / 32.1° |
+
+- The pyramid removes the bad pair (worst per-pair rotation 29.7° → 5.6°) and quadruples the inliers.
+- The per-pair accuracy is still below the reference's: the PnP is linear and has no refinement.
+- The frame-35 error is slightly larger than single scale's. Single scale's small final error
+  comes from errors of mixed sign cancelling; the pyramid's mean over frames is 2.5× smaller.
 
 ## Figures and the comparison with the reference pipeline
 
 ```bash
 python3 pnp_from_scratch/tools/make_figures.py       # after build/scratch_pipeline; NumPy + Matplotlib
+python3 pnp_from_scratch/tools/make_figures.py --pipeline pnp_from_scratch/results/pipeline_pyramid \
+                                               --out pnp_from_scratch/results/figures_pyramid
 python3 pnp_from_scratch/tools/check_trajectory.py   # frame-by-frame transform-chain check
 ```
 
@@ -410,18 +457,23 @@ identical RGB and 16-bit depth, and 202/202 baseline depth values.
   `../docs/migration/baseline/`, including the ORB keypoint lists of frames 0 and 1 in
   `reference_features/`, regenerated from the `baseline-pre-migration` tag.
 
-**Outputs** (`results/figures/`, PNG + PDF, generated):
+**Outputs** (`--out`, default `results/figures/`, PNG + PDF, generated). The correspondence
+and keypoint figures show the run given by `--pipeline`; the PnP comparison shows every
+scratch run that exists (`results/pipeline`, `results/pipeline_pyramid`). Keypoints are drawn
+with colour = pyramid level, circle radius ∝ scale and a tick along the orientation; the
+correspondence maps show positions only (no orientation ticks).
 
 | Figure | Shows |
 |---|---|
 | `bunny_correspondences_0_1` | scratch correspondences on the real frames 0 and 1, with the same colour for the same match in both frames: RANSAC inliers (solid), outliers (magenta dashed), matches without depth (grey), other keypoints (white) |
 | `bunny_correspondences_0_1_inliers` | the 57 RANSAC inliers only |
 | `bunny_correspondences_0_1_outliers` | the 19 rejected matches, numbered. Several ear-tip features of frame 0 are matched to the same frame-1 keypoint (nearest-neighbour matching is many-to-one); RANSAC rejects them |
-| `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367, with orientation) |
-| `feature_comparison_0_1` | scratch (FAST → orientation → rotated BRIEF → Hamming → scratch RANSAC) vs reference (ORB → ORB descriptor → Hamming → library RANSAC): keypoints with orientation and the correspondence maps, on the same frame pair. The pipelines use different keypoints and matches |
-| `pnp_comparison` (+ `pnp_comparison.md`) | per-pair counts and rotation errors, and accumulated position/rotation error per frame: scratch PnP, reference PnP, reference ICP |
+| `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367) with level, scale and orientation |
+| `feature_comparison_0_1` | scratch (FAST → orientation → rotated BRIEF → Hamming → scratch RANSAC) vs reference (ORB → ORB descriptor → Hamming → library RANSAC): keypoints with level, scale and orientation, and the correspondence maps, on the same frame pair. The pipelines use different keypoints and matches |
+| `pyramid_levels_0` | (pyramid run only) frame-0 keypoints per pyramid level, scratch vs reference ORB |
+| `pnp_comparison` (+ `pnp_comparison.md`) | per-pair counts and rotation errors, and accumulated position/rotation error per frame: scratch single scale, scratch pyramid, reference PnP, reference ICP |
 
-**Scratch vs reference PnP** (all 35 pairs; different features in each):
+**Scratch (single scale) vs reference PnP** (all 35 pairs; different features in each; the pyramid run is in the table above):
 
 | | Scratch | Reference (baseline) |
 |---|---|---|
@@ -447,6 +499,8 @@ identical RGB and 16-bit depth, and 202/202 baseline depth values.
 `visualization/scripts/build_scene.py` reads **`results/pipeline/trajectory.csv`** (milestone 3)
 and adds `ScratchPnP_Animated_Camera` (36 keyframes) and `ScratchPnP_Trajectory` (36 points),
 in cyan. The HUD label is "Scratch PnP", with the note "own features + RANSAC + linear PnP".
+It still shows the single-scale run; the pyramid run (`results/pipeline_pyramid/`) is not
+wired into the scene yet.
 
 The pose goes through the same `trajectory_to_blender_pose()` (R_FIX) and `WorldRoot`
 path as the GT, PnP and ICP cameras. `scripts/check_blender_consistency.py` verifies,
@@ -476,8 +530,9 @@ From the repository root:
 ```bash
 cd pnp_from_scratch
 cmake -S . -B build && cmake --build build -j
-ctest --test-dir build              # 12 tests
+ctest --test-dir build              # 14 tests
 ./build/scratch_pipeline            # milestone 3: images -> results/pipeline/
+./build/scratch_pipeline --pyramid-levels 8 --out pnp_from_scratch/results/pipeline_pyramid
 ./build/pnp_from_scratch            # milestone 1
 ./build/pnp_full_sequence           # milestone 2 -> results/scratch_pnp_trajectory.csv
 python3 tools/check_trajectory.py   # transform-chain check of the trajectories (NumPy)

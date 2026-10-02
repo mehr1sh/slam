@@ -1,0 +1,15 @@
+=== features/pyramid + features/multiscale ===
+  [PASS] 8 levels: 640x480, 533x400, 444x333, 370x278, 309x231, 257x193, 214x161, 179x134
+  [PASS] scale = original size / level size per axis, within 1% of 1.2^level (level 7: 3.5754 x 3.5821)
+  [PASS] level 0 is the input image
+  [PASS] deterministic: identical levels on a second build
+  [PASS] levels = 1 gives the input image only
+  [PASS] a constant image stays constant on every level
+  [PASS] linear ramp: every level equals the ramp at the mapped coordinates (max |diff| 1.19 grey levels; one rounding per level)
+  [PASS] blob centroid on every level maps back to (301, 217) within 0.105 level pixels
+  [PASS] keypoints on all 8 levels (91 83 70 95 192 244 248 234, total 1257), one descriptor each
+  [PASS] level, level coordinates, scale and original coordinates are consistent
+  [PASS] orientation and descriptor are computed on the keypoint's own level (74 checked)
+  [PASS] 1 level == the single-scale DetectFast/orientation/BRIEF path, bit for bit (91 keypoints)
+
+features_pyramid_test: PASS (0 failures)
