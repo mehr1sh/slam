@@ -14,8 +14,8 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 # the same single target definition the repository root uses.
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/feature_core.cmake)
 
-# Scratch library: PNG decoding, front end, projection, linear PnP, essential matrix.
-add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp)
+# Scratch library: PNG decoding, front end, projection, linear PnP, essential matrix, RANSAC.
+add_library(scratch_core src/png.cpp src/frontend.cpp src/projection.cpp src/pnp.cpp src/essential.cpp src/ransac.cpp)
 target_include_directories(scratch_core PUBLIC src)
 target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
 target_compile_options(scratch_core PRIVATE -Wall -Wextra)
@@ -37,7 +37,7 @@ foreach(t features_fast_test features_orientation_test features_brief_test featu
   target_link_libraries(${t} PRIVATE feature_core)
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
-foreach(t test_png test_frontend test_essential)
+foreach(t test_png test_frontend test_essential test_ransac)
   add_executable(${t} tests/${t}.cpp)
   target_include_directories(${t} PRIVATE tests)
   target_link_libraries(${t} PRIVATE scratch_core)
