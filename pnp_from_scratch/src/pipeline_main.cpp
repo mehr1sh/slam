@@ -209,6 +209,10 @@ int main(int argc, char **argv) {
     std::ofstream f(out / "trajectory.csv"), t(out / "trajectory.txt");
     f << "# Scratch pipeline trajectory, T_wc (camera -> world); FAST + rotated BRIEF + Hamming + "
          "RANSAC(linear PnP), all project-owned\n"
+      << "# note: Scratch pipeline: project-owned FAST (threshold " << params.frontend.fast.threshold
+      << ") + rotated BRIEF + Hamming matching + RANSAC (" << params.pnp_ransac.iterations << " it, "
+      << params.pnp_ransac.threshold_px << " px) around the scratch linear PnP; essential matrix as a diagnostic\n"
+      << "# hud_note: own features + RANSAC + linear PnP\n"
       << "# accumulation: T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i] * T_{i+1<-i}^-1 (failed pair: previous pose held)\n"
       << "frame,tx,ty,tz,r00,r01,r02,r10,r11,r12,r20,r21,r22,qx,qy,qz,qw,rotation_error_deg,translation_error_m,"
          "pnp_inliers,pose_source\n";

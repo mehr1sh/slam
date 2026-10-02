@@ -396,10 +396,21 @@ to 0.14° (`test_ransac`).
 
 ## Blender scene
 
-`visualization/scripts/build_scene.py` reads `results/scratch_pnp_trajectory.csv` and adds
-`ScratchPnP_Animated_Camera` (36 keyframes) and `ScratchPnP_Trajectory` (36 points), in cyan.
-The HUD label is "Scratch Linear PnP", with the note "pure linear PnP on raw matches, no
-RANSAC". Frames reached through a physically invalid pair are flagged.
+`visualization/scripts/build_scene.py` reads **`results/pipeline/trajectory.csv`** (milestone 3)
+and adds `ScratchPnP_Animated_Camera` (36 keyframes) and `ScratchPnP_Trajectory` (36 points),
+in cyan. The HUD label is "Scratch PnP", with the note "own features + RANSAC + linear PnP".
+
+The pose goes through the same `trajectory_to_blender_pose()` (R_FIX) and `WorldRoot`
+path as the GT, PnP and ICP cameras. `scripts/check_blender_consistency.py` verifies,
+from the saved scene:
+- the camera matches its data: position within 3e-8 m, rotation exactly
+- it looks at the bunny: maximum look-at error 5.61°, equal to the value
+  computed from the data to within 8e-4°
+
+Until this was fixed, the scene loaded the milestone-2 file
+`results/scratch_pnp_trajectory.csv` (no RANSAC), whose camera looks up to 141.7° away from
+the bunny. That trajectory is still available by pointing `SCRATCH_TRAJECTORY_CSV_PATH` at it.
+`tools/check_trajectory.py` compares both files with GT and the reference frame by frame.
 
 Before drawing, the build checks:
 - the frame-0 anchor
@@ -420,7 +431,8 @@ cmake -S . -B build && cmake --build build -j
 ctest --test-dir build              # 12 tests
 ./build/scratch_pipeline            # milestone 3: images -> results/pipeline/
 ./build/pnp_from_scratch            # milestone 1
-./build/pnp_full_sequence           # milestone 2 -> results/scratch_pnp_trajectory.csv (Blender)
+./build/pnp_full_sequence           # milestone 2 -> results/scratch_pnp_trajectory.csv
+python3 tools/check_trajectory.py   # transform-chain check of the trajectories (NumPy)
 cd .. && blender --python visualization/scripts/build_scene.py
 ```
 

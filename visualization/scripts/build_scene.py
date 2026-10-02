@@ -84,9 +84,13 @@ GROUNDTRUTH_PATH = os.path.join(DATASET_DIR, "groundtruth.txt")
 PNP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "pnp_trajectory.txt")
 ICP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "icp_trajectory.txt")
 TRAJECTORY_CSV_PATH = os.path.join(DATASET_DIR, "slam_trajectory.csv")
-# Written by pnp_from_scratch/ (the from-scratch PnP). May hold fewer poses than
-# the dataset (milestone 1: frames 0-1 only); only the poses it contains are shown.
-SCRATCH_TRAJECTORY_CSV_PATH = os.path.join(REPO_ROOT, "pnp_from_scratch", "results", "scratch_pnp_trajectory.csv")
+# Written by pnp_from_scratch/: the trajectory of its complete, self-contained
+# pipeline (own features + RANSAC around the scratch linear PnP; produced by
+# pnp_from_scratch/build/scratch_pipeline). Same T_wc format as the
+# milestone-2 file results/scratch_pnp_trajectory.csv (linear PnP on raw
+# matches, no RANSAC), which can be shown instead by pointing this path at it.
+# May hold fewer poses than the dataset; only the poses it contains are shown.
+SCRATCH_TRAJECTORY_CSV_PATH = os.path.join(REPO_ROOT, "pnp_from_scratch", "results", "pipeline", "trajectory.csv")
 SAVE_PATH = os.path.join(VISUALIZATION_ROOT, "scenes", "bunny_slam_demo.blend")
 RENDER_OUTPUT_PATH = os.path.join(VISUALIZATION_ROOT, "output", "render", "frame_")
 # Stored in the .blend relative to the .blend itself (visualization/scenes/),
@@ -150,7 +154,7 @@ METHOD_STYLES = {
                 color_name="orange", thickness=1.0),
     "ICP": dict(label="ICP", short="ICP", prefix="icp", color=(0.85, 0.40, 0.95),
                 color_name="magenta", thickness=1.0),
-    "ScratchPnP": dict(label="Scratch Linear PnP", short="Scratch PnP", prefix="scratch", color=(0.10, 0.78, 1.00),
+    "ScratchPnP": dict(label="Scratch PnP", short="Scratch PnP", prefix="scratch", color=(0.10, 0.78, 1.00),
                        color_name="cyan", thickness=1.0),
 }
 METHOD_COLLECTIONS = {"GT": "GroundTruth", "PnP": "PnP", "ICP": "ICP", "ScratchPnP": "ScratchPnP"}
@@ -219,16 +223,16 @@ def resolve_methods(rows, scratch=None):
 
 
 def read_scratch_trajectory(path, rows):
-    """Reads pnp_from_scratch's T_wc trajectory (scratch_pnp_trajectory.csv:
-    frame, tx, ty, tz, r00..r22, qx..qw, rotation_error_deg,
-    translation_error_m, per-pair stats, success, cheirality_ok, pose_source;
-    '#' lines = provenance notes) and checks it before anything is drawn:
+    """Reads a pnp_from_scratch T_wc trajectory (columns frame, tx, ty, tz,
+    r00..r22, qx..qw, rotation_error_deg, translation_error_m, then per-pair
+    statistics; optional cheirality_ok; '#' lines = provenance notes) and
+    checks it before anything is drawn:
       - frames are 0, 1, ..., k-1 (a prefix of the dataset; nothing is filled in)
       - frame 0 is the GT anchor (same convention as PnP/ICP)
       - the quaternion columns equal the rotation-matrix columns
       - the stored errors equal errors recomputed here from the poses vs GT
         (same definitions as slam_trajectory.csv)
-      - it is not a copy of the OpenCV PnP trajectory
+      - it is not a copy of the reference PnP trajectory
     Returns dict(rows=..., n_poses=k, note=..., note_short=...) or None."""
     from slam_coords import pose_from_row
 
@@ -280,7 +284,7 @@ def read_scratch_trajectory(path, rows):
     print(f"quaternion vs matrix columns: max {worst_q:.2e} deg; stored vs recomputed errors: max {worst_err:.2e}")
     print(f"frame 0: GT vs SCRATCH position diff: {d0:.6f} m "
           f"({'OK, common anchor confirmed' if d0 < 1e-4 else 'MISMATCH -- not anchored to GT!'})")
-    print(f"frames identical to OpenCV PnP: {same_as_pnp} (of {len(data) - 1})")
+    print(f"frames identical to the reference PnP: {same_as_pnp} (of {len(data) - 1})")
     print(f"frames reached through a physically invalid pair (most points behind the camera): {invalid}")
     if worst_q > 1e-2 or worst_err > 1e-4 or d0 > 1e-4:
         raise ValueError("scratch trajectory failed its consistency checks (see above)")
@@ -988,6 +992,8 @@ def main():
     scene["slam_intrinsics"] = intr
     scene["slam_trajectory"] = rows  # HUD/animation read positions+errors from this directly
     scene["slam_viz_methods"] = methods
+    if scratch:  # which scratch trajectory file this scene shows (read by scripts/check_blender_consistency.py)
+        scene["slam_scratch_source"] = os.path.relpath(SCRATCH_TRAJECTORY_CSV_PATH, REPO_ROOT)
     scene["slam_viz_external_view"] = view  # restored by the sidebar's "Reset external view" button
     os.makedirs(os.path.dirname(RENDER_OUTPUT_PATH), exist_ok=True)
 

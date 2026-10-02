@@ -12,7 +12,7 @@ SLAM* (slambook2). It contains:
 3. **Trajectory accumulation** of the 35 relative motions into global
    camera trajectories, compared with ground truth.
 4. **A Blender visualization** in which real, animated Blender cameras
-   (GT, PnP, ICP, and the from-scratch linear PnP) move along their trajectories around the bunny.
+   (GT, PnP, ICP, and the self-contained scratch PnP) move along their trajectories around the bunny.
 
 The feature-based two-view frontend from the book (ORB matching, 2D-2D pose,
 triangulation, PnP/ICP on a real TUM RGB-D frame pair) and some from-scratch
@@ -206,9 +206,8 @@ The scene contains:
 - the three full trajectory lines: GT green, PnP orange, ICP magenta
 - `GT_Animated_Camera`, `PnP_Animated_Camera`, `ICP_Animated_Camera`: real
   Blender cameras, keyframed so that frame *i* = pose *i*
-- `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the
-  from-scratch linear PnP of `pnp_from_scratch/`. It runs on raw matches with no
-  RANSAC, so it drifts badly by design; see `pnp_from_scratch/README.md`
+- `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the self-contained
+  pipeline of `pnp_from_scratch/` (own features, RANSAC, linear PnP); see `pnp_from_scratch/README.md`
 - a HUD with the per-frame errors
 
 To look through one camera, run this in Blender's Python console and then

@@ -121,10 +121,11 @@ cd build
 ## Blender visualization (Blender 5.x)
 
 ```bash
-# optional 4th trajectory (Scratch Linear PnP, all 36 poses): export the raw
-# correspondences, then run the from-scratch PnP on every pair
-pnp_from_scratch/export_correspondences.sh
-(cd pnp_from_scratch && mkdir -p build && cd build && cmake .. && make && ./pnp_full_sequence)
+# optional 4th trajectory (Scratch PnP, all 36 poses): the self-contained scratch pipeline
+(cd pnp_from_scratch && cmake -S . -B build && cmake --build build -j && ./build/scratch_pipeline)
+
+# read-only check: every camera equals its data, and looks at the bunny (look-at angle)
+blender -b visualization/scenes/bunny_slam_demo.blend --python scripts/check_blender_consistency.py -- /tmp/blender_check.csv
 
 # build the scene, save it to visualization/scenes/bunny_slam_demo.blend, and open it
 blender --python visualization/scripts/build_scene.py

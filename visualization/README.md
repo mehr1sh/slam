@@ -6,11 +6,15 @@ Stanford Bunny:
 - **Ground truth (green):** where the camera actually was.
 - **PnP (orange):** where PnP (OpenCV RANSAC) thinks the camera was.
 - **ICP (magenta):** where ICP thinks the camera was.
-- **Scratch Linear PnP (cyan):** where the from-scratch linear PnP in
-  `pnp_from_scratch/` thinks the camera was.
-  - It is run on the **raw** correspondences of all 35 pairs, with no RANSAC, so it drifts badly by design.
-  - Frames reached through a physically invalid pair (most points behind the camera) are flagged in the HUD.
-  - It appears only if `pnp_from_scratch/results/scratch_pnp_trajectory.csv` exists (run `pnp_full_sequence` first).
+- **Scratch PnP (cyan):** where the self-contained pipeline in `pnp_from_scratch/` thinks the
+  camera was. It uses its own features (FAST, rotated BRIEF, Hamming) and RANSAC around its
+  linear PnP, and ends 0.095 m / 9.9° from GT.
+  - It appears only if `pnp_from_scratch/results/pipeline/trajectory.csv` exists (run
+    `pnp_from_scratch/build/scratch_pipeline` first).
+  - The scene records the file it was built from in `scene["slam_scratch_source"]`.
+  - `SCRATCH_TRAJECTORY_CSV_PATH` in `build_scene.py` can point at the milestone-2 file
+    `results/scratch_pnp_trajectory.csv` instead (linear PnP on raw matches, no RANSAC). Frames
+    reached through a physically invalid pair are then flagged in the HUD.
   - If that file holds only a prefix of the frames, the line ends there and the camera is hidden afterwards; nothing is filled in.
 
 Blender is only a viewer. No trajectory, pose-estimation or pose-composition
@@ -55,10 +59,11 @@ whenever the files in `data/synthetic_bunny/` change.
 - **Data source:** GT, PnP and ICP come from `slam_trajectory.csv`. The build
   checks them against `groundtruth.txt`, `pnp_trajectory.txt` and
   `icp_trajectory.txt`.
-- **Scratch PnP data:** it comes from `scratch_pnp_trajectory.csv`. The build checks:
+- **Scratch PnP data:** it comes from `pnp_from_scratch/results/pipeline/trajectory.csv`
+  (same T_wc format, same conversion as the other cameras). The build checks:
   - that frame 0 is the GT anchor
   - its stored errors against errors it recomputes from the poses
-  - that it differs from OpenCV PnP
+  - that it differs from the reference PnP
 
 - **Lines:** a thin line in the method's colour shows its full trajectory
   (all 36 poses) for the whole animation.
