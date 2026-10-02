@@ -1,0 +1,57 @@
+== text scan (OpenCV|cv::|cv2) over the scratch path ==
+pnp_from_scratch/README.md:480:- The tools load no vision library (`cv2` is never imported). Matplotlib imports Pillow
+(above: only README prose / docstrings stating that cv2 is not used)
+== includes ==
+(no OpenCV include)
+== Python imports of the scratch tools ==
+from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection  # noqa: E402
+from matplotlib.lines import Line2D
+from matplotlib.lines import Line2D  # noqa: E402
+from pathlib import Path
+from png_reader import read_png  # noqa: E402
+import argparse
+import colorsys
+import csv
+import json
+import make_figures as mf  # noqa: E402
+import make_figures as mf  # noqa: E402  (shared loaders, colours, save())
+import math
+import matplotlib
+import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np
+import struct
+import sys
+import zlib
+== CMake ==
+pnp_from_scratch/CMakeLists.txt:11:find_package(Eigen3 REQUIRED NO_MODULE)
+pnp_from_scratch/CMakeLists.txt:21:target_link_libraries(scratch_core PUBLIC Eigen3::Eigen feature_core)
+pnp_from_scratch/CMakeLists.txt:25:target_link_libraries(pnp_from_scratch PRIVATE Eigen3::Eigen)
+pnp_from_scratch/CMakeLists.txt:30:target_link_libraries(pnp_full_sequence PRIVATE Eigen3::Eigen)
+pnp_from_scratch/CMakeLists.txt:35:target_link_libraries(scratch_pipeline PRIVATE scratch_core)
+pnp_from_scratch/CMakeLists.txt:41:target_link_libraries(depth_edge_experiment PRIVATE scratch_core)
+pnp_from_scratch/CMakeLists.txt:50:  target_link_libraries(${t} PRIVATE feature_core)
+pnp_from_scratch/CMakeLists.txt:57:  target_link_libraries(${t} PRIVATE scratch_core)
+== ldd: OpenCV libraries per scratch binary ==
+pnp_from_scratch/build/depth_edge_experiment       0
+pnp_from_scratch/build/features_brief_test         0
+pnp_from_scratch/build/features_fast_test          0
+pnp_from_scratch/build/features_matcher_test       0
+pnp_from_scratch/build/features_orientation_test   0
+pnp_from_scratch/build/features_pyramid_test       0
+pnp_from_scratch/build/pnp_from_scratch            0
+pnp_from_scratch/build/pnp_full_sequence           0
+pnp_from_scratch/build/scratch_pipeline            0
+pnp_from_scratch/build/test_essential              0
+pnp_from_scratch/build/test_frontend               0
+pnp_from_scratch/build/test_multiscale_0_1         0
+pnp_from_scratch/build/test_pipeline_0_1           0
+pnp_from_scratch/build/test_png                    0
+pnp_from_scratch/build/test_ransac                 0
+pnp_from_scratch/build/test_refine                 0
+== runtime: modules loaded by the four figure tools ==
+cv2 loaded: False
+== reference-side export (allowed, outside the scratch path) ==
+docs/migration/05_figures_depth_edges/export_reference_orb_distances.py imports cv2 (run once; output CSV tracked)

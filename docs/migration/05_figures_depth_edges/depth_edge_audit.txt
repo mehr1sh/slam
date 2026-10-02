@@ -1,0 +1,24 @@
+Depth neighbourhood of the RANSAC inliers (all 35 pairs, 'all' run), percentiles 10 / 50 / 90
+
+interior inliers: 2784 (33.1 %)
+  valid pixels in the window (fraction): 1.00 / 1.00 / 1.00
+  depth range in the window (mm):        2.60 / 6.60 / 14.40
+  largest adjacent depth jump (mm):      0.80 / 1.40 / 3.40
+  |depth gradient| at the sample (mm/px): 0.30 / 0.76 / 1.60  (undefined for 0: a 4-neighbour has no depth)
+  window radius (px):                     3.00 / 4.00 / 8.00
+  keypoint level, mean:                   1.86
+
+edge inliers: 5628 (66.9 %)
+  valid pixels in the window (fraction): 0.51 / 0.66 / 1.00
+  depth range in the window (mm):        4.80 / 16.00 / 40.20
+  largest adjacent depth jump (mm):      1.60 / 6.00 / 26.20
+  |depth gradient| at the sample (mm/px): 0.51 / 1.64 / 4.61  (undefined for 1768: a 4-neighbour has no depth)
+  window radius (px):                     3.00 / 5.00 / 9.00
+  keypoint level, mean:                   2.75
+
+Fixed-3D-point test with the TRUE motion (all inliers; d3 = |T_gt X_i - backproject(u_j, depth_j)|)
+
+interior: d3 (mm) percentiles 10/50/90: 0.38 / 1.17 / 3.51;  d3 > 5 mm: 4.9 %;  no frame-j depth at the match: 3
+   image residual observed - true projection (px): mean u +0.223, mean v +0.015; median |r| 1.01
+edge: d3 (mm) percentiles 10/50/90: 0.83 / 2.76 / 7.74;  d3 > 5 mm: 22.5 %;  no frame-j depth at the match: 520
+   image residual observed - true projection (px): mean u +0.338, mean v -0.104; median |r| 1.89

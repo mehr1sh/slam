@@ -521,6 +521,31 @@ correspondence maps show positions only (no orientation ticks).
   - one bad pair (10→11, 29.7°) puts it above the reference for frames 11–28
 - The reference's small errors are one-signed (under-rotation), so they accumulate steadily.
 
+### Trajectory, descriptor and depth-edge figures
+
+```bash
+python3 pnp_from_scratch/tools/trajectory_figures.py   # after build/scratch_pipeline
+python3 pnp_from_scratch/tools/descriptor_figure.py
+pnp_from_scratch/build/depth_edge_experiment           # read-only experiment -> results/depth_edge/
+python3 pnp_from_scratch/tools/depth_edge_audit.py     # -> results/figures/depth_edge/
+blender -b visualization/scenes/bunny_slam_demo.blend --python scripts/render_trajectory_overview.py \
+    -- pnp_from_scratch/results/figures/blender_trajectories_overview.png
+```
+
+| Figure | Shows |
+|---|---|
+| `trajectory_3d_comparison` | camera centres of GT, scratch PnP (refined), reference PnP and ICP in 3D, equal axes, start and end marked, bunny vertices at the centre |
+| `trajectory_position_error`, `trajectory_rotation_error` | error vs GT per frame 0–35 |
+| `relative_pose_error` | per-pair rotation and translation error: scratch linear, scratch refined, reference PnP |
+| `final_trajectory_comparison` | frame-35 and mean errors, measured values |
+| `blender_trajectories_overview` | render of the saved Blender scene: bunny and the four trajectory curves |
+| `descriptor_distances_0_1` | Hamming distances of unrelated and best-matching descriptors, scratch vs ORB, with the filter at 30; scratch bit bias |
+| `depth_edge/*` | the depth-edge audit: inliers by class on the RGB frames, where the rule applies on the depth map, neighbourhood statistics and the fixed-point test, the all vs interior experiment |
+
+The reference ORB all-pairs distance histogram is exported once with the frozen baseline's
+library (`../docs/migration/05_figures_depth_edges/export_reference_orb_distances.py`); the
+figure tools only read that CSV. Findings: `../docs/migration/05_figures_depth_edges/REPORT.md`.
+
 ## Blender scene
 
 `visualization/scripts/build_scene.py` reads **`results/pipeline/trajectory.csv`** (milestone 3)
