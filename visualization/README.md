@@ -1,14 +1,16 @@
 # Blender visualization — GT vs PnP vs ICP vs Scratch PnP
 
-An animated Blender scene that compares camera trajectories around the
-Stanford Bunny:
+A visualization and debugging aid for the SLAM pipeline: an animated Blender
+scene that compares the estimated camera trajectories with ground truth on the
+synthetic evaluation sequence (the test object is the Stanford Bunny mesh):
 
 - **Ground truth (green):** where the camera actually was.
 - **PnP (orange):** where PnP (OpenCV RANSAC) thinks the camera was.
 - **ICP (magenta):** where ICP thinks the camera was.
-- **Scratch PnP (cyan):** where the self-contained pipeline in `pnp_from_scratch/` thinks the
-  camera was. It uses its own features (FAST, rotated BRIEF, Hamming) and RANSAC around its
-  linear PnP, and ends 0.095 m / 9.9° from GT.
+- **Scratch PnP (cyan):** where the from-scratch pipeline in `pnp_from_scratch/` thinks the
+  camera was. It uses its own features (8-level pyramid, FAST, rotated BRIEF, Hamming), RANSAC
+  around its linear PnP and Levenberg–Marquardt refinement, and ends 0.284 m / 31.9° from GT
+  (default run).
   - It appears only if `pnp_from_scratch/results/pipeline/trajectory.csv` exists (run
     `pnp_from_scratch/build/scratch_pipeline` first).
   - The scene records the file it was built from in `scene["slam_scratch_source"]`.

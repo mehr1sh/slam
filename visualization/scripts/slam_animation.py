@@ -189,7 +189,7 @@ def _render_stamp_note(scene, i):
         else:
             tail = f" {err[0]:.3f}m {err[1]:.1f}deg" if err is not None else " n/a"
         legend.append(f"{m['short']} ({m['color_name']}){tail}")
-    return "STANFORD BUNNY - TRAJECTORY COMPARISON | " + " | ".join(legend)
+    return "VISUAL SLAM - TRAJECTORY COMPARISON (synthetic test scene) | " + " | ".join(legend)
 
 
 def update_animation(scene):

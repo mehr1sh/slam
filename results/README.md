@@ -1,4 +1,4 @@
-# Results: synthetic RGB-D Bunny trajectory experiment
+# Results: reference pipeline on the synthetic evaluation sequence
 
 Figures, CSVs and tables comparing **ground truth**, **PnP-based trajectory
 estimation**, and the project's **feature-correspondence-based 3D→3D ICP**

@@ -21,7 +21,7 @@ cd build
 ./trajectory_validation_test ../data/synthetic_bunny
 ```
 
-## Synthetic Stanford Bunny pipeline
+## Synthetic evaluation sequence (rendered test scene) and reference pipeline
 
 ```bash
 cd build

@@ -36,7 +36,7 @@ sc.render.film_transparent = False
 # the scene's HUD text is written by a frame-change handler that does not run in this
 # background render; replace it with a static colour legend instead of stale numbers
 sc.render.use_stamp_note = True
-sc.render.stamp_note_text = ("Stanford Bunny, frames 0-35 | GT (green) | Reference PnP (orange) | "
+sc.render.stamp_note_text = ("Synthetic test scene, frames 0-35 | GT (green) | Reference PnP (orange) | "
                              "Reference ICP (magenta) | Scratch PnP (cyan)")
 for flag in ("use_stamp_frame", "use_stamp_date", "use_stamp_time", "use_stamp_render_time", "use_stamp_camera",
              "use_stamp_lens", "use_stamp_scene", "use_stamp_filename", "use_stamp_marker", "use_stamp_memory",

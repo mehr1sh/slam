@@ -1,6 +1,45 @@
 # Architecture
 
-The final system is organized by SLAM function, not by book chapter.
+The project is a from-scratch C++ visual SLAM system under construction. Its
+code is organized by SLAM function, not by book chapter, so that each stage of
+the target pipeline has one place to live.
+
+## Target pipeline and where each stage lives
+
+```
+frame input ─▶ features ─▶ matching ─▶ geometry (2D-2D, PnP, triangulation) ─▶ tracking
+                                                                                 │
+        loop closing ◀── pose graph / bundle adjustment ◀── local mapping ◀── landmarks
+```
+
+| Stage | Current home | State |
+|---|---|---|
+| Image I/O | `pnp_from_scratch/src/png.*` | from scratch |
+| Features, matching | `src/features/` (`feature_core`, `cmake/feature_core.cmake`) | from scratch, shared by both builds |
+| Camera model | `pnp_from_scratch/src/projection.*` (scratch), `src/camera/` (reference) | both |
+| Two-view geometry | `pnp_from_scratch/src/essential.*` (scratch), `src/geometry/` (reference, OpenCV) | both |
+| PnP + RANSAC + refinement | `pnp_from_scratch/src/{pnp,ransac,refine}.*` | from scratch |
+| ICP / 3D-3D alignment | `src/tracking/icp.cpp` | reference |
+| Triangulation | `src/geometry/` | reference (OpenCV) only |
+| Frame-to-frame tracking | `pnp_from_scratch/src/pipeline.*`, `pipeline_main.cpp` | from scratch; no keyframes |
+| Landmarks / map, local mapping, backend optimization, loop closing, system | — | not started |
+
+`pnp_from_scratch/` is a separate CMake project today so that its no-OpenCV
+property can be verified by construction (it links only Eigen and
+`feature_core`). As the from-scratch stages mature they are meant to move into
+function-named modules (`features/` is the first to have done so), and the
+mapping, backend and loop-closing layers will be added next to them, once
+there is multi-frame state (`Frame`, `Map`, `KeyFrame`) for them to hold.
+
+Everything under `src/render/`, `data/`, `visualization/`, `scripts/`,
+`pnp_from_scratch/experiments/` and `pnp_from_scratch/tools/` is evaluation
+infrastructure: the synthetic test sequence (a rendered test object with exact
+ground truth), Blender visualization, plots and diagnostics. None of it is
+part of the SLAM computation.
+
+## The reference (book-derived) modules
+
+The reference modules below follow the book's structure.
 The book's companion code, slambook2 (<https://github.com/gaoxiang12/slambook2>,
 MIT; `ch6/` = nonlinear optimization, `ch7/` = visual odometry), is the algorithm
 reference -- it is not vendored here, see `THIRD_PARTY_NOTICES.md`; `src/` is the actual
@@ -13,11 +52,16 @@ include/<module>/*.hpp   public interface of each module
 src/<module>/*.cpp       implementation
   camera/        PinholeCamera, pixel2cam()
   features/      find_feature_matches() -- identical across 5 book files, extracted once
+                 (features.cpp: the book interface, now implemented with feature_core
+                 since migration checkpoint 01; the rest of features/ is feature_core)
   geometry/      pose_estimation_2d2d() (F/E/H + recoverPose), triangulation()
   optimization/  VertexPose -- identical g2o SE3 vertex duplicated in the book's
                  pose_estimation_3d2d.cpp and pose_estimation_3d3d.cpp, extracted once
                  (header-only: no .cpp, so it only exists under include/)
-  tracking/      PnP (pnp.cpp) and ICP (icp.cpp) pose estimation + BA refinement
+  tracking/      PnP (pnp.cpp) and ICP (icp.cpp) pose estimation + BA refinement;
+                 fast/brief/hamming_matching/essential_matrix.cpp are earlier
+                 from-scratch prototypes on OpenCV image types, superseded by
+                 feature_core and pnp_from_scratch/ (kept with their unit tests)
 tests/           one executable per component, adapted from the book's own main()s
 ```
 
@@ -40,9 +84,8 @@ sharing them is deduplication, not invented abstraction. Everything else
 in each BA function) differs between PnP and ICP and stays as the book has
 it, one copy each in `tracking/pnp.cpp` / `tracking/icp.cpp`.
 
-Not created yet: `mapping/`, `backend/`, `loop_closing/`, `system/` --
-there's no multi-frame state (`Frame`, `Map`, `KeyFrame`) yet for any of
-these to hold. They get designed when we actually build that layer.
+Not created yet: `mapping/`, `backend/`, `loop_closing/`, `system/` (see the
+target pipeline above).
 
 ## What's book-verbatim vs. changed
 
@@ -76,6 +119,7 @@ paths fixed in the first).
 
 ## Dependencies (pixi.toml)
 
-OpenCV, Eigen, g2o, Sophus -- all via conda-forge, pinned to versions where
+The from-scratch track needs only a C++17 compiler and Eigen. The reference
+modules need OpenCV, Eigen, g2o, Sophus -- all via conda-forge, pinned to versions where
 the book's OpenCV-2.4/3-era code compiles with the minimal changes above
 (OpenCV 4.x, not 5.x).

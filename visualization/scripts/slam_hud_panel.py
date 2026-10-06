@@ -403,7 +403,7 @@ def _draw_hud_panel(scene, s, region_height, ui, font):
     _draw_rect(x0 - 12 * ui, top - height, width, height + 6 * ui, (0.02, 0.022, 0.028, 0.62))
 
     y = top - 14 * ui
-    _text(font, x0, y, int(13 * ui), (0.95, 0.95, 0.96, 1.0), "STANFORD BUNNY — TRAJECTORY COMPARISON")
+    _text(font, x0, y, int(13 * ui), (0.95, 0.95, 0.96, 1.0), "VISUAL SLAM — TRAJECTORY COMPARISON (synthetic test scene)")
     y -= line
     _text(font, x0, y, int(11 * ui), (0.80, 0.80, 0.83, 1.0), f"Frame: {i} / {len(rows) - 1}")
     y -= line * 1.3

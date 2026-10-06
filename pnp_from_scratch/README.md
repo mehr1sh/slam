@@ -1,5 +1,11 @@
 # PnP from scratch: a self-contained visual-odometry pipeline
 
+This is the from-scratch track of the project's visual SLAM system: the
+frontend and tracking stages (features → matching → RANSAC PnP → refinement →
+frame-to-frame trajectory) that the mapping, optimization and loop-closing
+stages will build on. It is evaluated on the synthetic RGB-D sequence in
+`../data/synthetic_bunny/`; that scene is a test fixture, not the goal.
+
 Everything in this directory is written in the project. It depends on
 **Eigen** (matrices, SVD, QR), the **C++ standard library** and the project's
 own feature modules (`../include/features`, `../src/features`, library target

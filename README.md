@@ -1,30 +1,57 @@
-# Stanford Bunny RGB-D: PnP & ICP trajectory estimation
+# Visual SLAM from scratch (C++)
 
-A C++17 visual-odometry study built step by step from *14 Lectures on Visual
-SLAM* (slambook2). It contains:
+An ongoing, incremental implementation of a **visual SLAM pipeline in C++**,
+built component by component with the goal of owning the whole pipeline,
+rather than relying on OpenCV's feature, PnP, ICP or SLAM implementations.
+The geometric and computer-vision components come first; mapping,
+optimization and loop closure follow.
 
-1. **A synthetic RGB-D dataset generator.** A CPU rasterizer renders the
-   Stanford Bunny from a known circular camera orbit, producing RGB, depth and
-   exact ground-truth poses.
-2. **Frame-to-frame pose estimation** on that sequence:
-   - **PnP:** 3D points from depth in frame *i*, matched to 2D points in frame *i+1*.
-   - **ICP:** 3D–3D alignment of matched points.
-3. **Trajectory accumulation** of the 35 relative motions into global
-   camera trajectories, compared with ground truth.
-4. **A Blender visualization** in which real, animated Blender cameras
-   (GT, PnP, ICP, and the self-contained scratch PnP) move along their trajectories around the bunny.
-5. **A self-contained PnP pipeline** (`pnp_from_scratch/`) with no OpenCV:
-   own PNG decoder, 8-level image pyramid, FAST, rotated BRIEF, Hamming
-   matching, RANSAC, linear PnP and Levenberg–Marquardt refinement, built on
-   the C++ standard library and Eigen only. See
-   [Self-contained scratch pipeline](#self-contained-scratch-pipeline).
+C++ is the source of truth for every camera, geometry, pose and trajectory
+computation. Python and Blender are used only for dataset handling, plotting,
+visualization and debugging.
 
-The feature-based two-view frontend from the book (ORB matching, 2D-2D pose,
-triangulation, PnP/ICP on a real TUM RGB-D frame pair) and some from-scratch
-components (FAST, BRIEF, Hamming matching, 8-point essential matrix) are
-included as well.
+## Roadmap and status
 
-> **Scope.** This is *not* a full SLAM system. There is no map, no keyframes,
+| Stage | Status | Where |
+|---|---|---|
+| Feature detection / description | **from scratch**: image pyramid, FAST, intensity-centroid orientation, rotated BRIEF | `src/features/` (`feature_core`, no OpenCV) |
+| Feature matching | **from scratch**: brute-force Hamming, distance filter | `src/features/matcher.cpp` |
+| Camera geometry | **from scratch** in the scratch pipeline (pinhole projection, back-projection); the book-derived `camera/` module uses OpenCV types | `pnp_from_scratch/src/projection.*`, `src/camera/` |
+| Relative pose (2D–2D) | from-scratch 8-point essential matrix + decomposition (diagnostic); the book-derived module uses OpenCV | `pnp_from_scratch/src/essential.*`, `src/tracking/essential_matrix.cpp`, `src/geometry/` |
+| PnP | **from scratch**: linear DLT, RANSAC, Levenberg–Marquardt refinement | `pnp_from_scratch/src/{pnp,ransac,refine}.*` |
+| 3D–3D alignment (ICP) | reference: closed-form SVD + g2o refinement on feature correspondences | `src/tracking/icp.cpp` |
+| Triangulation | reference only (OpenCV) | `src/geometry/` |
+| Motion estimation / tracking | frame-to-frame odometry with trajectory chaining (no keyframes) | `pnp_from_scratch/src/pipeline*`, `tests/synthetic/slam_trajectory_test.cpp` |
+| Landmark management, local mapping | not started | — |
+| Pose graph optimization, loop closure | not started | — |
+| Bundle adjustment | not started (g2o is used only for single-pose refinement in the book-derived PnP/ICP) | — |
+| Full visual SLAM system | not started | — |
+
+The repository currently has two tracks:
+
+- **Scratch pipeline** (`pnp_from_scratch/` + `feature_core`): the
+  from-scratch implementation, with no OpenCV, which the SLAM system will be
+  built on. It currently runs RGB-D frames → features → matching → RANSAC PnP →
+  refinement → trajectory. See
+  [Self-contained scratch pipeline](#self-contained-scratch-pipeline).
+- **Reference pipeline** (the book-derived modules in `src/` and the programs
+  in `tests/`): code derived from *14 Lectures on Visual SLAM* (slambook2),
+  using OpenCV, g2o and Sophus. Its results with the original OpenCV ORB
+  features are frozen as the **baseline** the scratch implementation is
+  measured against (`docs/migration/baseline/`, tag `baseline-pre-migration`,
+  and the committed `data/synthetic_bunny/slam_trajectory.csv`). Its feature
+  stage has since been switched to `feature_core` (checkpoint 01); the rest
+  still uses OpenCV. It also contains the book's two-view frontend on a real
+  TUM RGB-D frame pair.
+
+**Evaluation environment.** Development and debugging use a controlled
+synthetic RGB-D sequence: a CPU rasterizer renders a test object (the
+Stanford Bunny mesh) from a known camera orbit, giving RGB, depth and exact
+ground-truth poses. The scene is a test fixture, not the purpose of the
+project. A Blender scene animates the estimated cameras against ground truth
+for visual inspection.
+
+> **Current scope.** This is *not yet* a full SLAM system. There is no map, no keyframes,
 > no loop closure, no global optimization, and **no fused PnP+ICP backend**.
 > PnP and ICP each produce an independent dead-reckoning trajectory. The file
 > `slam_trajectory.csv` and the program `slam_trajectory_test` are named after
@@ -33,31 +60,38 @@ included as well.
 
 ## Repository layout
 
+Roles: **[scratch]** = from-scratch implementation (no OpenCV), the basis of
+the SLAM system; **[reference]** = book-derived baseline using OpenCV/g2o;
+**[prototype]** = earlier from-scratch component, superseded but kept with its
+tests; **[evaluation]** = test data, rendering, visualization and analysis tools.
+
 ```
 include/<module>/        public headers
 src/<module>/            implementation
-  camera/                PinholeCamera, pixel2cam() / cam2pixel()
-  features/              project-owned feature modules (feature_core, no OpenCV): types, FAST,
-                         orientation, rotated BRIEF, Hamming matcher, image pyramid, multiscale
-                         extraction; features.cpp is the reference pipeline's adapter
-  geometry/              2D-2D pose (F/E/H + recoverPose), triangulation
-  optimization/          g2o SE(3) pose vertex (header-only, include/ only)
-  tracking/              PnP & ICP (+ Gauss-Newton / g2o refinement),
-                         from-scratch FAST, BRIEF, Hamming matching, 8-point E
-  render/                PLY I/O, CPU rasterizer, orbit trajectory, PLY scene export
-tests/
+  camera/                [reference] PinholeCamera, pixel2cam() / cam2pixel()
+  features/              [scratch] feature_core: types, image pyramid, FAST, orientation,
+                         rotated BRIEF, Hamming matcher, multiscale extraction
+                         ([reference] features.cpp: book interface, OpenCV types in/out,
+                         feature_core inside; transitional)
+  geometry/              [reference] 2D-2D pose (F/E/H + recoverPose), triangulation
+  optimization/          [reference] g2o SE(3) pose vertex (header-only, include/ only)
+  tracking/              [reference] PnP & ICP (+ Gauss-Newton / g2o refinement);
+                         [prototype] fast, brief, hamming_matching, essential_matrix
+  render/                [evaluation] PLY I/O, CPU rasterizer, orbit trajectory, PLY scene export
+tests/                   [reference] programs, one per component
   unit/                  self-contained (synthetic inputs)
   integration/           on data/tum_sample/ (real TUM RGB-D frame pair)
   synthetic/             on data/synthetic_bunny/, incl. the dataset generator
                          (render_bunny_test) and the trajectory pipeline (slam_trajectory_test)
-data/
-  meshes/bunny/          Stanford Bunny mesh (bun_zipper.ply)
-  synthetic_bunny/       generated dataset + reference trajectories (see its README)
+data/                    [evaluation]
+  meshes/bunny/          test-scene mesh (Stanford Bunny, bun_zipper.ply)
+  synthetic_bunny/       synthetic evaluation sequence + reference trajectories (see its README)
   tum_sample/            one real TUM RGB-D frame pair (+ depth)
-pnp_from_scratch/        self-contained pipeline (own CMake project, tests, figure tools;
-                         see pnp_from_scratch/README.md)
+pnp_from_scratch/        [scratch] the from-scratch pipeline: PNG decoding, projection, essential
+                         matrix, RANSAC, PnP, refinement, frame-to-frame tracking (own CMake
+                         project and tests); experiments/ and tools/ are [evaluation]
 cmake/                   feature_core.cmake: the feature library shared by both builds
-visualization/           Blender scene builder (see visualization/README.md)
+visualization/           [evaluation] Blender scene builder (see visualization/README.md)
 scripts/                 generate_results.py (results/), run_diagnostics.py (diagnostics/),
                          Blender checks and renders; migration/: regression suite and metrics
 results/                 README.md (tracked) + generated figures/, data/, tables/
@@ -96,7 +130,7 @@ All executables land in `build/`. **Run them from `build/`**: several use
 paths relative to it (`../data/...`, `../output/...`). They run from a plain
 shell, because the pixi library path is embedded in the binaries.
 
-## The synthetic dataset
+## Evaluation environment: synthetic RGB-D sequence
 
 `render_bunny_test` loads `bun_zipper.ply` (35,947 vertices, 69,451
 triangles), takes its bounding box (centre *c*, radius r_b = 0.1251 m), and
@@ -127,9 +161,15 @@ cd build
 The orbit flags matter: the program's defaults (3.0 / 0.5) give a different
 dataset.
 
-## Pose estimation
+## Reference pipeline (OpenCV baseline)
 
-For each consecutive pair (i, i+1), `slam_trajectory_test` does the following.
+For each consecutive pair (i, i+1), the reference program
+`slam_trajectory_test` does the following. The description and numbers are
+those of the frozen baseline (OpenCV ORB features; the committed
+`data/synthetic_bunny/slam_trajectory.csv`). The current build uses
+`feature_core` for the feature step (`docs/migration/01_features/`). The
+scratch pipeline replaces all of these steps with its own implementations
+(see below).
 
 - **Features.** ORB keypoints (OpenCV defaults) are matched by brute-force
   Hamming distance, keeping matches with distance ≤ max(2·d_min, 30). For pair
@@ -252,11 +292,11 @@ This builds and opens the scene, and saves it to
 
 The scene contains:
 
-- the bunny
+- the test object (Stanford Bunny mesh)
 - the three full trajectory lines: GT green, PnP orange, ICP magenta
 - `GT_Animated_Camera`, `PnP_Animated_Camera`, `ICP_Animated_Camera`: real
   Blender cameras, keyframed so that frame *i* = pose *i*
-- `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the self-contained
+- `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the from-scratch
   pipeline of `pnp_from_scratch/` (own features, pyramid, RANSAC, linear PnP + LM
   refinement); see `pnp_from_scratch/README.md`
 - a HUD with the per-frame errors
