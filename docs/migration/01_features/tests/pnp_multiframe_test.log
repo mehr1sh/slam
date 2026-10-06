@@ -1,0 +1,49 @@
+processing pair 0 -> 1...
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+processing pair 1 -> 2...
+-- Max dist : 74.000000 
+-- Min dist : 3.000000 
+processing pair 2 -> 3...
+-- Max dist : 90.000000 
+-- Min dist : 2.000000 
+processing pair 3 -> 4...
+-- Max dist : 102.000000 
+-- Min dist : 1.000000 
+processing pair 4 -> 5...
+-- Max dist : 91.000000 
+-- Min dist : 2.000000 
+processing pair 5 -> 6...
+-- Max dist : 100.000000 
+-- Min dist : 4.000000 
+processing pair 6 -> 7...
+-- Max dist : 82.000000 
+-- Min dist : 2.000000 
+processing pair 7 -> 8...
+-- Max dist : 70.000000 
+-- Min dist : 3.000000 
+processing pair 8 -> 9...
+-- Max dist : 83.000000 
+-- Min dist : 0.000000 
+processing pair 9 -> 10...
+-- Max dist : 82.000000 
+-- Min dist : 5.000000 
+
+=== PNP MULTI-FRAME TEST (frames 0 -> 10) ===
+
+Pair    Features   Matches  3D-2D  PlainRotErr    PlainTransErr   RansacRotErr RansacTransErr Inliers  
+0->1    70/66      58       49     176.097        1.068           1.323        0.010          36       
+1->2    66/77      50       42     16.507         0.149           2.073        0.020          34       
+2->3    77/68      61       55     11.822         0.221           2.390        0.020          34       
+3->4    68/77      54       47     8.258          0.271           4.349        0.040          29       
+4->5    77/71      53       47     27.055         0.274           3.625        0.033          30       
+5->6    71/68      46       37     175.944        1.316           1.745        0.015          23       
+6->7    68/66      51       46     177.969        1.103           4.678        0.041          26       
+7->8    66/60      54       47     179.687        1.198           2.636        0.024          28       
+8->9    60/75      49       44     176.634        1.057           0.836        0.008          27       
+9->10   75/62      58       52     28.466         0.340           7.175        0.063          20       
+
+=== SUMMARY ===
+pairs tested: 10
+plain solvePnP pairs with rot_err>5deg or trans_err>5cm: 10 / 10
+RANSAC diagnostic pairs with rot_err>5deg or trans_err>5cm: 1 / 10

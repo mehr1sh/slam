@@ -1,0 +1,63 @@
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+=== ICP SYNTHETIC TEST ===
+
+Frame 0 -> Frame 1
+
+Ground Truth:
+R =
+[0.9848076661445315, -0.04211592944238746, 0.1684639700059477;
+ 0.04211591894792201, 0.999106336044005, 0.00357472347122642;
+ -0.1684639726295598, 0.003574599827605089, 0.9857013301005226]
+t = [-0.0869100587537138, -0.001844077019979906, 0.007376312315133915]
+W=  0.0559719 -0.00981133  -0.0197069
+ 0.00107962    0.131879   0.0532066
+0.000404347   0.0550928   0.0382798
+U=  -0.121744    0.990693   0.0608763
+   0.899899    0.136047   -0.414335
+   0.418761 -0.00433973    0.908086
+V=-0.0359811   0.966388   0.254557
+  0.906558   0.138755  -0.398622
+  0.420544  -0.216428    0.88108
+iteration= 0	 chi2= 0.060281	 time= 3.032e-05	 cumTime= 3.032e-05	 edges= 45	 schur= 0	 lambda= 0.000218	 levenbergIter= 1
+iteration= 1	 chi2= 0.060184	 time= 5.14e-06	 cumTime= 3.546e-05	 edges= 45	 schur= 0	 lambda= 0.000145	 levenbergIter= 1
+iteration= 2	 chi2= 0.060182	 time= 4.63e-06	 cumTime= 4.009e-05	 edges= 45	 schur= 0	 lambda= 0.000097	 levenbergIter= 1
+iteration= 3	 chi2= 0.060182	 time= 4.53999e-06	 cumTime= 4.463e-05	 edges= 45	 schur= 0	 lambda= 0.000065	 levenbergIter= 1
+iteration= 4	 chi2= 0.060182	 time= 4.35e-06	 cumTime= 4.898e-05	 edges= 45	 schur= 0	 lambda= 0.000043	 levenbergIter= 1
+iteration= 5	 chi2= 0.060182	 time= 4.3e-06	 cumTime= 5.328e-05	 edges= 45	 schur= 0	 lambda= 0.000029	 levenbergIter= 1
+iteration= 6	 chi2= 0.060182	 time= 4.31e-06	 cumTime= 5.759e-05	 edges= 45	 schur= 0	 lambda= 0.000019	 levenbergIter= 1
+iteration= 7	 chi2= 0.060182	 time= 4.31e-06	 cumTime= 6.19e-05	 edges= 45	 schur= 0	 lambda= 0.000013	 levenbergIter= 1
+iteration= 8	 chi2= 0.060182	 time= 4.3e-06	 cumTime= 6.62e-05	 edges= 45	 schur= 0	 lambda= 0.000009	 levenbergIter= 1
+iteration= 9	 chi2= 0.060182	 time= 4.33e-06	 cumTime= 7.053e-05	 edges= 45	 schur= 0	 lambda= 0.000006	 levenbergIter= 1
+optimization costs time: 0.000749125 seconds.
+
+after optimization:
+T=
+   0.977271  0.00282879   -0.211975    0.109286
+-0.00637751    0.999851  -0.0160594  0.00732418
+   0.211898   0.0170463    0.977143  0.00683932
+          0           0           0           1
+
+ICP raw output (x_i = R*x_j + t, this repo's ICP convention):
+R =
+[0.9772709526524826, 0.002828785714454322, -0.2119751944758887;
+ -0.006377513431127549, 0.9998507002904202, -0.01605940382430241;
+ 0.2118981180287945, 0.01704626352424279, 0.9771430870019586]
+t = [0.109286358899392, 0.007324182675093871, 0.006839322549285459]
+
+ICP converted to common convention (x_j = R*x_i + t):
+R =
+[0.9772709526524826, -0.006377513431127549, 0.2118981180287945;
+ 0.002828785714454322, 0.9998507002904202, 0.01704626352424279;
+ -0.2119751944758887, -0.01605940382430241, 0.9771430870019586]
+t = [-0.108204913576933, -0.007748821762089314, 0.01660062243971178]
+
+Rotation error: 3.4616 degrees
+Translation error: 0.0239463 metres
+
+Number of valid depth pixels (frame 0): 14706
+Number of valid depth pixels (frame 1): 14946
+Number of feature matches: 58
+Number of 3D-3D correspondences: 45
+ICP iterations: 10 (fixed, hardcoded in bundleAdjustment(), see src/tracking/icp.cpp)
+Final point-to-point alignment error (m) mean/median/rms/max: 0.0195773 / 0.00764376 / 0.0365701 / 0.140992

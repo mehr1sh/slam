@@ -13,6 +13,11 @@ SLAM* (slambook2). It contains:
    camera trajectories, compared with ground truth.
 4. **A Blender visualization** in which real, animated Blender cameras
    (GT, PnP, ICP, and the self-contained scratch PnP) move along their trajectories around the bunny.
+5. **A self-contained PnP pipeline** (`pnp_from_scratch/`) with no OpenCV:
+   own PNG decoder, 8-level image pyramid, FAST, rotated BRIEF, Hamming
+   matching, RANSAC, linear PnP and Levenberg–Marquardt refinement, built on
+   the C++ standard library and Eigen only. See
+   [Self-contained scratch pipeline](#self-contained-scratch-pipeline).
 
 The feature-based two-view frontend from the book (ORB matching, 2D-2D pose,
 triangulation, PnP/ICP on a real TUM RGB-D frame pair) and some from-scratch
@@ -32,7 +37,9 @@ included as well.
 include/<module>/        public headers
 src/<module>/            implementation
   camera/                PinholeCamera, pixel2cam() / cam2pixel()
-  features/              ORB extraction + brute-force Hamming matching + distance filter
+  features/              project-owned feature modules (feature_core, no OpenCV): types, FAST,
+                         orientation, rotated BRIEF, Hamming matcher, image pyramid, multiscale
+                         extraction; features.cpp is the reference pipeline's adapter
   geometry/              2D-2D pose (F/E/H + recoverPose), triangulation
   optimization/          g2o SE(3) pose vertex (header-only, include/ only)
   tracking/              PnP & ICP (+ Gauss-Newton / g2o refinement),
@@ -47,16 +54,26 @@ data/
   meshes/bunny/          Stanford Bunny mesh (bun_zipper.ply)
   synthetic_bunny/       generated dataset + reference trajectories (see its README)
   tum_sample/            one real TUM RGB-D frame pair (+ depth)
+pnp_from_scratch/        self-contained pipeline (own CMake project, tests, figure tools;
+                         see pnp_from_scratch/README.md)
+cmake/                   feature_core.cmake: the feature library shared by both builds
 visualization/           Blender scene builder (see visualization/README.md)
-scripts/                 generate_results.py: figures, CSVs and tables for results/
+scripts/                 generate_results.py (results/), run_diagnostics.py (diagnostics/),
+                         Blender checks and renders; migration/: regression suite and metrics
 results/                 README.md (tracked) + generated figures/, data/, tables/
+diagnostics/             drift diagnosis reports (.md tracked; CSVs and figures generated)
 presentation/            progress slides (LaTeX source + PDF)
-docs/                    reference numbers for the chapter 6/7 programs
+docs/
+  chapter6_7_tests.md    reference numbers for the chapter 6/7 programs
+  library_removal_audit.md   where the reference pipeline uses OpenCV
+  migration/             checkpoint reports 01–05 with evidence; baseline/ = frozen
+                         reference outputs (tag baseline-pre-migration)
 COMMANDS.md              every command in one place
 ```
 
 Generated artifacts are not tracked: `build/`, `output/` (images, PLYs and
-CSVs written by the programs) and the Blender scene
+CSVs written by the programs), `pnp_from_scratch/build/` and
+`pnp_from_scratch/results/`, and the Blender scene
 `visualization/scenes/bunny_slam_demo.blend`.
 
 ## Dependencies
@@ -178,6 +195,39 @@ CSVs and a summary table to `results/`. Examples: the experiment setup, ORB
 matches, the correspondence funnel, the 3D trajectories, the error per frame,
 local vs global error, and a one-slide summary. See `results/README.md`.
 
+## Self-contained scratch pipeline
+
+`pnp_from_scratch/` is a separate CMake project that needs only a C++17
+compiler and Eigen:
+
+```
+RGB-D PNG (own decoder) → grayscale → 8-level pyramid (scale 1.2)
+  → FAST (threshold 20) → intensity-centroid orientation → rotated BRIEF
+  → Hamming matching, distance ≤ max(2·d_min, 30) → depth-backed 3D→2D
+  → RANSAC (6-point linear PnP, 300 iterations, 8 px) → LM refinement
+  → trajectory T_wc[i+1] = T_wc[i]·T_rel⁻¹ → Blender (ScratchPnP_Animated_Camera)
+```
+
+```bash
+cd pnp_from_scratch
+cmake -S . -B build && cmake --build build -j
+ctest --test-dir build          # 15 self-checking tests
+./build/scratch_pipeline        # -> results/pipeline/
+```
+
+Measured on the 35 pairs (no ranking; details and figures in
+`docs/migration/05_figures_depth_edges/REPORT.md`):
+
+| | Scratch | Reference PnP | Reference ICP |
+|---|---|---|---|
+| RANSAC inliers per pair, mean | 240.3 | 132.0 | — |
+| mean pair rotation / translation error | 1.16° / 0.011 m | 1.39° / 0.012 m | 2.81° / 0.023 m |
+| mean trajectory error | 0.147 m / 18.2° | 0.180 m / 21.4° | 0.270 m / 30.3° |
+| final error (frame 35) | 0.284 m / 31.9° | 0.277 m / 32.1° | 0.525 m / 64.9° |
+
+The remaining drift is a systematic under-rotation traced to depth-edge
+(silhouette) correspondences; see the checkpoint-05 report.
+
 ## Coordinate conventions
 
 - **Pose files** store **T_wc** (camera → world). The translation is the
@@ -207,7 +257,8 @@ The scene contains:
 - `GT_Animated_Camera`, `PnP_Animated_Camera`, `ICP_Animated_Camera`: real
   Blender cameras, keyframed so that frame *i* = pose *i*
 - `ScratchPnP_Animated_Camera` and `ScratchPnP_Trajectory` (cyan): the self-contained
-  pipeline of `pnp_from_scratch/` (own features, RANSAC, linear PnP); see `pnp_from_scratch/README.md`
+  pipeline of `pnp_from_scratch/` (own features, pyramid, RANSAC, linear PnP + LM
+  refinement); see `pnp_from_scratch/README.md`
 - a HUD with the per-frame errors
 
 To look through one camera, run this in Blender's Python console and then
@@ -241,7 +292,10 @@ are listed in `COMMANDS.md`.
   enter the least-squares fit. This is why it drifts more than PnP.
 - The synthetic data is noise-free, with fixed lighting and a single object.
 - The programs under `tests/` use paths relative to `build/`, and most of them
-  print results rather than assert them. There is no CTest integration.
+  print results rather than assert them; `scripts/migration/run_test_suite.sh`
+  runs all of them and records exit codes. (`pnp_from_scratch/` has CTest.)
+- `orb_from_scratch_test` (book demo) crashes intermittently: its border check
+  is smaller than its sampling pattern (see `docs/migration/03_scratch_pyramid/REPORT.md`).
 - Linux x86-64 only (as pinned in `pixi.toml`). `-msse4` is required by the
   from-scratch Hamming matcher.
 

@@ -1,0 +1,21 @@
+=== features/brief ===
+  [PASS] 256 binary tests
+  [PASS] every test point within the radius-15 disc
+  [PASS] no test compares a pixel with itself
+  [PASS] 256 distinct tests
+  [PASS] pattern generated once and reused
+  pattern fingerprint (FNV-1a): 24bb0ef5a0a96263
+  [PASS] pattern equals the fixed seeded pattern (fingerprint unchanged)
+  [PASS] per-axis spread 5.75 ~ sigma 6.2 (truncated Gaussian)
+  [PASS] smoothing a constant image changes nothing
+  [PASS] impulse response: symmetric, peaked, 9x9 support
+  [PASS] all 87 keypoints (border 16) get a valid descriptor
+  [PASS] bits are balanced: 0.521 ones
+  [PASS] noise image, 250 unrelated keypoint pairs: mean distance 123.8 (~128)
+  [PASS] same keypoint -> identical descriptor
+  [PASS] keypoint 3 px from the edge -> invalid (pattern leaves the image)
+  [PASS] rotated BRIEF, 87 keypoints: mean distance 0.00 after a 90 deg rotation
+  [PASS] unrotated BRIEF on the same points: mean distance 130.1 (not invariant)
+  [PASS] Hamming distance counts differing bits
+
+features_brief_test: PASS (0 failures)

@@ -1,0 +1,11 @@
+=== features/matcher ===
+  [PASS] one match per query descriptor
+  [PASS] exact copy found (train 2, distance 0)
+  [PASS] tie between train 1 and 3 (distance 1) -> lowest index 1
+  [PASS] empty input -> no matches
+  [PASS] d_min 10 -> limit max(20, 30) = 30: keeps 10, 25, 19
+  [PASS] d_min 20 -> limit 40: keeps 20, 40; drops 41
+  [PASS] shifted image: 101 filtered matches
+  [PASS] 99 / 101 filtered matches have exactly the true shift (7, -4)
+
+features_matcher_test: PASS (0 failures)

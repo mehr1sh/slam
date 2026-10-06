@@ -1,0 +1,83 @@
+-- Max dist : 91.000000 
+-- Min dist : 3.000000 
+matches: 169
+3d-3d pairs: 138
+W=   19.2887 -0.0900689    3.67055
+  -2.30233    6.79526   -9.92557
+   7.03331   -9.57864    15.9685
+U= 0.570387 -0.814648 -0.104912
+-0.404959 -0.390036  0.826971
+  0.71461  0.429208  0.552371
+V= 0.646684 -0.755636 -0.103992
+-0.367874 -0.428412  0.825307
+ 0.668183  0.495457  0.555026
+ICP via SVD results: 
+R = [0.995347758120621, 0.05259012510711417, -0.08072867610379822;
+ -0.05315340250846544, 0.99857461549051, -0.004842840050382879;
+ 0.08035892113528459, 0.009111313802006082, 0.9967243489324291]
+t = [0.2273947355531694;
+ -0.0456403400711308;
+ -0.007398521929080859]
+R_inv = [0.995347758120621, -0.05315340250846544, 0.08035892113528459;
+ 0.05259012510711417, 0.99857461549051, 0.009111313802006082;
+ -0.08072867610379822, -0.004842840050382879, 0.9967243489324291]
+t_inv = [-0.228168242367486;
+ 0.03368397770091211;
+ 0.02551053404019652]
+calling bundle adjustment
+iteration= 0	 chi2= 42.709005	 time= 4.079e-05	 cumTime= 4.079e-05	 edges= 138	 schur= 0	 lambda= 0.001399	 levenbergIter= 1
+iteration= 1	 chi2= 42.678027	 time= 1.324e-05	 cumTime= 5.403e-05	 edges= 138	 schur= 0	 lambda= 0.000466	 levenbergIter= 1
+iteration= 2	 chi2= 42.674736	 time= 1.238e-05	 cumTime= 6.641e-05	 edges= 138	 schur= 0	 lambda= 0.000155	 levenbergIter= 1
+iteration= 3	 chi2= 42.674310	 time= 1.218e-05	 cumTime= 7.859e-05	 edges= 138	 schur= 0	 lambda= 0.000104	 levenbergIter= 1
+iteration= 4	 chi2= 42.674252	 time= 1.216e-05	 cumTime= 9.075e-05	 edges= 138	 schur= 0	 lambda= 0.000069	 levenbergIter= 1
+iteration= 5	 chi2= 42.674245	 time= 1.23e-05	 cumTime= 0.00010305	 edges= 138	 schur= 0	 lambda= 0.000046	 levenbergIter= 1
+iteration= 6	 chi2= 42.674243	 time= 1.231e-05	 cumTime= 0.00011536	 edges= 138	 schur= 0	 lambda= 0.000031	 levenbergIter= 1
+iteration= 7	 chi2= 42.674243	 time= 1.227e-05	 cumTime= 0.00012763	 edges= 138	 schur= 0	 lambda= 0.000020	 levenbergIter= 1
+iteration= 8	 chi2= 42.674243	 time= 1.206e-05	 cumTime= 0.00013969	 edges= 138	 schur= 0	 lambda= 0.000014	 levenbergIter= 1
+iteration= 9	 chi2= 42.674243	 time= 1.201e-05	 cumTime= 0.0001517	 edges= 138	 schur= 0	 lambda= 0.000009	 levenbergIter= 1
+optimization costs time: 0.000501237 seconds.
+
+after optimization:
+T=
+   0.995348    0.052592   -0.080725    0.227389
+  -0.053155    0.998575  -0.0048408  -0.0456438
+  0.0803553  0.00910922    0.996725 -0.00739894
+          0           0           0           1
+p1 = [-0.00583935, -0.847605, 2.7652]
+p2 = [0.0264068, -0.77427, 2.8072]
+(R*p2+t) = [-0.01365885551606985;
+ -0.8338028092053315;
+ 2.785675403451207]
+
+p1 = [-0.489093, -0.16865, 1.4718]
+p2 = [-0.53375, -0.160299, 1.5268]
+(R*p2+t) = [-0.4355593614840402;
+ -0.1847341045196293;
+ 1.470050453204418]
+
+p1 = [0.244444, -0.0244715, 1.6558]
+p2 = [0.16254, 0.0264995, 1.6634]
+(R*p2+t) = [0.256288326735436;
+ -0.03587413633407883;
+ 1.663855253604379]
+
+p1 = [0.356963, 0.135198, 1.2082]
+p2 = [0.244871, 0.170163, 1.1932]
+(R*p2+t) = [0.3837483662613321;
+ 0.1054841625262364;
+ 1.203119622981345]
+
+p1 = [0.276232, -0.0308278, 1.6558]
+p2 = [0.0795137, 0.0264995, 1.6634]
+(R*p2+t) = [0.1736482636348313;
+ -0.03146086950409596;
+ 1.65718364643871]
+
+
+=== ICP SUMMARY ===
+3D-3D correspondences used: 138
+rotation diff SVD-vs-g2o (deg): 0.000259654
+translation diff SVD-vs-g2o (norm): 6.87713e-06
+point-to-point error before optimization (SVD) mean/median/rms/max: 0.236796 / 0.0570749 / 0.556088 / 3.89228
+point-to-point error after optimization (g2o) mean/median/rms/max: 0.236796 / 0.0570757 / 0.556088 / 3.89228
+(the check p1 ~= R*p2+t above uses the final R,t -- this is exactly the 'after optimization' statistic over the full correspondence set, not just the 5 printed samples)

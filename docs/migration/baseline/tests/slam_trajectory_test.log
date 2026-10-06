@@ -1,0 +1,1193 @@
+Loaded 36 ground-truth frames from <tmp>/ds/groundtruth.txt
+processing pair 0 -> 1...
+-- Max dist : 98.000000 
+-- Min dist : 6.000000 
+-- Max dist : 98.000000 
+-- Min dist : 6.000000 
+W=  0.162096  0.0387041 -0.0203594
+ 0.0361437   0.260587  0.0713341
+ 0.0027197   0.072572  0.0392777
+U= 0.250926  0.965536 0.0691098
+ 0.929897 -0.220597 -0.294328
+ 0.268938  -0.13812  0.953203
+V= 0.258031   0.94606  0.195934
+ 0.934048 -0.192444 -0.300865
+  0.24693 -0.260644  0.933322
+iteration= 0	 chi2= 0.110172	 time= 5.4879e-05	 cumTime= 5.4879e-05	 edges= 119	 schur= 0	 lambda= 0.000793	 levenbergIter= 1
+iteration= 1	 chi2= 0.110120	 time= 1.66e-05	 cumTime= 7.1479e-05	 edges= 119	 schur= 0	 lambda= 0.000529	 levenbergIter= 1
+iteration= 2	 chi2= 0.110119	 time= 1.55e-05	 cumTime= 8.6979e-05	 edges= 119	 schur= 0	 lambda= 0.000353	 levenbergIter= 1
+iteration= 3	 chi2= 0.110119	 time= 1.529e-05	 cumTime= 0.000102269	 edges= 119	 schur= 0	 lambda= 0.000235	 levenbergIter= 1
+iteration= 4	 chi2= 0.110119	 time= 1.51e-05	 cumTime= 0.000117369	 edges= 119	 schur= 0	 lambda= 0.000157	 levenbergIter= 1
+iteration= 5	 chi2= 0.110119	 time= 1.516e-05	 cumTime= 0.000132529	 edges= 119	 schur= 0	 lambda= 0.000104	 levenbergIter= 1
+iteration= 6	 chi2= 0.110119	 time= 1.515e-05	 cumTime= 0.000147679	 edges= 119	 schur= 0	 lambda= 0.000070	 levenbergIter= 1
+iteration= 7	 chi2= 0.110119	 time= 1.515e-05	 cumTime= 0.000162829	 edges= 119	 schur= 0	 lambda= 0.000046	 levenbergIter= 1
+iteration= 8	 chi2= 0.110119	 time= 1.514e-05	 cumTime= 0.000177969	 edges= 119	 schur= 0	 lambda= 0.000031	 levenbergIter= 1
+iteration= 9	 chi2= 0.110119	 time= 1.528e-05	 cumTime= 0.000193249	 edges= 119	 schur= 0	 lambda= 0.000021	 levenbergIter= 1
+optimization costs time: 0.000606396 seconds.
+
+after optimization:
+T=
+   0.991743   0.0277728   -0.125199   0.0636033
+ -0.0264249    0.999574   0.0124142 -0.00786678
+    0.12549 -0.00900337    0.992054  0.00352344
+          0           0           0           1
+processing pair 1 -> 2...
+-- Max dist : 100.000000 
+-- Min dist : 4.000000 
+-- Max dist : 100.000000 
+-- Min dist : 4.000000 
+W=  0.166249  0.0383603 -0.0394118
+ 0.0390769   0.287189  0.0736216
+-0.0059358  0.0832703  0.0543359
+U= 0.195455  0.968909    0.1517
+ 0.938198 -0.139681 -0.316661
+ 0.285626 -0.204217   0.93633
+V= 0.212379  0.928302  0.305207
+ 0.946732 -0.118099 -0.299584
+ 0.242059 -0.352575  0.903935
+iteration= 0	 chi2= 0.045036	 time= 3.2189e-05	 cumTime= 3.2189e-05	 edges= 128	 schur= 0	 lambda= 0.000567	 levenbergIter= 1
+iteration= 1	 chi2= 0.045001	 time= 1.746e-05	 cumTime= 4.9649e-05	 edges= 128	 schur= 0	 lambda= 0.000378	 levenbergIter= 1
+iteration= 2	 chi2= 0.045001	 time= 1.661e-05	 cumTime= 6.6259e-05	 edges= 128	 schur= 0	 lambda= 0.000252	 levenbergIter= 1
+iteration= 3	 chi2= 0.045001	 time= 1.6199e-05	 cumTime= 8.2458e-05	 edges= 128	 schur= 0	 lambda= 0.000168	 levenbergIter= 1
+iteration= 4	 chi2= 0.045001	 time= 1.623e-05	 cumTime= 9.8688e-05	 edges= 128	 schur= 0	 lambda= 0.000112	 levenbergIter= 1
+iteration= 5	 chi2= 0.045001	 time= 1.622e-05	 cumTime= 0.000114908	 edges= 128	 schur= 0	 lambda= 0.000075	 levenbergIter= 1
+iteration= 6	 chi2= 0.045001	 time= 1.618e-05	 cumTime= 0.000131088	 edges= 128	 schur= 0	 lambda= 0.000050	 levenbergIter= 1
+iteration= 7	 chi2= 0.045001	 time= 4.1539e-05	 cumTime= 0.000172627	 edges= 128	 schur= 0	 lambda= 1751148841.926853	 levenbergIter= 9
+optimization costs time: 0.000463777 seconds.
+
+after optimization:
+T=
+    0.98725   0.0251698   -0.157174   0.0827487
+ -0.0270593    0.999585 -0.00989293  0.00464459
+    0.15686   0.0140198    0.987521  0.00665531
+          0           0           0           1
+processing pair 2 -> 3...
+-- Max dist : 82.000000 
+-- Min dist : 4.000000 
+-- Max dist : 82.000000 
+-- Min dist : 4.000000 
+W=   0.129017   0.0344645 -0.00514676
+  0.0376116    0.286356   0.0659484
+  0.0285856   0.0535722   0.0352951
+U= 0.193763  0.969939  -0.14722
+ 0.958015 -0.219398 -0.184586
+ 0.211337  0.105273  0.971728
+V= 0.217832  0.972888    0.0777
+ 0.949417  -0.19278 -0.247876
+ 0.226176 -0.127765  0.965671
+iteration= 0	 chi2= 0.203867	 time= 3.2289e-05	 cumTime= 3.2289e-05	 edges= 133	 schur= 0	 lambda= 0.000443	 levenbergIter= 1
+iteration= 1	 chi2= 0.203153	 time= 1.818e-05	 cumTime= 5.0469e-05	 edges= 133	 schur= 0	 lambda= 0.000296	 levenbergIter= 1
+iteration= 2	 chi2= 0.203092	 time= 1.729e-05	 cumTime= 6.7759e-05	 edges= 133	 schur= 0	 lambda= 0.000197	 levenbergIter= 1
+iteration= 3	 chi2= 0.203086	 time= 1.713e-05	 cumTime= 8.4889e-05	 edges= 133	 schur= 0	 lambda= 0.000131	 levenbergIter= 1
+iteration= 4	 chi2= 0.203086	 time= 1.691e-05	 cumTime= 0.000101799	 edges= 133	 schur= 0	 lambda= 0.000088	 levenbergIter= 1
+iteration= 5	 chi2= 0.203086	 time= 1.71e-05	 cumTime= 0.000118899	 edges= 133	 schur= 0	 lambda= 0.000058	 levenbergIter= 1
+iteration= 6	 chi2= 0.203086	 time= 1.681e-05	 cumTime= 0.000135709	 edges= 133	 schur= 0	 lambda= 0.000039	 levenbergIter= 1
+iteration= 7	 chi2= 0.203086	 time= 1.684e-05	 cumTime= 0.000152549	 edges= 133	 schur= 0	 lambda= 0.000026	 levenbergIter= 1
+iteration= 8	 chi2= 0.203086	 time= 1.684e-05	 cumTime= 0.000169389	 edges= 133	 schur= 0	 lambda= 0.000017	 levenbergIter= 1
+iteration= 9	 chi2= 0.203086	 time= 1.682e-05	 cumTime= 0.000186209	 edges= 133	 schur= 0	 lambda= 0.000012	 levenbergIter= 1
+optimization costs time: 0.000611096 seconds.
+
+after optimization:
+T=
+  0.974412  0.0334683  -0.222264   0.118092
+-0.0191049   0.997606  0.0664619 -0.0404912
+  0.223957 -0.0605149   0.972719  0.0102346
+         0          0          0          1
+processing pair 3 -> 4...
+-- Max dist : 85.000000 
+-- Min dist : 3.000000 
+-- Max dist : 85.000000 
+-- Min dist : 3.000000 
+W=  0.123216  0.0346418 0.00510612
+ 0.0182069   0.344784  0.0807228
+ 0.0247947  0.0877124  0.0412632
+U= 0.129443  0.979145  -0.15659
+ 0.956201 -0.165068 -0.241728
+ 0.262534  0.118442  0.957626
+V=  0.107696   0.994181 0.00245389
+  0.964891  -0.103928  -0.241213
+  0.239555 -0.0283455   0.970469
+iteration= 0	 chi2= 0.070164	 time= 3.062e-05	 cumTime= 3.062e-05	 edges= 130	 schur= 0	 lambda= 0.000499	 levenbergIter= 1
+iteration= 1	 chi2= 0.070055	 time= 1.74e-05	 cumTime= 4.802e-05	 edges= 130	 schur= 0	 lambda= 0.000333	 levenbergIter= 1
+iteration= 2	 chi2= 0.070053	 time= 1.69e-05	 cumTime= 6.492e-05	 edges= 130	 schur= 0	 lambda= 0.000222	 levenbergIter= 1
+iteration= 3	 chi2= 0.070053	 time= 1.694e-05	 cumTime= 8.186e-05	 edges= 130	 schur= 0	 lambda= 0.000148	 levenbergIter= 1
+iteration= 4	 chi2= 0.070053	 time= 1.648e-05	 cumTime= 9.834e-05	 edges= 130	 schur= 0	 lambda= 0.000099	 levenbergIter= 1
+iteration= 5	 chi2= 0.070053	 time= 1.652e-05	 cumTime= 0.00011486	 edges= 130	 schur= 0	 lambda= 0.000066	 levenbergIter= 1
+iteration= 6	 chi2= 0.070053	 time= 1.647e-05	 cumTime= 0.00013133	 edges= 130	 schur= 0	 lambda= 0.000044	 levenbergIter= 1
+iteration= 7	 chi2= 0.070053	 time= 1.6479e-05	 cumTime= 0.000147809	 edges= 130	 schur= 0	 lambda= 0.000029	 levenbergIter= 1
+iteration= 8	 chi2= 0.070053	 time= 1.645e-05	 cumTime= 0.000164259	 edges= 130	 schur= 0	 lambda= 0.000019	 levenbergIter= 1
+iteration= 9	 chi2= 0.070053	 time= 1.652e-05	 cumTime= 0.000180779	 edges= 130	 schur= 0	 lambda= 0.000013	 levenbergIter= 1
+optimization costs time: 0.000543027 seconds.
+
+after optimization:
+T=
+    0.987003    0.0609092    -0.148712     0.076255
+  -0.0617213     0.998093 -0.000847674   0.00189312
+    0.148377    0.0100154      0.98888   0.00556272
+           0            0            0            1
+processing pair 4 -> 5...
+-- Max dist : 94.000000 
+-- Min dist : 5.000000 
+-- Max dist : 94.000000 
+-- Min dist : 5.000000 
+W=  0.141627  0.0392728  -0.011318
+ 0.0354925   0.324182  0.0742023
+0.00520654  0.0783585  0.0399812
+U=  0.169084   0.984331  0.0500297
+  0.955069  -0.151098  -0.254977
+  0.243423 -0.0908944   0.965652
+V= 0.169146  0.973625  0.153117
+ 0.959528 -0.127182 -0.251259
+ 0.225158  -0.18942  0.955732
+iteration= 0	 chi2= 0.110320	 time= 2.6449e-05	 cumTime= 2.6449e-05	 edges= 135	 schur= 0	 lambda= 0.000880	 levenbergIter= 1
+iteration= 1	 chi2= 0.110285	 time= 1.23e-05	 cumTime= 3.8749e-05	 edges= 135	 schur= 0	 lambda= 0.000587	 levenbergIter= 1
+iteration= 2	 chi2= 0.110284	 time= 1.144e-05	 cumTime= 5.0189e-05	 edges= 135	 schur= 0	 lambda= 0.000391	 levenbergIter= 1
+iteration= 3	 chi2= 0.110284	 time= 1.1259e-05	 cumTime= 6.1448e-05	 edges= 135	 schur= 0	 lambda= 0.000261	 levenbergIter= 1
+iteration= 4	 chi2= 0.110284	 time= 1.111e-05	 cumTime= 7.2558e-05	 edges= 135	 schur= 0	 lambda= 0.000174	 levenbergIter= 1
+iteration= 5	 chi2= 0.110284	 time= 1.111e-05	 cumTime= 8.3668e-05	 edges= 135	 schur= 0	 lambda= 0.000116	 levenbergIter= 1
+iteration= 6	 chi2= 0.110284	 time= 1.11e-05	 cumTime= 9.4768e-05	 edges= 135	 schur= 0	 lambda= 0.000077	 levenbergIter= 1
+iteration= 7	 chi2= 0.110284	 time= 1.1049e-05	 cumTime= 0.000105817	 edges= 135	 schur= 0	 lambda= 0.000052	 levenbergIter= 1
+iteration= 8	 chi2= 0.110284	 time= 1.122e-05	 cumTime= 0.000117037	 edges= 135	 schur= 0	 lambda= 0.000034	 levenbergIter= 1
+iteration= 9	 chi2= 0.110284	 time= 1.107e-05	 cumTime= 0.000128107	 edges= 135	 schur= 0	 lambda= 0.000023	 levenbergIter= 1
+optimization costs time: 0.000491777 seconds.
+
+after optimization:
+T=
+    0.994629     0.024481    -0.100566     0.052113
+  -0.0246086     0.999697 -2.77143e-05   0.00120554
+    0.100535   0.00250235      0.99493   0.00443721
+           0            0            0            1
+processing pair 5 -> 6...
+-- Max dist : 89.000000 
+-- Min dist : 5.000000 
+-- Max dist : 89.000000 
+-- Min dist : 5.000000 
+W=    0.148866    0.0134865    -0.041778
+-0.000124264     0.259249    0.0642708
+  -0.0193408    0.0594938    0.0433892
+U=-0.00403026    0.986265    0.165122
+   0.967944   0.0453163   -0.247046
+   0.251135   -0.158834    0.954831
+V=-0.020223  0.952725  0.303159
+ 0.963847 0.0991565 -0.247319
+ 0.265688 -0.287197  0.920287
+iteration= 0	 chi2= 0.095408	 time= 2.328e-05	 cumTime= 2.328e-05	 edges= 142	 schur= 0	 lambda= 0.000482	 levenbergIter= 1
+iteration= 1	 chi2= 0.095330	 time= 1.26e-05	 cumTime= 3.588e-05	 edges= 142	 schur= 0	 lambda= 0.000321	 levenbergIter= 1
+iteration= 2	 chi2= 0.095329	 time= 1.201e-05	 cumTime= 4.789e-05	 edges= 142	 schur= 0	 lambda= 0.000214	 levenbergIter= 1
+iteration= 3	 chi2= 0.095329	 time= 1.18e-05	 cumTime= 5.969e-05	 edges= 142	 schur= 0	 lambda= 0.000143	 levenbergIter= 1
+iteration= 4	 chi2= 0.095329	 time= 1.178e-05	 cumTime= 7.147e-05	 edges= 142	 schur= 0	 lambda= 0.000095	 levenbergIter= 1
+iteration= 5	 chi2= 0.095329	 time= 1.179e-05	 cumTime= 8.326e-05	 edges= 142	 schur= 0	 lambda= 0.000063	 levenbergIter= 1
+iteration= 6	 chi2= 0.095329	 time= 1.179e-05	 cumTime= 9.505e-05	 edges= 142	 schur= 0	 lambda= 0.000042	 levenbergIter= 1
+iteration= 7	 chi2= 0.095329	 time= 1.1789e-05	 cumTime= 0.000106839	 edges= 142	 schur= 0	 lambda= 0.000028	 levenbergIter= 1
+iteration= 8	 chi2= 0.095329	 time= 1.178e-05	 cumTime= 0.000118619	 edges= 142	 schur= 0	 lambda= 0.000019	 levenbergIter= 1
+iteration= 9	 chi2= 0.095329	 time= 1.4239e-05	 cumTime= 0.000132858	 edges= 142	 schur= 0	 lambda= 0.000025	 levenbergIter= 2
+optimization costs time: 0.000828935 seconds.
+
+after optimization:
+T=
+   0.989779    0.053072   -0.132363   0.0686397
+ -0.0512948    0.998542    0.016803  -0.0113984
+   0.133062 -0.00984167    0.991059  0.00417168
+          0           0           0           1
+processing pair 6 -> 7...
+-- Max dist : 87.000000 
+-- Min dist : 2.000000 
+-- Max dist : 87.000000 
+-- Min dist : 2.000000 
+W=   0.14306  0.0184546 -0.0476555
+0.00922754   0.344122   0.070308
+-0.0231518  0.0793213  0.0490662
+U=0.0293923  0.974869  0.220832
+ 0.969879   0.02563 -0.242233
+ 0.241805 -0.221301  0.944752
+V=0.0208618  0.932092  0.361621
+ 0.975914 0.0595768 -0.209861
+ 0.217154  -0.35729  0.908399
+iteration= 0	 chi2= 0.032329	 time= 2.57e-05	 cumTime= 2.57e-05	 edges= 142	 schur= 0	 lambda= 0.000617	 levenbergIter= 1
+iteration= 1	 chi2= 0.032290	 time= 1.279e-05	 cumTime= 3.849e-05	 edges= 142	 schur= 0	 lambda= 0.000412	 levenbergIter= 1
+iteration= 2	 chi2= 0.032290	 time= 1.212e-05	 cumTime= 5.061e-05	 edges= 142	 schur= 0	 lambda= 0.000274	 levenbergIter= 1
+iteration= 3	 chi2= 0.032290	 time= 1.1809e-05	 cumTime= 6.2419e-05	 edges= 142	 schur= 0	 lambda= 0.000183	 levenbergIter= 1
+iteration= 4	 chi2= 0.032290	 time= 1.179e-05	 cumTime= 7.4209e-05	 edges= 142	 schur= 0	 lambda= 0.000122	 levenbergIter= 1
+iteration= 5	 chi2= 0.032290	 time= 1.181e-05	 cumTime= 8.6019e-05	 edges= 142	 schur= 0	 lambda= 0.000081	 levenbergIter= 1
+iteration= 6	 chi2= 0.032290	 time= 1.204e-05	 cumTime= 9.8059e-05	 edges= 142	 schur= 0	 lambda= 0.000163	 levenbergIter= 1
+optimization costs time: 0.000609147 seconds.
+
+after optimization:
+T=
+  0.989138  0.0404198  -0.141324  0.0736334
+-0.0434737   0.998882  -0.018588  0.0103218
+  0.140415    0.02453   0.989789 0.00486172
+         0          0          0          1
+processing pair 7 -> 8...
+-- Max dist : 83.000000 
+-- Min dist : 10.000000 
+-- Max dist : 83.000000 
+-- Min dist : 10.000000 
+W=  0.132832  0.0320292 -0.0501645
+ 0.0336811   0.317965   0.075673
+-0.0252664  0.0796771  0.0542355
+U= 0.100055  0.949956  0.295927
+  0.96192 -0.016319 -0.272845
+ 0.254361 -0.311958  0.915414
+V=  0.114955   0.896963   0.426899
+  0.964236 0.00256341  -0.265034
+   0.23882  -0.442099   0.864589
+iteration= 0	 chi2= 0.032742	 time= 3.54e-05	 cumTime= 3.54e-05	 edges= 130	 schur= 0	 lambda= 0.000679	 levenbergIter= 1
+iteration= 1	 chi2= 0.032717	 time= 1.786e-05	 cumTime= 5.326e-05	 edges= 130	 schur= 0	 lambda= 0.000453	 levenbergIter= 1
+iteration= 2	 chi2= 0.032717	 time= 1.679e-05	 cumTime= 7.005e-05	 edges= 130	 schur= 0	 lambda= 0.000302	 levenbergIter= 1
+iteration= 3	 chi2= 0.032717	 time= 1.641e-05	 cumTime= 8.646e-05	 edges= 130	 schur= 0	 lambda= 0.000201	 levenbergIter= 1
+iteration= 4	 chi2= 0.032717	 time= 1.641e-05	 cumTime= 0.00010287	 edges= 130	 schur= 0	 lambda= 0.000134	 levenbergIter= 1
+iteration= 5	 chi2= 0.032717	 time= 1.637e-05	 cumTime= 0.00011924	 edges= 130	 schur= 0	 lambda= 0.000089	 levenbergIter= 1
+iteration= 6	 chi2= 0.032717	 time= 1.655e-05	 cumTime= 0.00013579	 edges= 130	 schur= 0	 lambda= 0.000179	 levenbergIter= 1
+optimization costs time: 0.000433617 seconds.
+
+after optimization:
+T=
+   0.989908   0.0204806   -0.140223   0.0719526
+ -0.0205374    0.999789  0.00104187 -0.00149664
+   0.140215  0.00184847    0.990119  0.00498269
+          0           0           0           1
+processing pair 8 -> 9...
+-- Max dist : 79.000000 
+-- Min dist : 4.000000 
+-- Max dist : 79.000000 
+-- Min dist : 4.000000 
+W= 0.140301 0.0987809 0.0080339
+0.0944445  0.345483 0.0890395
+0.0320711  0.105298 0.0780918
+U=  0.33765  0.935973 0.0997379
+ 0.890242 -0.283132 -0.356799
+ 0.305715 -0.209264  0.928842
+V= 0.342225  0.913142  0.221482
+ 0.903943  -0.25562 -0.342849
+ 0.256454 -0.317539  0.912908
+iteration= 0	 chi2= 0.020249	 time= 3.131e-05	 cumTime= 3.131e-05	 edges= 127	 schur= 0	 lambda= 0.000754	 levenbergIter= 1
+iteration= 1	 chi2= 0.020234	 time= 1.745e-05	 cumTime= 4.876e-05	 edges= 127	 schur= 0	 lambda= 0.000503	 levenbergIter= 1
+iteration= 2	 chi2= 0.020234	 time= 1.648e-05	 cumTime= 6.524e-05	 edges= 127	 schur= 0	 lambda= 0.000335	 levenbergIter= 1
+iteration= 3	 chi2= 0.020234	 time= 1.602e-05	 cumTime= 8.126e-05	 edges= 127	 schur= 0	 lambda= 0.000223	 levenbergIter= 1
+iteration= 4	 chi2= 0.020234	 time= 1.607e-05	 cumTime= 9.733e-05	 edges= 127	 schur= 0	 lambda= 0.000149	 levenbergIter= 1
+iteration= 5	 chi2= 0.020234	 time= 1.612e-05	 cumTime= 0.00011345	 edges= 127	 schur= 0	 lambda= 0.000099	 levenbergIter= 1
+iteration= 6	 chi2= 0.020234	 time= 1.622e-05	 cumTime= 0.00012967	 edges= 127	 schur= 0	 lambda= 0.000066	 levenbergIter= 1
+iteration= 7	 chi2= 0.020234	 time= 1.605e-05	 cumTime= 0.00014572	 edges= 127	 schur= 0	 lambda= 0.000044	 levenbergIter= 1
+iteration= 8	 chi2= 0.020234	 time= 3.4959e-05	 cumTime= 0.000180679	 edges= 127	 schur= 0	 lambda= 11850.531596	 levenbergIter= 7
+optimization costs time: 0.000478937 seconds.
+
+after optimization:
+T=
+   0.992318   0.0317679   -0.119564   0.0623461
+ -0.0329008     0.99943 -0.00751272   0.0039209
+   0.119257   0.0113888    0.992798  0.00360927
+          0           0           0           1
+processing pair 9 -> 10...
+-- Max dist : 82.000000 
+-- Min dist : 7.000000 
+-- Max dist : 82.000000 
+-- Min dist : 7.000000 
+W=  0.132939   0.141473 0.00856541
+  0.112389    0.41003  0.0623729
+ 0.0323103  0.0749932  0.0667647
+U= 0.375299  0.926656 0.0214098
+ 0.906764 -0.362258 -0.215749
+ 0.192169 -0.100384  0.976214
+V= 0.334437  0.923717  0.186815
+ 0.929806 -0.291091 -0.225226
+ 0.153665 -0.249026  0.956229
+iteration= 0	 chi2= 0.063114	 time= 3.3339e-05	 cumTime= 3.3339e-05	 edges= 134	 schur= 0	 lambda= 0.000469	 levenbergIter= 1
+iteration= 1	 chi2= 0.063049	 time= 1.827e-05	 cumTime= 5.1609e-05	 edges= 134	 schur= 0	 lambda= 0.000313	 levenbergIter= 1
+iteration= 2	 chi2= 0.063049	 time= 1.741e-05	 cumTime= 6.9019e-05	 edges= 134	 schur= 0	 lambda= 0.000208	 levenbergIter= 1
+iteration= 3	 chi2= 0.063049	 time= 1.709e-05	 cumTime= 8.6109e-05	 edges= 134	 schur= 0	 lambda= 0.000139	 levenbergIter= 1
+iteration= 4	 chi2= 0.063049	 time= 1.6979e-05	 cumTime= 0.000103088	 edges= 134	 schur= 0	 lambda= 0.000093	 levenbergIter= 1
+iteration= 5	 chi2= 0.063049	 time= 1.707e-05	 cumTime= 0.000120158	 edges= 134	 schur= 0	 lambda= 0.000062	 levenbergIter= 1
+iteration= 6	 chi2= 0.063049	 time= 1.703e-05	 cumTime= 0.000137188	 edges= 134	 schur= 0	 lambda= 0.000041	 levenbergIter= 1
+iteration= 7	 chi2= 0.063049	 time= 2.042e-05	 cumTime= 0.000157608	 edges= 134	 schur= 0	 lambda= 0.000055	 levenbergIter= 2
+iteration= 8	 chi2= 0.063049	 time= 3.312e-05	 cumTime= 0.000190728	 edges= 134	 schur= 0	 lambda= 1.798341	 levenbergIter= 5
+optimization costs time: 0.00115442 seconds.
+
+after optimization:
+T=
+  0.985481   0.074392  -0.152618  0.0774607
+-0.0716736   0.997157  0.0232443 -0.0102152
+  0.153913 -0.0119681   0.988012 0.00657759
+         0          0          0          1
+processing pair 10 -> 11...
+-- Max dist : 78.000000 
+-- Min dist : 7.000000 
+-- Max dist : 78.000000 
+-- Min dist : 7.000000 
+W= 0.151549   0.17021 0.0272887
+ 0.134135  0.489873 0.0306483
+0.0487581 0.0623898 0.0442807
+U=  0.383254   0.848213  -0.365584
+  0.912768   -0.40837 0.00940142
+  0.141319   0.337296   0.930731
+V= 0.337268  0.902524 -0.267769
+ 0.937967 -0.346455 0.0136743
+0.0804286   0.25577  0.963386
+iteration= 0	 chi2= 0.035916	 time= 3.207e-05	 cumTime= 3.207e-05	 edges= 131	 schur= 0	 lambda= 0.000608	 levenbergIter= 1
+iteration= 1	 chi2= 0.035891	 time= 1.787e-05	 cumTime= 4.994e-05	 edges= 131	 schur= 0	 lambda= 0.000405	 levenbergIter= 1
+iteration= 2	 chi2= 0.035890	 time= 1.694e-05	 cumTime= 6.688e-05	 edges= 131	 schur= 0	 lambda= 0.000270	 levenbergIter= 1
+iteration= 3	 chi2= 0.035890	 time= 1.661e-05	 cumTime= 8.349e-05	 edges= 131	 schur= 0	 lambda= 0.000180	 levenbergIter= 1
+iteration= 4	 chi2= 0.035890	 time= 1.661e-05	 cumTime= 0.0001001	 edges= 131	 schur= 0	 lambda= 0.000120	 levenbergIter= 1
+iteration= 5	 chi2= 0.035890	 time= 1.663e-05	 cumTime= 0.00011673	 edges= 131	 schur= 0	 lambda= 0.000080	 levenbergIter= 1
+iteration= 6	 chi2= 0.035890	 time= 2.0039e-05	 cumTime= 0.000136769	 edges= 131	 schur= 0	 lambda= 0.000640	 levenbergIter= 2
+optimization costs time: 0.000525457 seconds.
+
+after optimization:
+T=
+  0.992684  0.0606123  -0.104426  0.0535437
+-0.0632342   0.997757 -0.0219791   0.012362
+   0.10286  0.0284216    0.99429 0.00233044
+         0          0          0          1
+processing pair 11 -> 12...
+-- Max dist : 85.000000 
+-- Min dist : 5.000000 
+-- Max dist : 85.000000 
+-- Min dist : 5.000000 
+W=   0.15677   0.120057  0.0230357
+ 0.0863327   0.451791 0.00914084
+ 0.0461886  0.0215009  0.0480786
+U= 0.328997  0.870155 -0.366866
+ 0.941504 -0.332284 0.0561862
+0.0730131  0.363891  0.928575
+V= 0.280129  0.924882  -0.25714
+ 0.959108 -0.280953 0.0343239
+0.0404985   0.25624  0.965765
+iteration= 0	 chi2= 0.041248	 time= 3.3899e-05	 cumTime= 3.3899e-05	 edges= 136	 schur= 0	 lambda= 0.000638	 levenbergIter= 1
+iteration= 1	 chi2= 0.041211	 time= 1.858e-05	 cumTime= 5.2479e-05	 edges= 136	 schur= 0	 lambda= 0.000425	 levenbergIter= 1
+iteration= 2	 chi2= 0.041211	 time= 1.848e-05	 cumTime= 7.0959e-05	 edges= 136	 schur= 0	 lambda= 0.000284	 levenbergIter= 1
+iteration= 3	 chi2= 0.041211	 time= 1.733e-05	 cumTime= 8.8289e-05	 edges= 136	 schur= 0	 lambda= 0.000189	 levenbergIter= 1
+iteration= 4	 chi2= 0.041211	 time= 1.73e-05	 cumTime= 0.000105589	 edges= 136	 schur= 0	 lambda= 0.000126	 levenbergIter= 1
+iteration= 5	 chi2= 0.041211	 time= 1.731e-05	 cumTime= 0.000122899	 edges= 136	 schur= 0	 lambda= 0.000084	 levenbergIter= 1
+iteration= 6	 chi2= 0.041211	 time= 1.736e-05	 cumTime= 0.000140259	 edges= 136	 schur= 0	 lambda= 0.000056	 levenbergIter= 1
+iteration= 7	 chi2= 0.041211	 time= 1.736e-05	 cumTime= 0.000157619	 edges= 136	 schur= 0	 lambda= 0.000037	 levenbergIter= 1
+iteration= 8	 chi2= 0.041211	 time= 2.0789e-05	 cumTime= 0.000178408	 edges= 136	 schur= 0	 lambda= 0.000050	 levenbergIter= 2
+iteration= 9	 chi2= 0.041211	 time= 1.721e-05	 cumTime= 0.000195618	 edges= 136	 schur= 0	 lambda= 0.000033	 levenbergIter= 1
+optimization costs time: 0.0012886 seconds.
+
+after optimization:
+T=
+    0.991289    0.0584782    -0.118014    0.0606607
+  -0.0580283     0.998289   0.00724784  -0.00283999
+    0.118236 -0.000336539     0.992985   0.00384088
+           0            0            0            1
+processing pair 12 -> 13...
+-- Max dist : 73.000000 
+-- Min dist : 3.000000 
+-- Max dist : 73.000000 
+-- Min dist : 3.000000 
+W=  0.188786  0.0923175  0.0244014
+ 0.0637371   0.416176 -0.0194404
+ 0.0590851  0.0067394  0.0489652
+U= 0.319497  0.875935 -0.361469
+ 0.946262  -0.31509 0.0728417
+0.0500908  0.365318  0.929534
+V=  0.280005   0.930056  -0.237891
+  0.959821  -0.266457  0.0880007
+-0.0184577   0.252974   0.967297
+iteration= 0	 chi2= 0.027270	 time= 2.691e-05	 cumTime= 2.691e-05	 edges= 150	 schur= 0	 lambda= 0.000586	 levenbergIter= 1
+iteration= 1	 chi2= 0.027225	 time= 1.323e-05	 cumTime= 4.014e-05	 edges= 150	 schur= 0	 lambda= 0.000391	 levenbergIter= 1
+iteration= 2	 chi2= 0.027225	 time= 1.25e-05	 cumTime= 5.264e-05	 edges= 150	 schur= 0	 lambda= 0.000261	 levenbergIter= 1
+iteration= 3	 chi2= 0.027225	 time= 1.227e-05	 cumTime= 6.491e-05	 edges= 150	 schur= 0	 lambda= 0.000174	 levenbergIter= 1
+iteration= 4	 chi2= 0.027225	 time= 1.224e-05	 cumTime= 7.715e-05	 edges= 150	 schur= 0	 lambda= 0.000116	 levenbergIter= 1
+iteration= 5	 chi2= 0.027225	 time= 1.227e-05	 cumTime= 8.942e-05	 edges= 150	 schur= 0	 lambda= 0.000077	 levenbergIter= 1
+iteration= 6	 chi2= 0.027225	 time= 1.228e-05	 cumTime= 0.0001017	 edges= 150	 schur= 0	 lambda= 0.000051	 levenbergIter= 1
+iteration= 7	 chi2= 0.027225	 time= 1.23e-05	 cumTime= 0.000114	 edges= 150	 schur= 0	 lambda= 0.000034	 levenbergIter= 1
+iteration= 8	 chi2= 0.027225	 time= 1.932e-05	 cumTime= 0.00013332	 edges= 150	 schur= 0	 lambda= 0.001464	 levenbergIter= 4
+iteration= 9	 chi2= 0.027225	 time= 1.227e-05	 cumTime= 0.00014559	 edges= 150	 schur= 0	 lambda= 0.000976	 levenbergIter= 1
+optimization costs time: 0.000455037 seconds.
+
+after optimization:
+T=
+   0.99012  0.0414511  -0.133957  0.0693794
+ -0.045421   0.998611 -0.0267157  0.0141136
+  0.132664  0.0325362   0.990627 0.00174763
+         0          0          0          1
+processing pair 13 -> 14...
+-- Max dist : 80.000000 
+-- Min dist : 3.000000 
+-- Max dist : 80.000000 
+-- Min dist : 3.000000 
+W=   0.12983  0.0771485 0.00511284
+ 0.0823119   0.395758 -0.0176049
+ 0.0151598 -0.0118106  0.0434877
+U=  0.260828   0.941773  -0.212209
+  0.965146  -0.249489  0.0790465
+-0.0214999    0.22543   0.974022
+V=  0.270138   0.950268  -0.154969
+  0.962004  -0.259757  0.0841107
+-0.0396734   0.171802   0.984332
+iteration= 0	 chi2= 0.073951	 time= 1.877e-05	 cumTime= 1.877e-05	 edges= 120	 schur= 0	 lambda= 0.000558	 levenbergIter= 1
+iteration= 1	 chi2= 0.073938	 time= 1.06e-05	 cumTime= 2.937e-05	 edges= 120	 schur= 0	 lambda= 0.000372	 levenbergIter= 1
+iteration= 2	 chi2= 0.073938	 time= 1.005e-05	 cumTime= 3.942e-05	 edges= 120	 schur= 0	 lambda= 0.000248	 levenbergIter= 1
+iteration= 3	 chi2= 0.073938	 time= 9.87e-06	 cumTime= 4.929e-05	 edges= 120	 schur= 0	 lambda= 0.000165	 levenbergIter= 1
+iteration= 4	 chi2= 0.073938	 time= 9.87999e-06	 cumTime= 5.917e-05	 edges= 120	 schur= 0	 lambda= 0.000110	 levenbergIter= 1
+iteration= 5	 chi2= 0.073938	 time= 9.89001e-06	 cumTime= 6.906e-05	 edges= 120	 schur= 0	 lambda= 0.000073	 levenbergIter= 1
+iteration= 6	 chi2= 0.073938	 time= 9.86e-06	 cumTime= 7.892e-05	 edges= 120	 schur= 0	 lambda= 0.000049	 levenbergIter= 1
+iteration= 7	 chi2= 0.073938	 time= 9.85e-06	 cumTime= 8.877e-05	 edges= 120	 schur= 0	 lambda= 0.000033	 levenbergIter= 1
+iteration= 8	 chi2= 0.073938	 time= 1.188e-05	 cumTime= 0.00010065	 edges= 120	 schur= 0	 lambda= 0.000261	 levenbergIter= 2
+optimization costs time: 0.000374268 seconds.
+
+after optimization:
+T=
+   0.998282  -0.0115644  -0.0574335   0.0356456
+   0.011391     0.99993 -0.00334551   0.0048831
+  0.0574681  0.00268554    0.998344 -0.00105671
+          0           0           0           1
+processing pair 14 -> 15...
+-- Max dist : 73.000000 
+-- Min dist : 5.000000 
+-- Max dist : 73.000000 
+-- Min dist : 5.000000 
+W=   0.267159    0.142754    0.017748
+   0.115224    0.515089  -0.0297484
+  0.0668169 -0.00659027    0.067843
+U= 0.407457  0.853685 -0.324346
+ 0.912735 -0.392312  0.114045
+0.0298865   0.34251  0.939039
+V=  0.378412   0.905418  -0.192413
+  0.925107  -0.362895   0.111738
+-0.0313443   0.220285   0.974932
+iteration= 0	 chi2= 0.008541	 time= 3.713e-05	 cumTime= 3.713e-05	 edges= 174	 schur= 0	 lambda= 0.000580	 levenbergIter= 1
+iteration= 1	 chi2= 0.008504	 time= 2.31e-05	 cumTime= 6.023e-05	 edges= 174	 schur= 0	 lambda= 0.000387	 levenbergIter= 1
+iteration= 2	 chi2= 0.008504	 time= 2.22e-05	 cumTime= 8.243e-05	 edges= 174	 schur= 0	 lambda= 0.000258	 levenbergIter= 1
+iteration= 3	 chi2= 0.008504	 time= 2.184e-05	 cumTime= 0.00010427	 edges= 174	 schur= 0	 lambda= 0.000172	 levenbergIter= 1
+iteration= 4	 chi2= 0.008504	 time= 2.184e-05	 cumTime= 0.00012611	 edges= 174	 schur= 0	 lambda= 0.000115	 levenbergIter= 1
+iteration= 5	 chi2= 0.008504	 time= 2.1939e-05	 cumTime= 0.000148049	 edges= 174	 schur= 0	 lambda= 0.000076	 levenbergIter= 1
+iteration= 6	 chi2= 0.008504	 time= 2.875e-05	 cumTime= 0.000176799	 edges= 174	 schur= 0	 lambda= 0.000102	 levenbergIter= 2
+iteration= 7	 chi2= 0.008504	 time= 4.6139e-05	 cumTime= 0.000222938	 edges= 174	 schur= 0	 lambda= 142.380032	 levenbergIter= 7
+iteration= 8	 chi2= 0.008504	 time= 3.406e-05	 cumTime= 0.000256998	 edges= 174	 schur= 0	 lambda= 6074.881345	 levenbergIter= 4
+iteration= 9	 chi2= 0.008504	 time= 3.389e-05	 cumTime= 0.000290888	 edges= 174	 schur= 0	 lambda= 6220678.497644	 levenbergIter= 4
+optimization costs time: 0.000802105 seconds.
+
+after optimization:
+T=
+  0.989537  0.0309017  -0.140932  0.0737843
+-0.0317599   0.999488  -0.003844 0.00184928
+  0.140741 0.00827977   0.990012 0.00425133
+         0          0          0          1
+processing pair 15 -> 16...
+-- Max dist : 84.000000 
+-- Min dist : 4.000000 
+-- Max dist : 84.000000 
+-- Min dist : 4.000000 
+W=   0.303225    0.150937 -0.00295413
+   0.107496     0.54647   -0.067646
+  0.0582916  -0.0421279   0.0671884
+U=  0.412452   0.872619  -0.261569
+  0.910042   -0.38166   0.161736
+-0.0413037   0.304748   0.951537
+V=  0.36347  0.924131 -0.117778
+ 0.925317 -0.343455  0.160711
+-0.108067  0.167395  0.979949
+iteration= 0	 chi2= 0.030309	 time= 3.752e-05	 cumTime= 3.752e-05	 edges= 181	 schur= 0	 lambda= 0.000603	 levenbergIter= 1
+iteration= 1	 chi2= 0.030262	 time= 2.3679e-05	 cumTime= 6.1199e-05	 edges= 181	 schur= 0	 lambda= 0.000402	 levenbergIter= 1
+iteration= 2	 chi2= 0.030262	 time= 2.282e-05	 cumTime= 8.4019e-05	 edges= 181	 schur= 0	 lambda= 0.000268	 levenbergIter= 1
+iteration= 3	 chi2= 0.030262	 time= 2.243e-05	 cumTime= 0.000106449	 edges= 181	 schur= 0	 lambda= 0.000179	 levenbergIter= 1
+iteration= 4	 chi2= 0.030262	 time= 2.242e-05	 cumTime= 0.000128869	 edges= 181	 schur= 0	 lambda= 0.000119	 levenbergIter= 1
+iteration= 5	 chi2= 0.030262	 time= 2.248e-05	 cumTime= 0.000151349	 edges= 181	 schur= 0	 lambda= 0.000079	 levenbergIter= 1
+iteration= 6	 chi2= 0.030262	 time= 6.0679e-05	 cumTime= 0.000212028	 edges= 181	 schur= 0	 lambda= 2862534874263.913086	 levenbergIter= 10
+optimization costs time: 0.000606207 seconds.
+
+after optimization:
+T=
+   0.987136   0.0399068   -0.154825   0.0800152
+ -0.0409792    0.999153 -0.00374018  0.00308718
+   0.154544   0.0100367    0.987935  0.00532514
+          0           0           0           1
+processing pair 16 -> 17...
+-- Max dist : 87.000000 
+-- Min dist : 6.000000 
+-- Max dist : 87.000000 
+-- Min dist : 6.000000 
+W=  0.239102  0.0866008 0.00248675
+ 0.0287307   0.484841 -0.0717414
+ 0.0575973 -0.0545288   0.070093
+U= 0.239656  0.929823 -0.279273
+ 0.964804 -0.196021  0.175298
+-0.108253  0.311455  0.944075
+V=  0.15557  0.978448 -0.135783
+ 0.976296 -0.131356  0.172022
+-0.150479  0.159325   0.97569
+iteration= 0	 chi2= 0.034105	 time= 2.451e-05	 cumTime= 2.451e-05	 edges= 161	 schur= 0	 lambda= 0.000537	 levenbergIter= 1
+iteration= 1	 chi2= 0.034067	 time= 1.402e-05	 cumTime= 3.853e-05	 edges= 161	 schur= 0	 lambda= 0.000358	 levenbergIter= 1
+iteration= 2	 chi2= 0.034067	 time= 1.3329e-05	 cumTime= 5.1859e-05	 edges= 161	 schur= 0	 lambda= 0.000239	 levenbergIter= 1
+iteration= 3	 chi2= 0.034067	 time= 1.313e-05	 cumTime= 6.4989e-05	 edges= 161	 schur= 0	 lambda= 0.000159	 levenbergIter= 1
+iteration= 4	 chi2= 0.034067	 time= 1.309e-05	 cumTime= 7.8079e-05	 edges= 161	 schur= 0	 lambda= 0.000106	 levenbergIter= 1
+iteration= 5	 chi2= 0.034067	 time= 1.317e-05	 cumTime= 9.1249e-05	 edges= 161	 schur= 0	 lambda= 0.000071	 levenbergIter= 1
+iteration= 6	 chi2= 0.034067	 time= 2.3219e-05	 cumTime= 0.000114468	 edges= 161	 schur= 0	 lambda= 2.315785	 levenbergIter= 5
+optimization costs time: 0.000340878 seconds.
+
+after optimization:
+T=
+   0.984988   0.0637963   -0.160403   0.0812559
+ -0.0655042    0.997838 -0.00537703  0.00354339
+   0.159713   0.0158034    0.987037  0.00554516
+          0           0           0           1
+processing pair 17 -> 18...
+-- Max dist : 86.000000 
+-- Min dist : 4.000000 
+-- Max dist : 86.000000 
+-- Min dist : 4.000000 
+W=  0.267364   0.108605 -0.0144863
+ 0.0292341   0.499048 -0.0881221
+ 0.0570616  -0.079207  0.0740351
+U=  0.29336  0.924819 -0.242178
+ 0.944238  -0.24068  0.224695
+-0.149515   0.29459  0.943855
+V=  0.182851   0.979981 -0.0787605
+  0.965623   -0.16396   0.201718
+ -0.184766   0.112937   0.976272
+iteration= 0	 chi2= 0.097693	 time= 2.847e-05	 cumTime= 2.847e-05	 edges= 189	 schur= 0	 lambda= 0.000630	 levenbergIter= 1
+iteration= 1	 chi2= 0.097565	 time= 1.609e-05	 cumTime= 4.456e-05	 edges= 189	 schur= 0	 lambda= 0.000420	 levenbergIter= 1
+iteration= 2	 chi2= 0.097565	 time= 1.559e-05	 cumTime= 6.015e-05	 edges= 189	 schur= 0	 lambda= 0.000280	 levenbergIter= 1
+iteration= 3	 chi2= 0.097565	 time= 1.53e-05	 cumTime= 7.545e-05	 edges= 189	 schur= 0	 lambda= 0.000187	 levenbergIter= 1
+iteration= 4	 chi2= 0.097565	 time= 1.527e-05	 cumTime= 9.072e-05	 edges= 189	 schur= 0	 lambda= 0.000124	 levenbergIter= 1
+iteration= 5	 chi2= 0.097565	 time= 1.532e-05	 cumTime= 0.00010604	 edges= 189	 schur= 0	 lambda= 0.000083	 levenbergIter= 1
+iteration= 6	 chi2= 0.097565	 time= 1.531e-05	 cumTime= 0.00012135	 edges= 189	 schur= 0	 lambda= 0.000055	 levenbergIter= 1
+iteration= 7	 chi2= 0.097565	 time= 2.9729e-05	 cumTime= 0.000151079	 edges= 189	 schur= 0	 lambda= 115.990629	 levenbergIter= 6
+optimization costs time: 0.000374088 seconds.
+
+after optimization:
+T=
+    0.97902   0.0827898   -0.186188   0.0930467
+ -0.0809037    0.996564   0.0177188 -0.00803691
+   0.187015 -0.00228373    0.982354  0.00908795
+          0           0           0           1
+processing pair 18 -> 19...
+-- Max dist : 89.000000 
+-- Min dist : 4.000000 
+-- Max dist : 89.000000 
+-- Min dist : 4.000000 
+W=   0.25288  0.0899132 -0.0285655
+ 0.0352899   0.476372  -0.106066
+ 0.0307071 -0.0948969  0.0681432
+U= 0.270411  0.950893 -0.150601
+ 0.942662 -0.229727  0.242102
+-0.195616  0.207433  0.958492
+V=   0.185511    0.982639 -0.00237827
+   0.954184   -0.179559    0.239357
+  -0.234774   0.0466725    0.970929
+iteration= 0	 chi2= 0.067583	 time= 1.932e-05	 cumTime= 1.932e-05	 edges= 167	 schur= 0	 lambda= 0.000557	 levenbergIter= 1
+iteration= 1	 chi2= 0.067506	 time= 1.442e-05	 cumTime= 3.374e-05	 edges= 167	 schur= 0	 lambda= 0.000371	 levenbergIter= 1
+iteration= 2	 chi2= 0.067506	 time= 1.371e-05	 cumTime= 4.745e-05	 edges= 167	 schur= 0	 lambda= 0.000247	 levenbergIter= 1
+iteration= 3	 chi2= 0.067506	 time= 1.363e-05	 cumTime= 6.108e-05	 edges= 167	 schur= 0	 lambda= 0.000165	 levenbergIter= 1
+iteration= 4	 chi2= 0.067506	 time= 1.364e-05	 cumTime= 7.472e-05	 edges= 167	 schur= 0	 lambda= 0.000110	 levenbergIter= 1
+iteration= 5	 chi2= 0.067506	 time= 1.3639e-05	 cumTime= 8.8359e-05	 edges= 167	 schur= 0	 lambda= 0.000073	 levenbergIter= 1
+iteration= 6	 chi2= 0.067506	 time= 1.643e-05	 cumTime= 0.000104789	 edges= 167	 schur= 0	 lambda= 0.000098	 levenbergIter= 2
+iteration= 7	 chi2= 0.067506	 time= 1.359e-05	 cumTime= 0.000118379	 edges= 167	 schur= 0	 lambda= 0.000065	 levenbergIter= 1
+iteration= 8	 chi2= 0.067506	 time= 3.417e-05	 cumTime= 0.000152549	 edges= 167	 schur= 0	 lambda= 2292641785.614609	 levenbergIter= 9
+optimization costs time: 0.000444677 seconds.
+
+after optimization:
+T=
+  0.984907   0.051233  -0.165328  0.0844735
+-0.0514405   0.998671  0.0030289 -0.0017507
+  0.165263 0.00552136   0.986234  0.0075469
+         0          0          0          1
+processing pair 19 -> 20...
+-- Max dist : 90.000000 
+-- Min dist : 4.000000 
+-- Max dist : 90.000000 
+-- Min dist : 4.000000 
+W=  0.243494  0.0693094 -0.0423081
+ 0.0319222   0.460794   -0.11622
+ 0.0156048 -0.0974834  0.0616537
+U=  0.236748   0.968212 -0.0807233
+  0.947986  -0.212007   0.237434
+ -0.212773   0.132737   0.968044
+V=  0.169318   0.982128  0.0821943
+   0.94875  -0.185007   0.256215
+ -0.266843 -0.0345998   0.963119
+iteration= 0	 chi2= 0.174982	 time= 2.474e-05	 cumTime= 2.474e-05	 edges= 167	 schur= 0	 lambda= 0.000557	 levenbergIter= 1
+iteration= 1	 chi2= 0.174790	 time= 1.462e-05	 cumTime= 3.936e-05	 edges= 167	 schur= 0	 lambda= 0.000371	 levenbergIter= 1
+iteration= 2	 chi2= 0.174787	 time= 1.396e-05	 cumTime= 5.332e-05	 edges= 167	 schur= 0	 lambda= 0.000247	 levenbergIter= 1
+iteration= 3	 chi2= 0.174787	 time= 1.368e-05	 cumTime= 6.7e-05	 edges= 167	 schur= 0	 lambda= 0.000165	 levenbergIter= 1
+iteration= 4	 chi2= 0.174787	 time= 1.363e-05	 cumTime= 8.063e-05	 edges= 167	 schur= 0	 lambda= 0.000110	 levenbergIter= 1
+iteration= 5	 chi2= 0.174787	 time= 1.367e-05	 cumTime= 9.43e-05	 edges= 167	 schur= 0	 lambda= 0.000073	 levenbergIter= 1
+iteration= 6	 chi2= 0.174787	 time= 1.367e-05	 cumTime= 0.00010797	 edges= 167	 schur= 0	 lambda= 0.000049	 levenbergIter= 1
+iteration= 7	 chi2= 0.174787	 time= 1.362e-05	 cumTime= 0.00012159	 edges= 167	 schur= 0	 lambda= 0.000033	 levenbergIter= 1
+iteration= 8	 chi2= 0.174787	 time= 1.369e-05	 cumTime= 0.00013528	 edges= 167	 schur= 0	 lambda= 0.000022	 levenbergIter= 1
+iteration= 9	 chi2= 0.174787	 time= 1.364e-05	 cumTime= 0.00014892	 edges= 167	 schur= 0	 lambda= 0.000014	 levenbergIter= 1
+optimization costs time: 0.000841205 seconds.
+
+after optimization:
+T=
+  0.984359  0.0248065  -0.174421  0.0859549
+-0.0281906   0.999459 -0.0169508 0.00764978
+  0.173906  0.0216027   0.984525 0.00865545
+         0          0          0          1
+processing pair 20 -> 21...
+-- Max dist : 88.000000 
+-- Min dist : 2.000000 
+-- Max dist : 88.000000 
+-- Min dist : 2.000000 
+W=   0.294335   0.0659384  -0.0575548
+  0.0211305    0.377127  -0.0919622
+0.000561002  -0.0787738     0.04069
+U=    0.41564    0.909493 -0.00804503
+   0.888281   -0.404014    0.218469
+  -0.195446    0.097951    0.975811
+V=  0.336561    0.93209   0.133919
+  0.901801  -0.359978   0.239104
+ -0.271075 -0.0402953   0.961714
+iteration= 0	 chi2= 0.067339	 time= 2.279e-05	 cumTime= 2.279e-05	 edges= 155	 schur= 0	 lambda= 0.000517	 levenbergIter= 1
+iteration= 1	 chi2= 0.067308	 time= 1.324e-05	 cumTime= 3.603e-05	 edges= 155	 schur= 0	 lambda= 0.000344	 levenbergIter= 1
+iteration= 2	 chi2= 0.067308	 time= 1.278e-05	 cumTime= 4.881e-05	 edges= 155	 schur= 0	 lambda= 0.000230	 levenbergIter= 1
+iteration= 3	 chi2= 0.067308	 time= 1.278e-05	 cumTime= 6.159e-05	 edges= 155	 schur= 0	 lambda= 0.000153	 levenbergIter= 1
+iteration= 4	 chi2= 0.067308	 time= 1.276e-05	 cumTime= 7.435e-05	 edges= 155	 schur= 0	 lambda= 0.000102	 levenbergIter= 1
+iteration= 5	 chi2= 0.067308	 time= 1.278e-05	 cumTime= 8.713e-05	 edges= 155	 schur= 0	 lambda= 0.000068	 levenbergIter= 1
+iteration= 6	 chi2= 0.067308	 time= 1.283e-05	 cumTime= 9.996e-05	 edges= 155	 schur= 0	 lambda= 0.000045	 levenbergIter= 1
+iteration= 7	 chi2= 0.067308	 time= 1.773e-05	 cumTime= 0.00011769	 edges= 155	 schur= 0	 lambda= 0.000242	 levenbergIter= 3
+iteration= 8	 chi2= 0.067308	 time= 2.9609e-05	 cumTime= 0.000147299	 edges= 155	 schur= 0	 lambda= 16624227.019567	 levenbergIter= 8
+optimization costs time: 0.000788685 seconds.
+
+after optimization:
+T=
+  0.986541  0.0455036  -0.157055  0.0804081
+-0.0483589   0.998726 -0.0144057 0.00518657
+  0.156199  0.0218068   0.987485 0.00710669
+         0          0          0          1
+processing pair 21 -> 22...
+-- Max dist : 87.000000 
+-- Min dist : 5.000000 
+-- Max dist : 87.000000 
+-- Min dist : 5.000000 
+W=  0.331379    0.08167  -0.101821
+  0.022844   0.399808    -0.1096
+-0.0361588  -0.115437  0.0661408
+U= 0.511804  0.852916  0.102915
+ 0.810509 -0.519096  0.271322
+-0.284838 0.0554499  0.956971
+V=   0.41934   0.877825    0.23147
+  0.842685  -0.471227   0.260437
+ -0.337692 -0.0858445   0.937334
+iteration= 0	 chi2= 0.113727	 time= 2.277e-05	 cumTime= 2.277e-05	 edges= 159	 schur= 0	 lambda= 0.000530	 levenbergIter= 1
+iteration= 1	 chi2= 0.113601	 time= 1.387e-05	 cumTime= 3.664e-05	 edges= 159	 schur= 0	 lambda= 0.000353	 levenbergIter= 1
+iteration= 2	 chi2= 0.113600	 time= 1.32e-05	 cumTime= 4.984e-05	 edges= 159	 schur= 0	 lambda= 0.000236	 levenbergIter= 1
+iteration= 3	 chi2= 0.113600	 time= 1.311e-05	 cumTime= 6.295e-05	 edges= 159	 schur= 0	 lambda= 0.000157	 levenbergIter= 1
+iteration= 4	 chi2= 0.113600	 time= 1.307e-05	 cumTime= 7.602e-05	 edges= 159	 schur= 0	 lambda= 0.000105	 levenbergIter= 1
+iteration= 5	 chi2= 0.113600	 time= 1.31e-05	 cumTime= 8.912e-05	 edges= 159	 schur= 0	 lambda= 0.000070	 levenbergIter= 1
+iteration= 6	 chi2= 0.113600	 time= 1.307e-05	 cumTime= 0.00010219	 edges= 159	 schur= 0	 lambda= 0.000047	 levenbergIter= 1
+iteration= 7	 chi2= 0.113600	 time= 1.307e-05	 cumTime= 0.00011526	 edges= 159	 schur= 0	 lambda= 0.000031	 levenbergIter= 1
+iteration= 8	 chi2= 0.113600	 time= 1.307e-05	 cumTime= 0.00012833	 edges= 159	 schur= 0	 lambda= 0.000021	 levenbergIter= 1
+iteration= 9	 chi2= 0.113600	 time= 1.3059e-05	 cumTime= 0.000141389	 edges= 159	 schur= 0	 lambda= 0.000014	 levenbergIter= 1
+optimization costs time: 0.000819825 seconds.
+
+after optimization:
+T=
+   0.987152    0.056176   -0.149584   0.0746413
+ -0.0529938    0.998277   0.0251785 -0.00914122
+   0.150741   -0.016928    0.988428   0.0055289
+          0           0           0           1
+processing pair 22 -> 23...
+-- Max dist : 85.000000 
+-- Min dist : 2.000000 
+-- Max dist : 85.000000 
+-- Min dist : 2.000000 
+W=  0.237381  0.0589441  -0.102913
+ 0.0108346   0.336984 -0.0880316
+-0.0487135 -0.0958577  0.0539229
+U=  0.422462    0.88431   0.198801
+  0.853054  -0.462048   0.242508
+ -0.306308 -0.0671376   0.949562
+V= 0.320774  0.882197   0.34472
+ 0.880829 -0.411652  0.233845
+-0.348202 -0.228629  0.909112
+iteration= 0	 chi2= 0.091187	 time= 3.3869e-05	 cumTime= 3.3869e-05	 edges= 134	 schur= 0	 lambda= 0.000447	 levenbergIter= 1
+iteration= 1	 chi2= 0.091083	 time= 1.862e-05	 cumTime= 5.2489e-05	 edges= 134	 schur= 0	 lambda= 0.000298	 levenbergIter= 1
+iteration= 2	 chi2= 0.091082	 time= 1.749e-05	 cumTime= 6.9979e-05	 edges= 134	 schur= 0	 lambda= 0.000199	 levenbergIter= 1
+iteration= 3	 chi2= 0.091082	 time= 1.733e-05	 cumTime= 8.7309e-05	 edges= 134	 schur= 0	 lambda= 0.000132	 levenbergIter= 1
+iteration= 4	 chi2= 0.091082	 time= 1.715e-05	 cumTime= 0.000104459	 edges= 134	 schur= 0	 lambda= 0.000088	 levenbergIter= 1
+iteration= 5	 chi2= 0.091082	 time= 1.715e-05	 cumTime= 0.000121609	 edges= 134	 schur= 0	 lambda= 0.000059	 levenbergIter= 1
+iteration= 6	 chi2= 0.091082	 time= 1.713e-05	 cumTime= 0.000138739	 edges= 134	 schur= 0	 lambda= 0.000039	 levenbergIter= 1
+iteration= 7	 chi2= 0.091082	 time= 1.713e-05	 cumTime= 0.000155869	 edges= 134	 schur= 0	 lambda= 0.000026	 levenbergIter= 1
+iteration= 8	 chi2= 0.091082	 time= 1.726e-05	 cumTime= 0.000173129	 edges= 134	 schur= 0	 lambda= 0.000017	 levenbergIter= 1
+iteration= 9	 chi2= 0.091082	 time= 2.05e-05	 cumTime= 0.000193629	 edges= 134	 schur= 0	 lambda= 0.000139	 levenbergIter= 2
+optimization costs time: 0.00127393 seconds.
+
+after optimization:
+T=
+  0.984181   0.054578  -0.168548   0.085346
+-0.0503829   0.998307  0.0290697 -0.0112304
+  0.169849 -0.0201179   0.985265  0.0079867
+         0          0          0          1
+processing pair 23 -> 24...
+-- Max dist : 91.000000 
+-- Min dist : 2.000000 
+-- Max dist : 91.000000 
+-- Min dist : 2.000000 
+W=  0.149488 0.00950474  -0.077491
+-0.0315548   0.328215 -0.0998935
+-0.0394964  -0.103761  0.0652794
+U=0.0926587  0.943109  0.319313
+ 0.940385 -0.188289  0.283239
+-0.327248 -0.274032  0.904331
+V=-0.00794458    0.900502    0.434779
+   0.941879   -0.139295    0.305715
+  -0.335859   -0.411938    0.847057
+iteration= 0	 chi2= 0.135505	 time= 2.303e-05	 cumTime= 2.303e-05	 edges= 114	 schur= 0	 lambda= 0.000380	 levenbergIter= 1
+iteration= 1	 chi2= 0.135279	 time= 1.061e-05	 cumTime= 3.364e-05	 edges= 114	 schur= 0	 lambda= 0.000253	 levenbergIter= 1
+iteration= 2	 chi2= 0.135272	 time= 9.74e-06	 cumTime= 4.338e-05	 edges= 114	 schur= 0	 lambda= 0.000169	 levenbergIter= 1
+iteration= 3	 chi2= 0.135272	 time= 9.53001e-06	 cumTime= 5.291e-05	 edges= 114	 schur= 0	 lambda= 0.000113	 levenbergIter= 1
+iteration= 4	 chi2= 0.135272	 time= 9.47001e-06	 cumTime= 6.238e-05	 edges= 114	 schur= 0	 lambda= 0.000075	 levenbergIter= 1
+iteration= 5	 chi2= 0.135272	 time= 9.539e-06	 cumTime= 7.1919e-05	 edges= 114	 schur= 0	 lambda= 0.000050	 levenbergIter= 1
+iteration= 6	 chi2= 0.135272	 time= 9.48001e-06	 cumTime= 8.1399e-05	 edges= 114	 schur= 0	 lambda= 0.000033	 levenbergIter= 1
+iteration= 7	 chi2= 0.135272	 time= 9.49e-06	 cumTime= 9.0889e-05	 edges= 114	 schur= 0	 lambda= 0.000022	 levenbergIter= 1
+iteration= 8	 chi2= 0.135272	 time= 9.46e-06	 cumTime= 0.000100349	 edges= 114	 schur= 0	 lambda= 0.000015	 levenbergIter= 1
+iteration= 9	 chi2= 0.135272	 time= 9.48001e-06	 cumTime= 0.000109829	 edges= 114	 schur= 0	 lambda= 0.000010	 levenbergIter= 1
+optimization costs time: 0.000773415 seconds.
+
+after optimization:
+T=
+  0.987366  0.0535216  -0.149146  0.0775476
+ -0.053879   0.998546 0.00164587 0.00130972
+  0.149017 0.00641076   0.988814 0.00211153
+         0          0          0          1
+processing pair 24 -> 25...
+-- Max dist : 94.000000 
+-- Min dist : 7.000000 
+-- Max dist : 94.000000 
+-- Min dist : 7.000000 
+W=  0.117571 -0.0270688 -0.0237955
+-0.0603163   0.265819  -0.144712
+-0.0205001  -0.102224  0.0825438
+U=-0.0976232   0.926108   0.364408
+  0.923545 -0.0521431    0.37993
+ -0.370857  -0.373637   0.850212
+V=   -0.17835    0.935153    0.306072
+   0.856275 -0.00573801    0.516488
+  -0.484751   -0.354198    0.799725
+iteration= 0	 chi2= 0.038161	 time= 2.167e-05	 cumTime= 2.167e-05	 edges= 94	 schur= 0	 lambda= 0.000313	 levenbergIter= 1
+iteration= 1	 chi2= 0.037995	 time= 8.69001e-06	 cumTime= 3.036e-05	 edges= 94	 schur= 0	 lambda= 0.000209	 levenbergIter= 1
+iteration= 2	 chi2= 0.037994	 time= 8.21e-06	 cumTime= 3.857e-05	 edges= 94	 schur= 0	 lambda= 0.000139	 levenbergIter= 1
+iteration= 3	 chi2= 0.037994	 time= 7.89e-06	 cumTime= 4.646e-05	 edges= 94	 schur= 0	 lambda= 0.000093	 levenbergIter= 1
+iteration= 4	 chi2= 0.037994	 time= 7.84999e-06	 cumTime= 5.431e-05	 edges= 94	 schur= 0	 lambda= 0.000062	 levenbergIter= 1
+iteration= 5	 chi2= 0.037994	 time= 7.86e-06	 cumTime= 6.217e-05	 edges= 94	 schur= 0	 lambda= 0.000041	 levenbergIter= 1
+iteration= 6	 chi2= 0.037994	 time= 7.85e-06	 cumTime= 7.002e-05	 edges= 94	 schur= 0	 lambda= 0.000028	 levenbergIter= 1
+iteration= 7	 chi2= 0.037994	 time= 7.85e-06	 cumTime= 7.787e-05	 edges= 94	 schur= 0	 lambda= 0.000018	 levenbergIter= 1
+iteration= 8	 chi2= 0.037994	 time= 7.85e-06	 cumTime= 8.572e-05	 edges= 94	 schur= 0	 lambda= 0.000012	 levenbergIter= 1
+iteration= 9	 chi2= 0.037994	 time= 9.52999e-06	 cumTime= 9.525e-05	 edges= 94	 schur= 0	 lambda= 0.000016	 levenbergIter= 2
+optimization costs time: 0.000299378 seconds.
+
+after optimization:
+T=
+   0.994999    0.099306   0.0107243 -0.00648862
+ -0.0971899    0.987337   -0.125381   0.0667026
+ -0.0230395    0.123712    0.992051 -0.00369187
+          0           0           0           1
+processing pair 25 -> 26...
+-- Max dist : 82.000000 
+-- Min dist : 5.000000 
+-- Max dist : 82.000000 
+-- Min dist : 5.000000 
+W=   0.148977  -0.0180604  -0.0365396
+ -0.0618543    0.285398   -0.142479
+0.000827816    -0.15361    0.118672
+U=-0.0608923   0.966938   0.247636
+  0.862111 -0.0740871   0.501274
+ -0.503047  -0.244014   0.829096
+V= -0.166864   0.940261   0.296758
+  0.861818 -0.0071248   0.507167
+ -0.478984  -0.340379   0.809145
+iteration= 0	 chi2= 0.012861	 time= 3.273e-05	 cumTime= 3.273e-05	 edges= 121	 schur= 0	 lambda= 0.000566	 levenbergIter= 1
+iteration= 1	 chi2= 0.012848	 time= 1.699e-05	 cumTime= 4.972e-05	 edges= 121	 schur= 0	 lambda= 0.000378	 levenbergIter= 1
+iteration= 2	 chi2= 0.012848	 time= 1.59e-05	 cumTime= 6.562e-05	 edges= 121	 schur= 0	 lambda= 0.000252	 levenbergIter= 1
+iteration= 3	 chi2= 0.012848	 time= 1.546e-05	 cumTime= 8.108e-05	 edges= 121	 schur= 0	 lambda= 0.000168	 levenbergIter= 1
+iteration= 4	 chi2= 0.012848	 time= 1.548e-05	 cumTime= 9.656e-05	 edges= 121	 schur= 0	 lambda= 0.000112	 levenbergIter= 1
+iteration= 5	 chi2= 0.012848	 time= 1.565e-05	 cumTime= 0.00011221	 edges= 121	 schur= 0	 lambda= 0.000075	 levenbergIter= 1
+iteration= 6	 chi2= 0.012848	 time= 4.2519e-05	 cumTime= 0.000154729	 edges= 121	 schur= 0	 lambda= 2686626680541.254883	 levenbergIter= 10
+optimization costs time: 0.000919305 seconds.
+
+after optimization:
+T=
+   0.992823   0.0662257  -0.0995855   0.0516242
+ -0.0647599    0.997741   0.0178836 -0.00955741
+   0.100545  -0.0113061    0.994868 -0.00125462
+          0           0           0           1
+processing pair 26 -> 27...
+-- Max dist : 86.000000 
+-- Min dist : 7.000000 
+-- Max dist : 86.000000 
+-- Min dist : 7.000000 
+W=  0.151107 -0.0470022 -0.0235024
+-0.0682708   0.276514  -0.102139
+0.00864745  -0.105548  0.0930678
+U=-0.229799  0.946264  0.227544
+ 0.894273  0.113049  0.433007
+-0.384016 -0.302991  0.872197
+V=-0.293766  0.898619   0.32586
+ 0.885208  0.127111  0.447492
+-0.360705 -0.419912  0.832806
+iteration= 0	 chi2= 0.014530	 time= 2.312e-05	 cumTime= 2.312e-05	 edges= 117	 schur= 0	 lambda= 0.000741	 levenbergIter= 1
+iteration= 1	 chi2= 0.014521	 time= 1.059e-05	 cumTime= 3.371e-05	 edges= 117	 schur= 0	 lambda= 0.000494	 levenbergIter= 1
+iteration= 2	 chi2= 0.014521	 time= 9.94999e-06	 cumTime= 4.366e-05	 edges= 117	 schur= 0	 lambda= 0.000329	 levenbergIter= 1
+iteration= 3	 chi2= 0.014521	 time= 9.71901e-06	 cumTime= 5.3379e-05	 edges= 117	 schur= 0	 lambda= 0.000220	 levenbergIter= 1
+iteration= 4	 chi2= 0.014521	 time= 9.72e-06	 cumTime= 6.3099e-05	 edges= 117	 schur= 0	 lambda= 0.000146	 levenbergIter= 1
+iteration= 5	 chi2= 0.014521	 time= 1.37e-05	 cumTime= 7.6799e-05	 edges= 117	 schur= 0	 lambda= 0.009367	 levenbergIter= 3
+optimization costs time: 0.000264679 seconds.
+
+after optimization:
+T=
+   0.991986   0.0186846   -0.124958   0.0625823
+ -0.0200186    0.999755 -0.00942834  0.00515515
+   0.124751   0.0118543    0.992117  0.00377396
+          0           0           0           1
+processing pair 27 -> 28...
+-- Max dist : 84.000000 
+-- Min dist : 6.000000 
+-- Max dist : 84.000000 
+-- Min dist : 6.000000 
+W=  0.107189  -0.075937 0.00865874
+ -0.100966   0.243043  -0.103723
+ 0.0359365  -0.109504   0.093263
+U=-0.328116  -0.87775  0.349134
+ 0.844616 -0.107083  0.524554
+-0.423041  0.466999  0.776498
+V=-0.405807  -0.80953  0.424242
+ 0.827227 -0.127964  0.547102
+-0.388608  0.572962  0.721594
+iteration= 0	 chi2= 0.022221	 time= 2.1309e-05	 cumTime= 2.1309e-05	 edges= 101	 schur= 0	 lambda= 0.000673	 levenbergIter= 1
+iteration= 1	 chi2= 0.022213	 time= 9.17001e-06	 cumTime= 3.0479e-05	 edges= 101	 schur= 0	 lambda= 0.000449	 levenbergIter= 1
+iteration= 2	 chi2= 0.022213	 time= 8.63e-06	 cumTime= 3.9109e-05	 edges= 101	 schur= 0	 lambda= 0.000299	 levenbergIter= 1
+iteration= 3	 chi2= 0.022213	 time= 8.41e-06	 cumTime= 4.7519e-05	 edges= 101	 schur= 0	 lambda= 0.000200	 levenbergIter= 1
+iteration= 4	 chi2= 0.022213	 time= 8.39999e-06	 cumTime= 5.5919e-05	 edges= 101	 schur= 0	 lambda= 0.000133	 levenbergIter= 1
+iteration= 5	 chi2= 0.022213	 time= 8.40001e-06	 cumTime= 6.4319e-05	 edges= 101	 schur= 0	 lambda= 0.000089	 levenbergIter= 1
+iteration= 6	 chi2= 0.022213	 time= 1.866e-05	 cumTime= 8.2979e-05	 edges= 101	 schur= 0	 lambda= 123.968821	 levenbergIter= 7
+iteration= 7	 chi2= 0.022213	 time= 1.666e-05	 cumTime= 9.9639e-05	 edges= 101	 schur= 0	 lambda= 259981459.970519	 levenbergIter= 6
+optimization costs time: 0.000359597 seconds.
+
+after optimization:
+T=
+  0.991834  0.0319066  -0.123476  0.0630048
+-0.0335267   0.999377 -0.0110647 0.00479454
+  0.123046  0.0151141   0.992286 0.00459752
+         0          0          0          1
+processing pair 28 -> 29...
+-- Max dist : 89.000000 
+-- Min dist : 5.000000 
+-- Max dist : 89.000000 
+-- Min dist : 5.000000 
+W=  0.109471 -0.0638452  0.0289101
+-0.0833871   0.209005 -0.0600095
+ 0.0450824 -0.0616404  0.0573338
+U=-0.419035  0.866498 -0.271276
+  0.84603  0.481075  0.229784
+-0.329611   0.13322   0.93467
+V=-0.482425  0.852737 -0.200265
+ 0.822767  0.519582  0.230409
+-0.300532 0.0536162  0.952264
+iteration= 0	 chi2= 0.020950	 time= 2.0659e-05	 cumTime= 2.0659e-05	 edges= 82	 schur= 0	 lambda= 0.000547	 levenbergIter= 1
+iteration= 1	 chi2= 0.020942	 time= 7.97e-06	 cumTime= 2.8629e-05	 edges= 82	 schur= 0	 lambda= 0.000364	 levenbergIter= 1
+iteration= 2	 chi2= 0.020942	 time= 7.25e-06	 cumTime= 3.5879e-05	 edges= 82	 schur= 0	 lambda= 0.000243	 levenbergIter= 1
+iteration= 3	 chi2= 0.020942	 time= 7.05999e-06	 cumTime= 4.2939e-05	 edges= 82	 schur= 0	 lambda= 0.000162	 levenbergIter= 1
+iteration= 4	 chi2= 0.020942	 time= 7.03e-06	 cumTime= 4.9969e-05	 edges= 82	 schur= 0	 lambda= 0.000108	 levenbergIter= 1
+iteration= 5	 chi2= 0.020942	 time= 7.02e-06	 cumTime= 5.6989e-05	 edges= 82	 schur= 0	 lambda= 0.000072	 levenbergIter= 1
+iteration= 6	 chi2= 0.020942	 time= 1.004e-05	 cumTime= 6.7029e-05	 edges= 82	 schur= 0	 lambda= 0.000384	 levenbergIter= 3
+iteration= 7	 chi2= 0.020942	 time= 9.86e-06	 cumTime= 7.6889e-05	 edges= 82	 schur= 0	 lambda= 0.002048	 levenbergIter= 3
+iteration= 8	 chi2= 0.020942	 time= 1e-05	 cumTime= 8.6889e-05	 edges= 82	 schur= 0	 lambda= 0.010921	 levenbergIter= 3
+iteration= 9	 chi2= 0.020942	 time= 7.00999e-06	 cumTime= 9.3899e-05	 edges= 82	 schur= 0	 lambda= 0.007281	 levenbergIter= 1
+optimization costs time: 0.000768375 seconds.
+
+after optimization:
+T=
+   0.995375   0.0429442  -0.0859342   0.0428752
+ -0.0439333    0.998988 -0.00965052  0.00282563
+  0.0854328   0.0133813    0.996254   0.0050751
+          0           0           0           1
+processing pair 29 -> 30...
+-- Max dist : 87.000000 
+-- Min dist : 8.000000 
+-- Max dist : 87.000000 
+-- Min dist : 8.000000 
+W=  0.140664   -0.11613   0.021516
+ -0.132152   0.257001 -0.0488627
+ 0.0574165 -0.0702739  0.0676311
+U=-0.495198  0.825971 -0.269352
+ 0.819904  0.546835  0.169497
+-0.287291  0.136908  0.948008
+V= -0.548097   0.828509   -0.11473
+  0.812722   0.559954   0.161043
+ -0.197669 0.00497654   0.980256
+iteration= 0	 chi2= 0.010727	 time= 2.7489e-05	 cumTime= 2.7489e-05	 edges= 84	 schur= 0	 lambda= 0.000474	 levenbergIter= 1
+iteration= 1	 chi2= 0.010705	 time= 1.205e-05	 cumTime= 3.9539e-05	 edges= 84	 schur= 0	 lambda= 0.000316	 levenbergIter= 1
+iteration= 2	 chi2= 0.010705	 time= 1.105e-05	 cumTime= 5.0589e-05	 edges= 84	 schur= 0	 lambda= 0.000211	 levenbergIter= 1
+iteration= 3	 chi2= 0.010705	 time= 1.404e-05	 cumTime= 6.4629e-05	 edges= 84	 schur= 0	 lambda= 0.000140	 levenbergIter= 1
+iteration= 4	 chi2= 0.010705	 time= 1.08e-05	 cumTime= 7.5429e-05	 edges= 84	 schur= 0	 lambda= 0.000094	 levenbergIter= 1
+iteration= 5	 chi2= 0.010705	 time= 1.086e-05	 cumTime= 8.6289e-05	 edges= 84	 schur= 0	 lambda= 0.000062	 levenbergIter= 1
+iteration= 6	 chi2= 0.010705	 time= 3.414e-05	 cumTime= 0.000120429	 edges= 84	 schur= 0	 lambda= 2247384970068.675781	 levenbergIter= 10
+optimization costs time: 0.000350198 seconds.
+
+after optimization:
+T=
+   0.986644   0.0166698   -0.162038   0.0834954
+ -0.0157758    0.999852   0.0068023 -0.00299363
+   0.162128 -0.00415516    0.986761  0.00783394
+          0           0           0           1
+processing pair 30 -> 31...
+-- Max dist : 81.000000 
+-- Min dist : 3.000000 
+-- Max dist : 81.000000 
+-- Min dist : 3.000000 
+W=   0.138509   -0.110536   0.0233488
+  -0.119664    0.238547 0.000126003
+  0.0492549  -0.0163601   0.0339449
+U=-0.538495  0.665104 -0.517358
+ 0.831492   0.51892 -0.198351
+-0.136543   0.53699  0.832465
+V= -0.569953   0.725823  -0.385142
+  0.819907   0.533134  -0.208617
+-0.0539133   0.434682   0.898969
+iteration= 0	 chi2= 0.016078	 time= 2.736e-05	 cumTime= 2.736e-05	 edges= 77	 schur= 0	 lambda= 0.000513	 levenbergIter= 1
+iteration= 1	 chi2= 0.016052	 time= 1.139e-05	 cumTime= 3.875e-05	 edges= 77	 schur= 0	 lambda= 0.000342	 levenbergIter= 1
+iteration= 2	 chi2= 0.016052	 time= 1.065e-05	 cumTime= 4.94e-05	 edges= 77	 schur= 0	 lambda= 0.000228	 levenbergIter= 1
+iteration= 3	 chi2= 0.016052	 time= 1.06e-05	 cumTime= 6e-05	 edges= 77	 schur= 0	 lambda= 0.000152	 levenbergIter= 1
+iteration= 4	 chi2= 0.016052	 time= 1.005e-05	 cumTime= 7.005e-05	 edges= 77	 schur= 0	 lambda= 0.000101	 levenbergIter= 1
+iteration= 5	 chi2= 0.016052	 time= 1.007e-05	 cumTime= 8.012e-05	 edges= 77	 schur= 0	 lambda= 0.000068	 levenbergIter= 1
+iteration= 6	 chi2= 0.016052	 time= 1e-05	 cumTime= 9.012e-05	 edges= 77	 schur= 0	 lambda= 0.000045	 levenbergIter= 1
+iteration= 7	 chi2= 0.016052	 time= 1.021e-05	 cumTime= 0.00010033	 edges= 77	 schur= 0	 lambda= 0.000030	 levenbergIter= 1
+iteration= 8	 chi2= 0.016052	 time= 1.221e-05	 cumTime= 0.00011254	 edges= 77	 schur= 0	 lambda= 0.000040	 levenbergIter= 2
+iteration= 9	 chi2= 0.016052	 time= 2.04e-05	 cumTime= 0.00013294	 edges= 77	 schur= 0	 lambda= 0.875101	 levenbergIter= 6
+optimization costs time: 0.000548527 seconds.
+
+after optimization:
+T=
+    0.988921    0.0210034    -0.146947    0.0771231
+  -0.0208736     0.999779   0.00242542 -0.000818462
+    0.146965  0.000668766     0.989141   0.00600339
+           0            0            0            1
+processing pair 31 -> 32...
+-- Max dist : 77.000000 
+-- Min dist : 5.000000 
+-- Max dist : 77.000000 
+-- Min dist : 5.000000 
+W=   0.118269   -0.080941   0.0106288
+ -0.0987908    0.158313 -0.00340487
+  0.0338309  -0.0185501   0.0285429
+U=-0.595046   0.67949 -0.429201
+ 0.787242  0.600284 -0.141096
+-0.161769  0.421844   0.89212
+V= -0.656901   0.695286  -0.291646
+  0.751723   0.633842  -0.182092
+-0.0582515   0.338853   0.939034
+iteration= 0	 chi2= 0.005190	 time= 2.31e-05	 cumTime= 2.31e-05	 edges= 62	 schur= 0	 lambda= 0.000413	 levenbergIter= 1
+iteration= 1	 chi2= 0.005182	 time= 9.08e-06	 cumTime= 3.218e-05	 edges= 62	 schur= 0	 lambda= 0.000276	 levenbergIter= 1
+iteration= 2	 chi2= 0.005182	 time= 8.45001e-06	 cumTime= 4.063e-05	 edges= 62	 schur= 0	 lambda= 0.000184	 levenbergIter= 1
+iteration= 3	 chi2= 0.005182	 time= 8.32e-06	 cumTime= 4.895e-05	 edges= 62	 schur= 0	 lambda= 0.000122	 levenbergIter= 1
+iteration= 4	 chi2= 0.005182	 time= 8.2e-06	 cumTime= 5.715e-05	 edges= 62	 schur= 0	 lambda= 0.000082	 levenbergIter= 1
+iteration= 5	 chi2= 0.005182	 time= 8.27e-06	 cumTime= 6.542e-05	 edges= 62	 schur= 0	 lambda= 0.000054	 levenbergIter= 1
+iteration= 6	 chi2= 0.005182	 time= 8.22e-06	 cumTime= 7.364e-05	 edges= 62	 schur= 0	 lambda= 0.000109	 levenbergIter= 1
+optimization costs time: 0.000366278 seconds.
+
+after optimization:
+T=
+  0.988501   0.061533  -0.138125  0.0700715
+ -0.058621   0.997966  0.0250561 -0.0127387
+  0.139386  -0.016671   0.990098 0.00568449
+         0          0          0          1
+processing pair 32 -> 33...
+-- Max dist : 74.000000 
+-- Min dist : 3.000000 
+-- Max dist : 74.000000 
+-- Min dist : 3.000000 
+W=  0.147362  -0.057294  0.0231845
+-0.0743881   0.212233  0.0396755
+ 0.0457649  0.0306587  0.0564048
+U=-0.489045  0.733378  -0.47222
+ 0.871843  0.394264 -0.290596
+0.0269375  0.553816  0.832203
+V=-0.533162  0.768317 -0.354156
+ 0.840395  0.432819 -0.326196
+0.0973366  0.471547  0.876453
+iteration= 0	 chi2= 0.015844	 time= 2.037e-05	 cumTime= 2.037e-05	 edges= 88	 schur= 0	 lambda= 0.000587	 levenbergIter= 1
+iteration= 1	 chi2= 0.015834	 time= 8.27e-06	 cumTime= 2.864e-05	 edges= 88	 schur= 0	 lambda= 0.000391	 levenbergIter= 1
+iteration= 2	 chi2= 0.015833	 time= 7.7e-06	 cumTime= 3.634e-05	 edges= 88	 schur= 0	 lambda= 0.000261	 levenbergIter= 1
+iteration= 3	 chi2= 0.015833	 time= 7.40899e-06	 cumTime= 4.3749e-05	 edges= 88	 schur= 0	 lambda= 0.000174	 levenbergIter= 1
+iteration= 4	 chi2= 0.015833	 time= 7.41001e-06	 cumTime= 5.1159e-05	 edges= 88	 schur= 0	 lambda= 0.000116	 levenbergIter= 1
+iteration= 5	 chi2= 0.015833	 time= 7.42001e-06	 cumTime= 5.8579e-05	 edges= 88	 schur= 0	 lambda= 0.000077	 levenbergIter= 1
+iteration= 6	 chi2= 0.015833	 time= 7.41e-06	 cumTime= 6.5989e-05	 edges= 88	 schur= 0	 lambda= 0.000052	 levenbergIter= 1
+iteration= 7	 chi2= 0.015833	 time= 9.01999e-06	 cumTime= 7.5009e-05	 edges= 88	 schur= 0	 lambda= 0.000069	 levenbergIter= 2
+iteration= 8	 chi2= 0.015833	 time= 1.328e-05	 cumTime= 8.8289e-05	 edges= 88	 schur= 0	 lambda= 2.250259	 levenbergIter= 5
+optimization costs time: 0.000399907 seconds.
+
+after optimization:
+T=
+   0.991447   0.0604656   -0.115658   0.0582107
+  -0.058997    0.998129   0.0160824 -0.00774238
+   0.116414 -0.00912138    0.993159    0.003291
+          0           0           0           1
+processing pair 33 -> 34...
+-- Max dist : 84.000000 
+-- Min dist : 6.000000 
+-- Max dist : 84.000000 
+-- Min dist : 6.000000 
+W=  0.190843 -0.0635013  0.0180011
+-0.0725629   0.231441  0.0390756
+ 0.0523568  0.0248169  0.0551267
+U= -0.581829    0.71766  -0.382673
+  0.812792   0.529884  -0.242059
+-0.0290562    0.45187    0.89161
+V=-0.605945  0.755561 -0.248914
+ 0.792462  0.545964 -0.271896
+0.0695359  0.362009  0.929578
+iteration= 0	 chi2= 0.012795	 time= 1.3639e-05	 cumTime= 1.3639e-05	 edges= 107	 schur= 0	 lambda= 0.000693	 levenbergIter= 1
+iteration= 1	 chi2= 0.012789	 time= 9.58001e-06	 cumTime= 2.3219e-05	 edges= 107	 schur= 0	 lambda= 0.000462	 levenbergIter= 1
+iteration= 2	 chi2= 0.012789	 time= 9.15e-06	 cumTime= 3.2369e-05	 edges= 107	 schur= 0	 lambda= 0.000308	 levenbergIter= 1
+iteration= 3	 chi2= 0.012789	 time= 8.92e-06	 cumTime= 4.1289e-05	 edges= 107	 schur= 0	 lambda= 0.000205	 levenbergIter= 1
+iteration= 4	 chi2= 0.012789	 time= 8.89e-06	 cumTime= 5.0179e-05	 edges= 107	 schur= 0	 lambda= 0.000137	 levenbergIter= 1
+iteration= 5	 chi2= 0.012789	 time= 1.088e-05	 cumTime= 6.1059e-05	 edges= 107	 schur= 0	 lambda= 0.000183	 levenbergIter= 2
+iteration= 6	 chi2= 0.012789	 time= 2.294e-05	 cumTime= 8.3999e-05	 edges= 107	 schur= 0	 lambda= 6421713119.395416	 levenbergIter= 9
+optimization costs time: 0.000312698 seconds.
+
+after optimization:
+T=
+  0.990045  0.0347867  -0.136383  0.0696963
+-0.0318955   0.999219  0.0233285 -0.0121457
+  0.137088 -0.0187462   0.990381 0.00526001
+         0          0          0          1
+processing pair 34 -> 35...
+-- Max dist : 82.000000 
+-- Min dist : 7.000000 
+-- Max dist : 82.000000 
+-- Min dist : 7.000000 
+W=    0.166106   -0.0427237 -0.000237466
+  -0.0463065     0.245132    0.0628937
+   0.0326466     0.061615    0.0522232
+U=-0.339549  0.895501 -0.287722
+ 0.916851  0.246826 -0.313786
+ 0.209978  0.370344  0.904851
+V=-0.332012  0.934635 -0.127378
+ 0.910102  0.281904 -0.303719
+ 0.247958  0.216766  0.944208
+iteration= 0	 chi2= 0.059820	 time= 1.326e-05	 cumTime= 1.326e-05	 edges= 108	 schur= 0	 lambda= 0.000507	 levenbergIter= 1
+iteration= 1	 chi2= 0.059797	 time= 9.58999e-06	 cumTime= 2.285e-05	 edges= 108	 schur= 0	 lambda= 0.000338	 levenbergIter= 1
+iteration= 2	 chi2= 0.059797	 time= 8.969e-06	 cumTime= 3.1819e-05	 edges= 108	 schur= 0	 lambda= 0.000225	 levenbergIter= 1
+iteration= 3	 chi2= 0.059797	 time= 8.94e-06	 cumTime= 4.0759e-05	 edges= 108	 schur= 0	 lambda= 0.000150	 levenbergIter= 1
+iteration= 4	 chi2= 0.059797	 time= 8.90999e-06	 cumTime= 4.9669e-05	 edges= 108	 schur= 0	 lambda= 0.000100	 levenbergIter= 1
+iteration= 5	 chi2= 0.059797	 time= 8.97e-06	 cumTime= 5.8639e-05	 edges= 108	 schur= 0	 lambda= 0.000067	 levenbergIter= 1
+iteration= 6	 chi2= 0.059797	 time= 8.95999e-06	 cumTime= 6.7599e-05	 edges= 108	 schur= 0	 lambda= 0.000045	 levenbergIter= 1
+iteration= 7	 chi2= 0.059797	 time= 8.99e-06	 cumTime= 7.6589e-05	 edges= 108	 schur= 0	 lambda= 0.000030	 levenbergIter= 1
+iteration= 8	 chi2= 0.059797	 time= 1.435e-05	 cumTime= 9.0939e-05	 edges= 108	 schur= 0	 lambda= 0.001266	 levenbergIter= 4
+iteration= 9	 chi2= 0.059797	 time= 8.94e-06	 cumTime= 9.9879e-05	 edges= 108	 schur= 0	 lambda= 0.000844	 levenbergIter= 1
+optimization costs time: 0.000417638 seconds.
+
+after optimization:
+T=
+  0.986351  0.0308074   -0.16175  0.0835585
+-0.0337433   0.999311  -0.015435  0.0116727
+  0.161163  0.0206823   0.986711 0.00791009
+         0          0          0          1
+
+=== PER-PAIR RELATIVE POSE RESULTS ===
+
+Pair    Matches  PnP3D2DPnPInl    PnPRotErr   PnPTransErr  ICP3D3D  ICPRotErr   ICPTransErr  
+0->1    202      136    121       0.978       0.007        119      2.717       0.025        
+1->2    200      141    135       2.055       0.016        128      1.329       0.007        
+2->3    197      145    132       2.433       0.020        133      4.950       0.051        
+3->4    185      141    127       1.516       0.014        130      1.625       0.012        
+4->5    196      146    131       2.915       0.027        135      4.060       0.035        
+5->6    194      155    143       3.008       0.027        142      2.281       0.020        
+6->7    186      150    140       3.265       0.028        142      2.023       0.018        
+7->8    177      138    127       1.989       0.017        130      2.060       0.015        
+8->9    188      143    127       1.750       0.015        127      2.948       0.025        
+9->10   185      148    130       0.868       0.008        134      2.225       0.011        
+10->11  180      141    131       0.722       0.006        131      4.172       0.037        
+11->12  175      145    133       1.110       0.011        136      3.063       0.026        
+12->13  188      155    143       1.190       0.011        150      2.655       0.024        
+13->14  159      131    113       1.107       0.010        120      7.113       0.052        
+14->15  209      176    162       1.515       0.013        174      1.756       0.014        
+15->16  213      197    188       0.914       0.009        181      0.898       0.009        
+16->17  212      184    180       0.731       0.007        161      1.511       0.009        
+17->18  253      206    197       0.854       0.008        189      2.595       0.007        
+18->19  242      193    182       0.746       0.007        167      0.565       0.003        
+19->20  248      184    169       0.494       0.005        167      1.465       0.008        
+20->21  241      169    165       0.685       0.005        155      1.277       0.010        
+21->22  233      175    168       0.890       0.009        159      1.760       0.014        
+22->23  214      156    151       0.692       0.006        134      1.536       0.009        
+23->24  189      135    119       0.962       0.010        114      1.312       0.011        
+24->25  158      102    97        3.276       0.030        94       13.247      0.118        
+25->26  195      137    127       1.415       0.013        121      4.255       0.036        
+26->27  205      138    129       1.105       0.010        117      2.914       0.025        
+27->28  170      111    103       0.999       0.010        101      2.779       0.025        
+28->29  145      95     84        1.389       0.012        82       4.830       0.045        
+29->30  135      97     92        1.223       0.011        84       1.568       0.005        
+30->31  134      91     81        1.283       0.013        77       1.748       0.010        
+31->32  127      72     67        1.612       0.014        62       2.335       0.019        
+32->33  165      101    92        1.173       0.011        88       3.276       0.029        
+33->34  194      124    115       1.507       0.012        107      2.259       0.021        
+34->35  214      130    119       0.305       0.004        108      1.251       0.013        
+
+=== PER-FRAME ACCUMULATED TRAJECTORY ERROR ===
+
+Frame  GT position                   PnP position                  ICP position                  PnPTErr    ICPTErr    PnPRErr    ICPRErr    
+0      (-0.017,0.235,-0.502)         (-0.017,0.235,-0.502)         (-0.017,0.235,-0.502)         0.0000     0.0000     0.0000     0.0000     
+1      (-0.104,0.235,-0.494)         (-0.097,0.236,-0.493)         (-0.080,0.242,-0.497)         0.0067     0.0244     0.9780     2.7167     
+2      (-0.188,0.235,-0.472)         (-0.169,0.227,-0.479)         (-0.162,0.235,-0.481)         0.0220     0.0277     2.8659     3.6679     
+3      (-0.267,0.235,-0.435)         (-0.235,0.215,-0.456)         (-0.270,0.270,-0.428)         0.0431     0.0357     5.2519     4.3212     
+4      (-0.339,0.235,-0.385)         (-0.300,0.223,-0.414)         (-0.334,0.263,-0.387)         0.0500     0.0279     5.9108     3.4231     
+5      (-0.400,0.235,-0.323)         (-0.347,0.222,-0.375)         (-0.372,0.258,-0.352)         0.0753     0.0461     8.7534     6.2845     
+6      (-0.450,0.235,-0.252)         (-0.391,0.220,-0.333)         (-0.416,0.265,-0.298)         0.1020     0.0648     11.7291    7.8856     
+7      (-0.487,0.235,-0.173)         (-0.428,0.228,-0.286)         (-0.459,0.252,-0.239)         0.1284     0.0735     14.8563    9.0566     
+8      (-0.510,0.235,-0.088)         (-0.469,0.221,-0.225)         (-0.490,0.250,-0.173)         0.1433     0.0885     16.4416    11.0680    
+9      (-0.517,0.235,-0.002)         (-0.503,0.216,-0.157)         (-0.509,0.243,-0.114)         0.1571     0.1133     17.8551    13.8773    
+10     (-0.510,0.235,0.085)          (-0.523,0.219,-0.079)         (-0.519,0.248,-0.037)         0.1662     0.1231     18.6757    14.1054    
+11     (-0.487,0.235,0.170)          (-0.529,0.222,0.002)          (-0.524,0.235,0.017)          0.1733     0.1575     19.2898    17.5246    
+12     (-0.450,0.235,0.249)          (-0.519,0.224,0.079)          (-0.517,0.239,0.077)          0.1832     0.1843     20.3230    20.3120    
+13     (-0.400,0.235,0.320)          (-0.497,0.222,0.157)          (-0.506,0.229,0.146)          0.1895     0.2039     21.0186    22.3485    
+14     (-0.339,0.235,0.382)          (-0.464,0.230,0.227)          (-0.497,0.226,0.181)          0.1994     0.2562     22.1163    29.0479    
+15     (-0.267,0.235,0.432)          (-0.417,0.249,0.292)          (-0.467,0.227,0.248)          0.2055     0.2716     22.8085    30.7342    
+16     (-0.188,0.235,0.469)          (-0.362,0.258,0.348)          (-0.424,0.226,0.316)          0.2128     0.2812     23.6974    31.5478    
+17     (-0.104,0.235,0.491)          (-0.298,0.266,0.396)          (-0.370,0.226,0.377)          0.2181     0.2896     24.3686    31.8787    
+18     (-0.017,0.235,0.499)          (-0.226,0.275,0.431)          (-0.294,0.239,0.430)          0.2235     0.2851     25.1716    30.6819    
+19     (0.070,0.235,0.491)           (-0.150,0.283,0.456)          (-0.217,0.248,0.465)          0.2277     0.2885     25.9027    30.8386    
+20     (0.154,0.235,0.469)           (-0.063,0.291,0.466)          (-0.133,0.249,0.489)          0.2246     0.2889     25.9162    30.4454    
+21     (0.233,0.235,0.432)           (0.028,0.293,0.465)           (-0.053,0.250,0.497)          0.2154     0.2942     25.4222    31.0077    
+22     (0.305,0.235,0.382)           (0.108,0.288,0.450)           (0.020,0.265,0.490)           0.2148     0.3057     25.7827    32.1626    
+23     (0.367,0.235,0.320)           (0.184,0.287,0.423)           (0.102,0.283,0.466)           0.2155     0.3062     26.3418    32.3509    
+24     (0.417,0.235,0.249)           (0.260,0.276,0.376)           (0.174,0.289,0.439)           0.2063     0.3131     26.1065    33.3255    
+25     (0.453,0.235,0.170)           (0.310,0.255,0.333)           (0.187,0.228,0.464)           0.2183     0.3967     27.2520    42.4704    
+26     (0.476,0.235,0.085)           (0.365,0.244,0.277)           (0.229,0.248,0.439)           0.2218     0.4315     28.0052    46.5319    
+27     (0.484,0.235,-0.002)          (0.412,0.248,0.212)           (0.278,0.257,0.401)           0.2260     0.4523     28.9718    48.9193    
+28     (0.476,0.235,-0.088)          (0.447,0.251,0.141)           (0.322,0.265,0.356)           0.2321     0.4711     29.8928    51.3813    
+29     (0.453,0.235,-0.173)          (0.469,0.251,0.069)           (0.346,0.270,0.320)           0.2428     0.5056     31.0389    55.9479    
+30     (0.417,0.235,-0.252)          (0.482,0.239,-0.012)          (0.384,0.290,0.248)           0.2486     0.5037     31.5837    56.5100    
+31     (0.367,0.235,-0.323)          (0.483,0.228,-0.106)          (0.410,0.303,0.176)           0.2465     0.5060     30.8669    57.9068    
+32     (0.305,0.235,-0.385)          (0.458,0.225,-0.204)          (0.419,0.323,0.108)           0.2375     0.5139     29.2770    59.6383    
+33     (0.233,0.235,-0.435)          (0.425,0.222,-0.273)          (0.420,0.338,0.051)           0.2511     0.5309     30.4225    62.4850    
+34     (0.154,0.235,-0.472)          (0.386,0.217,-0.338)          (0.409,0.357,-0.016)          0.2681     0.5362     31.8867    64.6484    
+35     (0.070,0.235,-0.494)          (0.330,0.212,-0.402)          (0.396,0.353,-0.100)          0.2767     0.5253     32.1212    64.9186    
+
+========================================
+SYNTHETIC BUNNY SLAM TRAJECTORY
+========================================
+
+Frames: 36
+
+PNP (RANSAC)
+-------------
+Successful pairs: 35 / 35
+Mean rotation error: 21.3584 deg
+Median rotation error: 24.7701 deg
+Max rotation error: 32.1212 deg
+Mean translation error: 0.1798 m
+Median translation error: 0.2138 m
+Max translation error: 0.2767 m
+Final translation error: 0.2767 m
+Final rotation error: 32.1212 deg
+
+ICP
+---
+Successful pairs: 35 / 35
+Mean rotation error: 30.3325 deg
+Median rotation error: 30.7864 deg
+Max rotation error: 64.9186 deg
+Mean translation error: 0.2701 m
+Median translation error: 0.2868 m
+Max translation error: 0.5362 m
+Final translation error: 0.5253 m
+Final rotation error: 64.9186 deg
+
+========================================
+
+wrote <tmp>/ds/pnp_trajectory.txt
+wrote <tmp>/ds/icp_trajectory.txt
+wrote <tmp>/ds/slam_trajectory.csv

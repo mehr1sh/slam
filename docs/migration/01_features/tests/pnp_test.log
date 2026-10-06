@@ -1,0 +1,54 @@
+-- Max dist : 91.000000 
+-- Min dist : 3.000000 
+matches: 169
+3d-2d pairs: 145
+solve pnp in opencv cost time: 0.000905984 seconds.
+R=
+[-0.9181979759372252, 0.03288001910896034, -0.3947548369914893;
+ 0.03274446084906164, -0.9868384268753612, -0.1583594630133186;
+ -0.3947661045080836, -0.1583313727141805, 0.9050364076356029]
+t=
+[0.8704422024774201;
+ 0.1434183033930173;
+ -4.068809523794982]
+calling bundle adjustment by gauss newton
+iteration 0 cost=1834147.99948
+iteration 1 cost=1373771.17356
+iteration 2 cost=1345420.30912
+iteration 3 cost=1345100.78223
+iteration 4 cost=1345100.12881
+iteration 5 cost=1345100.1243
+iteration 6 cost=1345100.12426
+iteration 7 cost=1345100.12426
+pose by g-n: 
+  0.989266382479 -0.0342659140332    0.14204883538  -0.386009113362
+ 0.0271558636913   0.998293692498  0.0516939318116 -0.0407068621267
+  -0.14357779621 -0.0472816101083    0.98850891032   0.461129488981
+               0                0                0                1
+solve pnp by gauss newton cost time: 0.000119679 seconds.
+calling bundle adjustment by g2o
+iteration= 0	 chi2= 1373771.173561	 time= 2.969e-05	 cumTime= 2.969e-05	 edges= 145	 schur= 0
+iteration= 1	 chi2= 1345420.309121	 time= 1.064e-05	 cumTime= 4.033e-05	 edges= 145	 schur= 0
+iteration= 2	 chi2= 1345100.782232	 time= 1.012e-05	 cumTime= 5.045e-05	 edges= 145	 schur= 0
+iteration= 3	 chi2= 1345100.128810	 time= 9.91e-06	 cumTime= 6.036e-05	 edges= 145	 schur= 0
+iteration= 4	 chi2= 1345100.124296	 time= 9.88001e-06	 cumTime= 7.024e-05	 edges= 145	 schur= 0
+iteration= 5	 chi2= 1345100.124264	 time= 9.91e-06	 cumTime= 8.015e-05	 edges= 145	 schur= 0
+iteration= 6	 chi2= 1345100.124263	 time= 9.92e-06	 cumTime= 9.007e-05	 edges= 145	 schur= 0
+iteration= 7	 chi2= 1345100.124263	 time= 9.84001e-06	 cumTime= 9.991e-05	 edges= 145	 schur= 0
+iteration= 8	 chi2= 1345100.124263	 time= 9.84001e-06	 cumTime= 0.00010975	 edges= 145	 schur= 0
+iteration= 9	 chi2= 1345100.124263	 time= 9.86e-06	 cumTime= 0.00011961	 edges= 145	 schur= 0
+optimization costs time: 0.000390197 seconds.
+pose estimated by g2o =
+  0.989266381912  -0.034265913514   0.142048839453  -0.386009119852
+ 0.0271558627827   0.998293692456  0.0516939331063 -0.0407068641485
+ -0.143577800287 -0.0472816113782   0.988508909667   0.461129489744
+               0                0                0                1
+solve pnp by g2o cost time: 0.000465957 seconds.
+
+=== PNP SUMMARY ===
+3D-2D correspondences used: 145 (rejected for bad depth: 24 of 169)
+rotation diff (deg) solvePnP-GN / solvePnP-g2o / GN-g2o: 178.37205165 / 178.372051694 / 0
+translation diff (norm) solvePnP-GN / solvePnP-g2o / GN-g2o: 4.70456368276 / 4.7045636853 / 6.84002083121e-09
+reprojection error (px) solvePnP mean/median/rms/max: 84.6733446307 / 67.332091171 / 107.270630027 / 330.905135117
+reprojection error (px) Gauss-Newton mean/median/rms/max: 60.1121704111 / 34.5882822402 / 96.3148616836 / 352.318033847
+reprojection error (px) g2o mean/median/rms/max: 60.1121705005 / 34.5882823313 / 96.3148616836 / 352.318033555

@@ -54,6 +54,8 @@ diagnostics/summary_generated.md
 # --- LaTeX build by-products (presentation/) ---
 *.aux
 *.log
+# ...but the per-program console logs are frozen migration evidence
+!docs/migration/**/tests/*.log
 *.nav
 *.out
 *.snm

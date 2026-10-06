@@ -1,0 +1,177 @@
+
+========================================
+SECTION 6: ZERO-MOTION TEST
+========================================
+  anchor frame 0: |result - T_wc[0]| = 0
+  anchor frame 5: |result - T_wc[5]| = 0
+  anchor frame 20: |result - T_wc[20]| = 0
+  anchor frame 35: |result - T_wc[35]| = 0
+PASS: T_rel=Identity => T_wc[i+1] == T_wc[i], max combined error = 0
+
+========================================
+SECTION 7: PERFECT-MOTION TEST (ground-truth relative poses through the SAME accumulation function)
+========================================
+max translation error over all 36 frames: 4.54378e-16 m
+max rotation error over all 36 frames: 1.70755e-06 deg
+PASS: perfect ground-truth relative poses reproduce the ground-truth trajectory through the accumulation formula
+
+========================================
+SECTION 8: IDENTITY-ANCHOR TEST
+========================================
+max translation error vs GT-relative-to-frame0 over all 36 frames: 6.39923e-16 m
+max rotation error vs GT-relative-to-frame0 over all 36 frames: 1.20742e-06 deg
+PASS: identity-anchored accumulation reproduces GT expressed relative to frame 0
+
+========================================
+SECTION 4: ONE-STEP VALIDATION (frame 0 -> 1), REAL PnP(RANSAC)
+========================================
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+GT relative (0->1):
+R =
+[0.9848076661445315, -0.04211592944238746, 0.1684639700059477;
+ 0.04211591894792201, 0.999106336044005, 0.00357472347122642;
+ -0.1684639726295598, 0.003574599827605089, 0.9857013301005226]
+t = [-0.0869100587537138, -0.001844077019979906, 0.007376312315133915]
+PnP relative (0->1):
+R =
+[0.9863857094177005, -0.03529903259604131, 0.1606151006422598;
+ 0.03205666129003096, 0.9992274544102905, 0.02273466119534553;
+ -0.1612935297012124, -0.01727636103218881, 0.9867552506199344]
+t = [-0.08280689068350214, -0.01134089420368168, 0.008348319806959385]
+R error = 1.3229 deg
+t error = 0.0103909 m
+
+Accumulated frame-1 pose from T_wc[0] + PnP relative (via the accumulation formula):
+  T_wc[1] (expected, from composition):
+R =
+[-0.9863857094177007, -0.03205666129003097, 0.1612935297012124;
+ -0.004709688237988239, -0.9749071252727324, -0.2225621619439343;
+ 0.1643808112075147, -0.2202917782383022, 0.9614834794978883]
+t = [-0.1002296147844727, 0.2256887068996263, -0.4989422134627718]
+  T_wc[1] (ground truth):
+R =
+[-0.9848076661445317, -0.04211591894792201, 0.1684639726295598;
+ 4.85299790319027e-08, -0.9701426674512044, -0.2425349558118583;
+ 0.1736486703172778, -0.2388502756159902, 0.9554039382037354]
+t = [-0.10375, 0.235277, -0.494425]
+position error: 0.0111684 m
+rotation error: 1.3229 deg
+
+========================================
+SECTION 5: TWO-STEP VALIDATION (0 -> 1 -> 2), REAL PnP(RANSAC)
+========================================
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+-- Max dist : 74.000000 
+-- Min dist : 3.000000 
+Frame 0:
+  GT position:  [-0.01684, 0.235277, -0.5020289999999999]
+  PnP position: [-0.01684, 0.235277, -0.5020289999999999]
+  rotation error: 1.70755e-06 deg
+Frame 1:
+  GT position:  [-0.10375, 0.235277, -0.494425]
+  PnP position: [-0.1002296147844727, 0.2256887068996263, -0.4989422134627718]
+  rotation error: 1.3229 deg
+Frame 2:
+  GT position:  [-0.188019, 0.235277, -0.471846]
+  PnP position: [-0.1700797631242707, 0.2356091515039419, -0.4700485271454868]
+  rotation error: 1.99192 deg
+
+========================================
+SECTION 10 (ICP variant of section 4): ONE-STEP VALIDATION, REAL ICP
+========================================
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+W=  0.0559719 -0.00981133  -0.0197069
+ 0.00107962    0.131879   0.0532066
+0.000404347   0.0550928   0.0382798
+U=  -0.121744    0.990693   0.0608763
+   0.899899    0.136047   -0.414335
+   0.418761 -0.00433973    0.908086
+V=-0.0359811   0.966388   0.254557
+  0.906558   0.138755  -0.398622
+  0.420544  -0.216428    0.88108
+iteration= 0	 chi2= 0.060281	 time= 3.237e-05	 cumTime= 3.237e-05	 edges= 45	 schur= 0	 lambda= 0.000218	 levenbergIter= 1
+iteration= 1	 chi2= 0.060184	 time= 4.43e-06	 cumTime= 3.68e-05	 edges= 45	 schur= 0	 lambda= 0.000145	 levenbergIter= 1
+iteration= 2	 chi2= 0.060182	 time= 4.19001e-06	 cumTime= 4.099e-05	 edges= 45	 schur= 0	 lambda= 0.000097	 levenbergIter= 1
+iteration= 3	 chi2= 0.060182	 time= 3.76999e-06	 cumTime= 4.476e-05	 edges= 45	 schur= 0	 lambda= 0.000065	 levenbergIter= 1
+iteration= 4	 chi2= 0.060182	 time= 3.65e-06	 cumTime= 4.841e-05	 edges= 45	 schur= 0	 lambda= 0.000043	 levenbergIter= 1
+iteration= 5	 chi2= 0.060182	 time= 3.64899e-06	 cumTime= 5.2059e-05	 edges= 45	 schur= 0	 lambda= 0.000029	 levenbergIter= 1
+iteration= 6	 chi2= 0.060182	 time= 3.64e-06	 cumTime= 5.5699e-05	 edges= 45	 schur= 0	 lambda= 0.000019	 levenbergIter= 1
+iteration= 7	 chi2= 0.060182	 time= 3.64e-06	 cumTime= 5.9339e-05	 edges= 45	 schur= 0	 lambda= 0.000013	 levenbergIter= 1
+iteration= 8	 chi2= 0.060182	 time= 3.62999e-06	 cumTime= 6.2969e-05	 edges= 45	 schur= 0	 lambda= 0.000009	 levenbergIter= 1
+iteration= 9	 chi2= 0.060182	 time= 3.62999e-06	 cumTime= 6.6599e-05	 edges= 45	 schur= 0	 lambda= 0.000006	 levenbergIter= 1
+optimization costs time: 0.000244708 seconds.
+
+after optimization:
+T=
+   0.977271  0.00282879   -0.211975    0.109286
+-0.00637751    0.999851  -0.0160594  0.00732418
+   0.211898   0.0170463    0.977143  0.00683932
+          0           0           0           1
+GT relative (0->1):
+R =
+[0.9848076661445315, -0.04211592944238746, 0.1684639700059477;
+ 0.04211591894792201, 0.999106336044005, 0.00357472347122642;
+ -0.1684639726295598, 0.003574599827605089, 0.9857013301005226]
+t = [-0.0869100587537138, -0.001844077019979906, 0.007376312315133915]
+ICP relative, converted to common convention (0->1):
+R =
+[0.9772709526524825, -0.006377513431127551, 0.2118981180287945;
+ 0.002828785714454322, 0.9998507002904202, 0.0170462635242428;
+ -0.2119751944758887, -0.01605940382430241, 0.9771430870019585]
+t = [-0.108204913576933, -0.007748821762089314, 0.01660062243971178]
+R error = 3.4616 deg
+t error = 0.0239463 m
+position error of accumulated frame-1 vs GT: 0.0241878 m
+
+========================================
+SECTION 9: pnp_trajectory.txt FILE VERIFICATION
+========================================
+frames in file: 36 (expected 36)
+timestamp == frame index for every row: PASS
+frame 0 matches GT frame 0: 0 m (PASS)
+all quaternions unit-norm: PASS
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+spot-check: file's implied 0->1 relative pose vs fresh PnP re-run: 0.0128361 m (FAIL)
+
+========================================
+SECTION 10: icp_trajectory.txt FILE VERIFICATION
+========================================
+frames in file: 36 (expected 36)
+timestamp == frame index for every row: PASS
+frame 0 matches GT frame 0: 0 m (PASS)
+-- Max dist : 77.000000 
+-- Min dist : 3.000000 
+W=  0.0559719 -0.00981133  -0.0197069
+ 0.00107962    0.131879   0.0532066
+0.000404347   0.0550928   0.0382798
+U=  -0.121744    0.990693   0.0608763
+   0.899899    0.136047   -0.414335
+   0.418761 -0.00433973    0.908086
+V=-0.0359811   0.966388   0.254557
+  0.906558   0.138755  -0.398622
+  0.420544  -0.216428    0.88108
+iteration= 0	 chi2= 0.060281	 time= 1.424e-05	 cumTime= 1.424e-05	 edges= 45	 schur= 0	 lambda= 0.000218	 levenbergIter= 1
+iteration= 1	 chi2= 0.060184	 time= 4.31e-06	 cumTime= 1.855e-05	 edges= 45	 schur= 0	 lambda= 0.000145	 levenbergIter= 1
+iteration= 2	 chi2= 0.060182	 time= 4.05e-06	 cumTime= 2.26e-05	 edges= 45	 schur= 0	 lambda= 0.000097	 levenbergIter= 1
+iteration= 3	 chi2= 0.060182	 time= 3.8e-06	 cumTime= 2.64e-05	 edges= 45	 schur= 0	 lambda= 0.000065	 levenbergIter= 1
+iteration= 4	 chi2= 0.060182	 time= 3.66e-06	 cumTime= 3.006e-05	 edges= 45	 schur= 0	 lambda= 0.000043	 levenbergIter= 1
+iteration= 5	 chi2= 0.060182	 time= 3.64899e-06	 cumTime= 3.3709e-05	 edges= 45	 schur= 0	 lambda= 0.000029	 levenbergIter= 1
+iteration= 6	 chi2= 0.060182	 time= 3.66e-06	 cumTime= 3.7369e-05	 edges= 45	 schur= 0	 lambda= 0.000019	 levenbergIter= 1
+iteration= 7	 chi2= 0.060182	 time= 3.67001e-06	 cumTime= 4.1039e-05	 edges= 45	 schur= 0	 lambda= 0.000013	 levenbergIter= 1
+iteration= 8	 chi2= 0.060182	 time= 3.66e-06	 cumTime= 4.4699e-05	 edges= 45	 schur= 0	 lambda= 0.000009	 levenbergIter= 1
+iteration= 9	 chi2= 0.060182	 time= 3.66e-06	 cumTime= 4.8359e-05	 edges= 45	 schur= 0	 lambda= 0.000006	 levenbergIter= 1
+optimization costs time: 0.000203049 seconds.
+
+after optimization:
+T=
+   0.977271  0.00282879   -0.211975    0.109286
+-0.00637751    0.999851  -0.0160594  0.00732418
+   0.211898   0.0170463    0.977143  0.00683932
+          0           0           0           1
+spot-check: file's implied 0->1 relative pose vs fresh ICP re-run: 0.0481211 m (FAIL)
+
+=== VALIDATION COMPLETE ===

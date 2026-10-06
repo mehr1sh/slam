@@ -1,0 +1,7 @@
+loaded mesh: 35947 vertices, 69451 faces
+
+=== BUNNY RENDER SUMMARY ===
+frames: 36 (640x480)
+render time (ms): n=36 min=3.34249 max=4.44386 mean=3.66174 median=3.60342 rms=3.66866
+wrote dataset to: <tmp>/render
+wrote visualization to: ../output/synthetic_bunny/scene_visualization.ply

@@ -1,0 +1,7 @@
+bad/total: 43/638
+bad/total: 8/595
+extract ORB cost = 0.00601983 seconds. 
+match ORB cost = 0.00360025 seconds. 
+matches: 41
+wrote ../output/orb/matches.png
+done.

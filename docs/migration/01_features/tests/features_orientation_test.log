@@ -1,0 +1,7 @@
+=== features/orientation ===
+  [PASS] blob at 24 known directions: max angle error 0.59 deg
+  [PASS] blob below the keypoint -> +90 deg (x right, y down)
+  [PASS] 55 keypoints: rotated image gives angle - 90 deg (max error 9.33e-06 deg)
+  [PASS] uniform patch -> angle 0 (finite)
+
+features_orientation_test: PASS (0 failures)
