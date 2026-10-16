@@ -1,0 +1,18 @@
+-- Max dist : 94.000000 
+-- Min dist : 4.000000 
+all matches: 500
+matches: 79
+keypoints in image 1: 500
+keypoints in image 2: 500
+good match Hamming distance: n=79 min=4 max=30 mean=21.4177 median=22 rms=22.2671
+wrote ../output/feature_matching/keypoints.png
+wrote ../output/feature_matching/all_matches.png
+wrote ../output/feature_matching/good_matches.png
+
+=== FEATURE MATCHING SUMMARY ===
+keypoints image 1: 500
+keypoints image 2: 500
+candidate matches: 500
+good matches: 79
+retained: 15.8%
+Hamming distance (good matches) min/max/mean/median: 4 / 30 / 21.4177 / 22

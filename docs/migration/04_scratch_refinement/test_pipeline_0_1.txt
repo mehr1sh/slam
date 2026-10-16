@@ -1,0 +1,15 @@
+=== scratch pipeline, frames 0 -> 1 (end to end) ===
+  [PASS] frames load
+  [PASS] RANSAC PnP solved the pair ()
+  [PASS] 249 3D->2D correspondences, 206 RANSAC inliers
+  [PASS] pose vs ground truth: rotation error 1.303 deg, translation error 0.0095 m (true motion 10 deg, 0.087 m)
+  [PASS] inlier reprojection error mean 1.96 px, median 1.68 px, max 7.51 px
+  [PASS] R is a proper rotation
+  [PASS] exported inlier mask matches the count
+  [PASS] RANSAC improves on the plain linear PnP of the same matches (72.01 deg without RANSAC)
+  [PASS] essential stage ran on all 346 filtered matches (ok 1, 200 inliers, rotation error 11.11 deg)
+  [PASS] refinement: 7 steps, inlier reprojection mean 2.07 -> 1.96 px; rotation error 2.766 -> 1.303 deg
+  [PASS] --no-refine keeps the linear pose; the inlier set is the same with and without refinement
+  [PASS] deterministic: identical result on a second run
+
+test_pipeline_0_1: PASS (0 failures)

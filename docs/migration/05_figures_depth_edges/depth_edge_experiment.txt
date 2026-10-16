@@ -1,0 +1,4 @@
+depth-edge rule: radius ceil(3.0 x level scale), jump > (Z/fx) tan(80 deg), or no depth in the window
+PnP inputs: 10977 with depth, 7812 edge (71.2%); 5628 of 8412 RANSAC inliers of the 'all' run are edge (66.9%)
+all       mean pair rot 1.164 deg, trans 0.0107 m; signed rot sum -30.4 deg (33/35 negative); trajectory mean 0.1466 m / 18.16 deg, final 0.2835 m / 31.90 deg
+interior  mean pair rot 3.672 deg, trans 0.0245 m; signed rot sum +88.7 deg (17/35 negative); trajectory mean 0.6493 m / 63.48 deg, final 0.4728 m / 88.95 deg

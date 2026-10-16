@@ -1,0 +1,9 @@
+=== BRIEF TEST ===
+
+determinism (identical descriptors across repeated runs): PASS
+descriptor size (uint32 words): 8 (expect 8, i.e. 256 bits)
+Hamming distance between two different keypoints: 116 / 256
+descriptors differ meaningfully: PASS
+edge keypoint descriptor empty (boundary handled safely): PASS
+
+PASS

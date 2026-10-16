@@ -1,0 +1,21 @@
+start optimization
+iteration= 0	 chi2= 376785.128234	 time= 2.055e-05	 cumTime= 2.055e-05	 edges= 100	 schur= 0
+iteration= 0	 chi2= 35673.566018	 time= 4.08001e-06	 cumTime= 4.08001e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 2195.012304	 time= 3.24e-06	 cumTime= 3.24e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 174.853126	 time= 3.17e-06	 cumTime= 3.17e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 102.779695	 time= 3.11001e-06	 cumTime= 3.11001e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 101.937194	 time= 3.08e-06	 cumTime= 3.08e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 101.937020	 time= 3.09999e-06	 cumTime= 3.09999e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 101.937020	 time= 3.10999e-06	 cumTime= 3.10999e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 101.937020	 time= 3.13e-06	 cumTime= 3.13e-06	 edges= 100	 schur= 0
+iteration= 0	 chi2= 101.937020	 time= 3.14e-06	 cumTime= 3.14e-06	 edges= 100	 schur= 0
+solve time cost = 0.000307758 seconds. 
+estimated model: 0.890912   2.1719 0.943629
+wrote ../output/optimization/g2o_cost.csv
+
+=== G2O CURVE FIT SUMMARY ===
+initial cost (chi2): 3.19575e+06
+final cost (chi2): 101.937
+iterations run: 10
+converged: yes
+final params (a,b,c): 0.890912   2.1719 0.943629

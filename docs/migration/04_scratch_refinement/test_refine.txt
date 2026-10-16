@@ -1,0 +1,12 @@
+=== scratch nonlinear PnP refinement ===
+  [PASS] ExpSO3 equals the axis-angle rotation (max |diff| 7.1e-16)
+  [PASS] one undamped step: 0.45 deg / 5.4 mm -> 3.4e-03 deg / 5.5e-05 m (rms 5.92 -> 2.5e-02 px)
+  [PASS] noise-free: from 5.03 deg / 0.029 m to 0.0e+00 deg / 2.4e-15 m in 7 steps (rms 38.8 -> 2.2e-13 px)
+  [PASS] the refined R is a proper rotation
+  [PASS] the reprojection error decreases in 40 / 40 trials
+  [PASS] pose error with 1 px noise, mean of 40 trials: linear 0.607 deg / 5.45 mm -> refined 0.171 deg / 1.51 mm
+  [PASS] 30 masked-out outliers: identical result to refining the 150 inliers alone
+  [PASS] fewer than 3 points, or points behind the camera: not refined, input pose returned
+  [PASS] deterministic (6 steps)
+
+test_refine: PASS (0 failures)

@@ -1,0 +1,11 @@
+=== FAST TEST ===
+
+detected keypoints: 24
+corner (30,30): DETECTED
+corner (49,30): DETECTED
+corner (30,49): DETECTED
+corner (49,49): DETECTED
+flat interior point (40,40) incorrectly flagged: no (PASS)
+
+corners detected: 4/4
+PASS

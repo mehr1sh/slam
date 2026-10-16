@@ -1,0 +1,4 @@
+all                   signed rotation (est - 10): mean -0.870 deg, sum -30.5 deg, negative 33/35;  |rotation error| mean 1.156 deg; translation error mean 0.0107 m; points per pair 240
+interior              signed rotation (est - 10): mean +0.108 deg, sum +3.8 deg, negative 16/35;  |rotation error| mean 1.230 deg; translation error mean 0.0110 m; points per pair 64
+half_pixel            signed rotation (est - 10): mean -0.867 deg, sum -30.3 deg, negative 33/35;  |rotation error| mean 1.153 deg; translation error mean 0.0106 m; points per pair 240
+interior+half_pixel   signed rotation (est - 10): mean +0.112 deg, sum +3.9 deg, negative 16/35;  |rotation error| mean 1.234 deg; translation error mean 0.0110 m; points per pair 64

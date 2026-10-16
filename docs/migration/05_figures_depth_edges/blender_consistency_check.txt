@@ -1,0 +1,15 @@
+BLENDER_CHECK frames=36 frame_start=0 frame_end=35 methods=['GT', 'PnP', 'ICP', 'ScratchPnP'] scratch_frames=36
+BLENDER_CHECK max_camera_position_error_m=3.332e-08
+BLENDER_CHECK max_camera_rotation_error_deg=0.000e+00
+BLENDER_CHECK max_view_direction_error_deg=0.000e+00
+BLENDER_CHECK max_curve_point_error_m=0.000e+00
+BLENDER_CHECK max_lookat_data_deg=3.813e+00
+BLENDER_CHECK max_lookat_blender_deg=3.813e+00
+BLENDER_CHECK max_lookat_diff_deg=7.666e-04
+BLENDER_CHECK max_hud_translation_value_diff=0.000e+00
+BLENDER_CHECK max_hud_rotation_value_diff=0.000e+00
+BLENDER_CHECK scratch_source=pnp_from_scratch/results/pipeline/trajectory.csv
+BLENDER_LOOKAT GT         max    0.00 deg  mean   0.00 deg  (36 frames)
+BLENDER_LOOKAT PnP        max    2.29 deg  mean   0.78 deg  (36 frames)
+BLENDER_LOOKAT ICP        max    3.18 deg  mean   1.44 deg  (36 frames)
+BLENDER_LOOKAT ScratchPnP max    3.81 deg  mean   1.58 deg  (36 frames)

@@ -1,0 +1,20 @@
+========================================
+SCRATCH PIPELINE -- FULL SEQUENCE
+========================================
+Pairs: 35 attempted, 35 solved by RANSAC PnP, 0 failed (previous pose held)
+Poses: 36
+
+Pyramid: 1 level(s); frame 0 keypoints per level: 108 (total 108)
+Front end (per frame / pair, mean): keypoints 131.4, filtered matches 94.2, 3D->2D correspondences 83.6
+RANSAC PnP inliers (mean / min): 56.5 / 30; inlier reprojection error mean 2.42 px
+
+Per-pair PnP error vs ground truth:
+  rotation    mean 4.741 deg, median 2.753 deg, max 29.656 deg (pair 10->11)
+  translation mean 0.0416 m, median 0.0241 m, max 0.2552 m
+Per-pair essential-matrix estimate (scale-free, diagnostic): 34 solved;
+  rotation error mean 10.065 deg, median 10.132 deg; translation-direction error median 87.70 deg
+
+Trajectory (frame 35): position error 0.0952 m, rotation error 9.876 deg
+
+Pair 0->1: 108/107 keypoints, 86 filtered matches, 76 3D->2D, 57 RANSAC inliers; rotation error 2.306 deg, translation error 0.0197 m, inlier reprojection mean/median/max 1.53/1.28/4.55 px
+========================================

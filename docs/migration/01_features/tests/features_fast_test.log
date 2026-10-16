@@ -1,0 +1,22 @@
+=== features/fast ===
+  [PASS] 9 contiguous brighter pixels -> corner
+  [PASS] 9 contiguous darker pixels -> corner
+  [PASS] 8 contiguous brighter pixels -> not a corner
+  [PASS] arc wrapping 15 -> 0 is contiguous
+  [PASS] difference exactly at the threshold does not count
+  [PASS] 5 brighter + 5 darker is not a 9-arc
+  [PASS] score = sum (I-c-t) over brighter = 630
+  [PASS] a longer arc scores higher
+  [PASS] all 4 square corners detected (4 keypoints total)
+  [PASS] no keypoint on straight edges or flat regions
+  [PASS] flat image -> no keypoints
+  [PASS] noise image has 5554 corners after NMS (> 500, so the cap matters)
+  [PASS] strongest-500 cap: 500 kept
+  [PASS] every keypoint >= 16 px from the image edge
+  [PASS] 3x3 NMS: no two keypoints are 8-neighbours
+  [PASS] order: score descending, then y, then x
+  [PASS] the 500 kept are the first 500 of the full ordered list
+  [PASS] deterministic: two runs give identical keypoints
+  [PASS] a higher threshold gives fewer corners (3060 < 5554)
+
+features_fast_test: PASS (0 failures)

@@ -1,0 +1,39 @@
+BLENDER_CHECK frames=36 frame_start=0 frame_end=35 methods=['GT', 'PnP', 'ICP', 'ScratchPnP'] scratch_frames=36
+BLENDER_CHECK max_camera_position_error_m=3.332e-08
+BLENDER_CHECK max_camera_rotation_error_deg=0.000e+00
+BLENDER_CHECK max_view_direction_error_deg=0.000e+00
+BLENDER_CHECK max_curve_point_error_m=0.000e+00
+BLENDER_CHECK max_lookat_data_deg=3.813e+00
+BLENDER_CHECK max_lookat_blender_deg=3.813e+00
+BLENDER_CHECK max_lookat_diff_deg=7.666e-04
+BLENDER_CHECK max_hud_translation_value_diff=0.000e+00
+BLENDER_CHECK max_hud_rotation_value_diff=0.000e+00
+BLENDER_CHECK scratch_source=pnp_from_scratch/results/pipeline/trajectory.csv
+BLENDER_LOOKAT GT         max    0.00 deg  mean   0.00 deg  (36 frames)
+BLENDER_LOOKAT PnP        max    2.29 deg  mean   0.78 deg  (36 frames)
+BLENDER_LOOKAT ICP        max    3.18 deg  mean   1.44 deg  (36 frames)
+BLENDER_LOOKAT ScratchPnP max    3.81 deg  mean   1.58 deg  (36 frames)
+BLENDER_FRAME  0 GT         world pos (+0.0000, +0.5005, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  0 PnP        world pos (+0.0000, +0.5005, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  0 ICP        world pos (+0.0000, +0.5005, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  0 ScratchPnP world pos (+0.0000, +0.5005, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  1 GT         world pos (-0.0869, +0.4929, +0.2023)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  1 PnP        world pos (-0.0805, +0.4911, +0.2030)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  1 ICP        world pos (-0.0636, +0.4952, +0.2091)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.20 deg (data    0.20)  hidden False
+BLENDER_FRAME  1 ScratchPnP world pos (-0.0787, +0.4978, +0.1986)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.03 deg (data    0.03)  hidden False
+BLENDER_FRAME  2 GT         world pos (-0.1712, +0.4703, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME  2 PnP        world pos (-0.1519, +0.4773, +0.1942)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.08 deg (data    0.08)  hidden False
+BLENDER_FRAME  2 ICP        world pos (-0.1450, +0.4793, +0.2025)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.23 deg (data    0.23)  hidden False
+BLENDER_FRAME  2 ScratchPnP world pos (-0.1506, +0.4810, +0.1919)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME 10 GT         world pos (-0.4929, -0.0869, +0.2023)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME 10 PnP        world pos (-0.5064, +0.0779, +0.1858)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.32 deg (data    0.32)  hidden False
+BLENDER_FRAME 10 ICP        world pos (-0.5023, +0.0352, +0.2152)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.63 deg (data    0.63)  hidden False
+BLENDER_FRAME 10 ScratchPnP world pos (-0.5054, +0.0626, +0.1896)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.23 deg (data    0.23)  hidden False
+BLENDER_FRAME 11 GT         world pos (-0.4703, -0.1712, +0.2023)  pos diff 1.5e-08 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME 11 PnP        world pos (-0.5118, -0.0035, +0.1892)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.22 deg (data    0.22)  hidden False
+BLENDER_FRAME 11 ICP        world pos (-0.5070, -0.0181, +0.2022)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.55 deg (data    0.55)  hidden False
+BLENDER_FRAME 11 ScratchPnP world pos (-0.5071, -0.0208, +0.1900)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    0.28 deg (data    0.28)  hidden False
+BLENDER_FRAME 35 GT         world pos (+0.0869, +0.4929, +0.2023)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    0.00 deg (data    0.00)  hidden False
+BLENDER_FRAME 35 PnP        world pos (+0.3468, +0.4005, +0.1794)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    1.41 deg (data    1.41)  hidden False
+BLENDER_FRAME 35 ICP        world pos (+0.4129, +0.0982, +0.3200)  pos diff 0.0e+00 m  rot diff 0.0e+00 deg  look-at    1.64 deg (data    1.64)  hidden False
+BLENDER_FRAME 35 ScratchPnP world pos (+0.3510, +0.4100, +0.1411)  pos diff 3.0e-08 m  rot diff 0.0e+00 deg  look-at    2.34 deg (data    2.34)  hidden False

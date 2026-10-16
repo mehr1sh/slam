@@ -1,0 +1,111 @@
+-- Max dist : 94.000000 
+-- Min dist : 4.000000 
+matches: 79
+fundamental_matrix is 
+[4.544437504017977e-06, 0.0001333855577002274, -0.01798499246493566;
+ -0.0001275657012974053, 2.26679480466152e-05, -0.01416678429170123;
+ 0.01814994639985514, 0.004146055870580375, 1]
+essential_matrix is 
+[-0.008455114492964277, 0.0545157070105978, 0.1546375809484052;
+ -0.00828715470844521, 0.03351311565984171, -0.6896472136971503;
+ -0.1153993974485718, 0.6945899967012866, 0.02159624094256633]
+homography_matrix is 
+[0.9261214281381583, -0.144532202442817, 33.26921085316808;
+ 0.04535424465999154, 0.9386696693983617, 8.570979963290597;
+ -1.006197557828092e-05, -3.008140278079568e-05, 1]
+R is 
+[0.995658494081358, -0.05615340406690447, 0.07423582945816434;
+ 0.0526884633144, 0.9974645001566197, 0.04783823534446424;
+ -0.07673388428334535, -0.0437191735855581, 0.9960926386957119]
+t is 
+[-0.972670311345495;
+ -0.2153829834753195;
+ 0.08673313009645389]
+depth: 8.95119
+depth: 8.06918
+depth: 10.3294
+depth: 8.6317
+depth: 8.17645
+depth: 7.37573
+depth: 11.8396
+depth: 8.05226
+depth: 8.08888
+depth: 8.92732
+depth: 8.17315
+depth: 7.03846
+depth: 8.17768
+depth: 7.93303
+depth: 9.0064
+depth: 10.0725
+depth: 12.2046
+depth: 12.348
+depth: 7.31126
+depth: 8.03819
+depth: 8.11742
+depth: 8.80592
+depth: 7.29207
+depth: 10.3618
+depth: 8.15175
+depth: 8.25446
+depth: 9.02341
+depth: 7.1761
+depth: 10.0498
+depth: 10.0789
+depth: 8.20269
+depth: 8.74983
+depth: 8.19139
+depth: 8.55992
+depth: 8.14039
+depth: 7.13569
+depth: 7.10316
+depth: 11.8327
+depth: 8.07921
+depth: 10.1274
+depth: 10.2183
+depth: 11.9348
+depth: 8.01726
+depth: 8.23094
+depth: 8.88643
+depth: 8.25303
+depth: 8.73167
+depth: 8.71261
+depth: 9.22772
+depth: 8.76106
+depth: 8.31465
+depth: 8.92808
+depth: 10.2404
+depth: 8.44863
+depth: 9.06756
+depth: 8.10639
+depth: 8.40526
+depth: 8.74884
+depth: 8.92165
+depth: 9.13693
+depth: 7.0544
+depth: 8.8007
+depth: 7.85402
+depth: 8.72166
+depth: 9.82223
+depth: 10.5516
+depth: 6.73889
+depth: 8.60173
+depth: 6.64584
+depth: 6.66798
+depth: 8.73605
+depth: 8.18344
+depth: 9.19246
+depth: 8.94078
+depth: 9.11707
+depth: 8.76513
+depth: 8.22164
+depth: 7.17891
+depth: 8.70631
+wrote ../output/triangulation/img1_reprojection.png
+wrote ../output/triangulation/img2_reprojection.png
+wrote ../output/triangulation/points_and_cameras.ply
+
+=== TRIANGULATION SUMMARY ===
+triangulated points: 79
+positive depth in both cameras: 79 (100%)
+depth (valid points) min/max/mean/median: 6.64584 / 12.348 / 8.73382 / 8.6317
+NOTE: monocular two-view reconstruction has arbitrary scale -- t from the essential matrix is unit-norm, so depths/points above are in that same unit-norm-t scale, not metres.
