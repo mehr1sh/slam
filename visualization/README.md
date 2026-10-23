@@ -1,4 +1,51 @@
-# Blender visualization — GT vs PnP vs ICP vs Scratch PnP
+# Current final workflow
+
+See [FINAL_WORKFLOW.md](../FINAL_WORKFLOW.md) for the authoritative build/view commands, new
+scratch frontend, robust PnP, own fundamental estimator, current measurements
+and four-camera Blender scene. The default scratch executable now uses the
+improved settings; `--legacy` selects historical settings. The notes and old
+measurements below are preserved for history and earlier ablations.
+
+---
+
+# Corrected ICP Blender workflow
+
+The included `../outputs/blender/bunny_slam_demo.blend` is rebuilt from the corrected C++ run.
+Open it from the extracted project, keeping the folder structure intact:
+
+```bash
+blender -y outputs/blender/bunny_slam_demo.blend
+```
+
+The corrected ICP camera is selected initially. Press Space to animate, or select
+GT / PnP / ICP cameras in the Trajectories sidebar. Corrected ICP almost overlaps
+GT at this scale. Orange PnP remains the explicitly labelled **legacy comparison**.
+
+To recompile, estimate, rebuild and validate everything:
+
+```bash
+bash scripts/rebuild_blender.sh
+```
+
+Requirements: C++17 compiler, CMake, OpenCV, Eigen and Blender. Estimation is all
+C++; Python scripts here only build and validate the Blender scene.
+
+The scene reads `icp_cpp_results/selected_trajectory.txt`, choosing the current
+run's pose-graph trajectory when optimization succeeds, otherwise point-to-plane.
+`trajectory_data.py` combines it with GT/legacy PnP and recomputes all ICP HUD
+errors. `icp_cpp_results/blender_trajectory.csv` and `blender_source.json` are
+regenerated from those authoritative sources each build. Historical
+`data/synthetic_bunny/slam_trajectory.csv` is **not** the corrected viewer source.
+A completed-run marker and source fingerprint prevent silent use of a stale scene.
+
+Tested in Blender 4.0.2: all 36 frames, camera poses, viewing axes, curve points,
+HUD values, animation range, reopen handler and intrinsic projection checks.
+A final image render could not be completed in the execution environment; the
+scene and camera/data checks above completed successfully.
+
+## Existing visualization controls and design
+
+Blender visualization — GT vs PnP vs ICP vs Scratch PnP
 
 A visualization and debugging aid for the SLAM pipeline: an animated Blender
 scene that compares the estimated camera trajectories with ground truth on the
@@ -9,7 +56,7 @@ synthetic evaluation sequence (the test object is the Stanford Bunny mesh):
 - **ICP (magenta):** where ICP thinks the camera was.
 - **Scratch PnP (cyan):** where the from-scratch pipeline in `pnp_from_scratch/` thinks the
   camera was. It uses its own features (8-level pyramid, FAST, rotated BRIEF, Hamming), RANSAC
-  around its linear PnP and Levenberg–Marquardt refinement, and ends 0.253 m / 29.4° from GT
+  around its linear PnP and Levenberg–Marquardt refinement, and ends 0.284 m / 31.9° from GT
   (default run).
   - It appears only if `pnp_from_scratch/results/pipeline/trajectory.csv` exists (run
     `pnp_from_scratch/build/scratch_pipeline` first).
@@ -47,8 +94,8 @@ output/
 ```bash
 # from the repository root
 blender --python visualization/scripts/build_scene.py      # rebuild + open
-blender -y visualization/scenes/bunny_slam_demo.blend      # open the saved scene
-blender -b -y visualization/scenes/bunny_slam_demo.blend -a  # render the animation
+blender -y outputs/blender/bunny_slam_demo.blend      # open the saved scene
+blender -b -y outputs/blender/bunny_slam_demo.blend -a  # render the animation
 ```
 
 `-y` lets the embedded `slam_viz_autoload.py` text block re-register the
@@ -58,9 +105,7 @@ whenever the files in `data/synthetic_bunny/` change.
 
 ## What you see
 
-- **Data source:** GT, PnP and ICP come from `slam_trajectory.csv`. The build
-  checks them against `groundtruth.txt`, `pnp_trajectory.txt` and
-  `icp_trajectory.txt`.
+- **Data source:** GT and legacy PnP come from their TUM files; ICP comes from the corrected C++ run. See the workflow above.
 - **Scratch PnP data:** it comes from `pnp_from_scratch/results/pipeline/trajectory.csv`
   (same T_wc format, same conversion as the other cameras). The build checks:
   - that frame 0 is the GT anchor
@@ -103,14 +148,14 @@ whenever the files in `data/synthetic_bunny/` change.
   ```
 
 - **Which camera is active:** nothing changes the scene camera automatically.
-  The build starts with `GT_Animated_Camera` because renders need a camera.
+  The build starts with `ICP_Animated_Camera` because renders need a camera.
 
 **Camera model.** The cameras use the renderer's pinhole model from
 `intrinsics.txt`:
 
 - lens = fx / 640 × 36 mm = 29.30 mm, on a 36 mm sensor with horizontal fit
-- shift_x = (320 − cx) / 640 = −0.00797 and shift_y = (cy − 240) / 640 = +0.01516
-- render resolution 640 × 480, with pixel aspect y = fy / fx
+- shift_x = (320 − cx) / 640 = −0.00797 and shift_y = (cy − 240) / 640 × fx/fy = +0.01515
+- render resolution 640 × 480, with pixel aspect ratio y/x = fx / fy (encoded with both components >= 1)
 
 **Pose conversion.** The pose goes through `slam_coords.trajectory_to_blender_pose()`,
 the same conversion as before, under `WorldRoot`.

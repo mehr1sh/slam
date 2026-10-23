@@ -1,0 +1,6 @@
+frames=15,16
+FAST threshold=10; levels=8; scale=1.2; budget=1400; ratio=0.87
+Stage 0 and 1 have no cap: Harris alone changes order, not membership.
+Stage 2 and 3 use the same quotas to isolate Harris selection.
+Matches are descriptor-only; depth and geometric checks occur later.
+Stable IDs are local to a frame and pyramid level; they are not persistent physical tracks.

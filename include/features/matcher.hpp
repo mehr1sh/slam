@@ -18,7 +18,13 @@ std::vector<Match> MatchBruteForce(const std::vector<BriefDescriptor> &query,
 // find_feature_matches()): with d_min the smallest distance among `matches`,
 // keep matches with distance <= max(2 * d_min, floor_distance).
 // `d_min_out` / `d_max_out` (optional) receive the smallest/largest distance.
-std::vector<Match> FilterMatchesByDistance(const std::vector<Match> &matches, int floor_distance = 30,
-                                           int *d_min_out = nullptr, int *d_max_out = nullptr);
+std::vector<Match> FilterMatchesByDistance(const std::vector<Match> &matches,
+                                           int floor_distance = 30,
+                                           int *d_min_out = nullptr,
+                                           int *d_max_out = nullptr);
 
-}  // namespace features
+// Bidirectional nearest/second-nearest ratio tests plus mutual consistency.
+std::vector<Match> MatchMutualRatio(const std::vector<BriefDescriptor> &a,
+                                    const std::vector<BriefDescriptor> &b,
+                                    double ratio = .87);
+} // namespace features

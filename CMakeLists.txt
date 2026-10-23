@@ -14,6 +14,17 @@ find_package(Eigen3 REQUIRED)
 find_package(g2o CONFIG REQUIRED)
 find_package(Sophus REQUIRED)
 
+# Corrected RGB-D registration (also independently buildable via icp_cpp/).
+add_library(rgbd_icp src/tracking/rgbd_icp.cpp)
+target_include_directories(rgbd_icp PUBLIC include ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(rgbd_icp PUBLIC ${OpenCV_LIBS} Eigen3::Eigen feature_core)
+add_executable(icp_sequence apps/icp_sequence.cpp)
+target_link_libraries(icp_sequence PRIVATE rgbd_icp)
+add_executable(rgbd_icp_test tests/unit/rgbd_icp_test.cpp)
+target_link_libraries(rgbd_icp_test PRIVATE rgbd_icp)
+enable_testing()
+add_test(NAME rgbd_icp_geometry COMMAND rgbd_icp_test)
+
 # --- camera: PinholeCamera, pixel2cam() ---
 add_library(camera src/camera/camera.cpp)
 target_include_directories(camera PUBLIC include ${OpenCV_INCLUDE_DIRS})
@@ -34,7 +45,7 @@ target_link_libraries(features PUBLIC ${OpenCV_LIBS} PRIVATE feature_core)
 # of geometry.hpp's own interface.
 add_library(geometry src/geometry/geometry.cpp)
 target_include_directories(geometry PUBLIC include ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(geometry PUBLIC ${OpenCV_LIBS} PRIVATE camera)
+target_link_libraries(geometry PUBLIC ${OpenCV_LIBS} PRIVATE camera Eigen3::Eigen)
 
 # --- optimization: shared g2o SE3 pose vertex (header-only) ---
 add_library(optimization INTERFACE)
@@ -58,7 +69,7 @@ target_compile_options(tracking PRIVATE -msse4)
 target_include_directories(tracking PUBLIC include ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(tracking
   PUBLIC ${OpenCV_LIBS} Eigen3::Eigen Sophus::Sophus
-  PRIVATE optimization g2o::core g2o::stuff g2o::solver_dense camera)
+  PRIVATE optimization g2o::core g2o::stuff g2o::solver_dense camera rgbd_icp)
 
 # --- render: PLY mesh I/O, CPU software rasterizer, orbit camera trajectory,
 # and combined mesh+trajectory+frustum PLY visualization export.
@@ -135,3 +146,5 @@ target_link_libraries(brief_test PRIVATE tracking)
 
 add_executable(vo_pipeline_test tests/unit/vo_pipeline_test.cpp)
 target_link_libraries(vo_pipeline_test PRIVATE camera tracking Eigen3::Eigen)
+
+include(cmake/orb_benchmark.cmake)

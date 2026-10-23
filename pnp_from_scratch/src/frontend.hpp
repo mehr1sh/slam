@@ -8,7 +8,8 @@
 //       -> per level: FAST (score, 3x3 NMS, border, strongest N)
 //       -> intensity-centroid orientation -> Gaussian-smoothed rotated BRIEF
 //       -> brute-force Hamming nearest neighbour -> distance filter
-//       -> depth lookup in frame i -> 3D point in camera i  (+ 2D point in frame i+1)
+//       -> depth lookup in frame i -> 3D point in camera i  (+ 2D point in
+//       frame i+1)
 
 #include <cstdint>
 #include <string>
@@ -17,6 +18,7 @@
 #include <Eigen/Core>
 
 #include "features/fast.hpp"
+#include "features/multiscale.hpp"
 #include "features/pyramid.hpp"
 #include "features/types.hpp"
 #include "png.hpp"
@@ -25,59 +27,72 @@
 namespace scratch {
 
 struct FrontendParams {
-  features::FastParams fast;        // threshold 20 below, with a per-30-px-cell fallback to 7 for cells
-                                    // without a corner (ORB-SLAM's values); border 16; strongest 500 (per level)
-  features::PyramidParams pyramid;  // 8 levels x 1.2 (the reference ORB's structure); 1 = single scale
-  int match_floor = 30;             // keep matches with distance <= max(2 * d_min, match_floor)
-  double depth_scale = 5000.0;      // depth PNG value = metres * depth_scale (TUM convention); 0 = no depth
-  FrontendParams() {
-    fast.threshold = 20;
-    fast.cell_size = 30;      // spatial distribution: low-contrast cells still get corners
-    fast.min_threshold = 7;
-  }
+  features::FastParams
+      fast; // threshold set to 20 below; border 16; strongest 500 (per level)
+  features::PyramidParams pyramid; // 8 levels x 1.2 (the reference ORB's
+                                   // structure); 1 = single scale
+  features::SelectionParams selection;
+  bool mutual_ratio = false;
+  double ratio = .87;
+  double depth_edge_m = 0; // >0 rejects invalid/discontinuous 3x3 source depths
+  int match_floor =
+      30; // keep matches with distance <= max(2 * d_min, match_floor)
+  double depth_scale = 5000.0; // depth PNG value = metres * depth_scale (TUM
+                               // convention); 0 = no depth
+  FrontendParams() { fast.threshold = 20; }
 };
 
 struct RgbdFrame {
-  PngImage rgb;    // 8-bit, 3 or 4 channels
-  PngImage depth;  // 16-bit, 1 channel
+  PngImage rgb;   // 8-bit, 3 or 4 channels
+  PngImage depth; // 16-bit, 1 channel
 };
 
-// Loads <dataset>/<index padded to 6 digits>.png and _depth.png; checks the formats.
-bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame, std::string *error = nullptr);
+// Loads <dataset>/<index padded to 6 digits>.png and _depth.png; checks the
+// formats.
+bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame,
+                   std::string *error = nullptr);
 
 struct FrameFeatures {
   features::GrayImage gray;
   // keypoints[k].x/.y are ORIGINAL-image coordinates (mapped from the level);
   // score and angle are those computed on the keypoint's level.
   std::vector<features::Keypoint> keypoints;
-  std::vector<features::BriefDescriptor> descriptors;  // computed on each keypoint's level
-  std::vector<int> level;                   // pyramid level of each keypoint
-  std::vector<float> scale;                 // original size / level size
-  std::vector<float> level_x, level_y;      // position on its level
+  std::vector<features::BriefDescriptor>
+      descriptors;                     // computed on each keypoint's level
+  std::vector<int> level;              // pyramid level of each keypoint
+  std::vector<float> scale;            // original size / level size
+  std::vector<float> level_x, level_y; // position on its level
   std::vector<int> per_level_count;
 };
 
-FrameFeatures ExtractFeatures(const PngImage &rgb, const FrontendParams &params);
+FrameFeatures ExtractFeatures(const PngImage &rgb,
+                              const FrontendParams &params);
 
 // One filtered match with everything the geometry stages need.
 struct Correspondence {
-  int query = -1, train = -1;  // keypoint index in frame i / frame i+1
+  int query = -1, train = -1; // keypoint index in frame i / frame i+1
   int hamming = 0;
-  int level_i = 0, level_j = 0;  // pyramid levels of the two keypoints
-  Eigen::Vector2d uv_i = Eigen::Vector2d::Zero(), uv_j = Eigen::Vector2d::Zero();  // pixels
-  uint16_t depth_raw_i = 0, depth_raw_j = 0;  // raw depth at the (truncated) keypoint pixel
-  bool has_3d = false;                        // depth_raw_i > 0
-  Eigen::Vector3d X_i = Eigen::Vector3d::Zero();  // ((u-cx)/fx Z, (v-cy)/fy Z, Z) in camera i
+  int level_i = 0, level_j = 0; // pyramid levels of the two keypoints
+  Eigen::Vector2d uv_i = Eigen::Vector2d::Zero(),
+                  uv_j = Eigen::Vector2d::Zero(); // pixels
+  uint16_t depth_raw_i = 0,
+           depth_raw_j = 0; // raw depth at the (truncated) keypoint pixel
+  bool has_3d = false;      // depth_raw_i > 0
+  Eigen::Vector3d X_i =
+      Eigen::Vector3d::Zero(); // ((u-cx)/fx Z, (v-cy)/fy Z, Z) in camera i
 };
 
 struct PairMatches {
-  std::vector<features::Match> raw;        // nearest neighbour of every frame-i descriptor
-  std::vector<features::Match> filtered;   // after the distance filter
+  std::vector<features::Match>
+      raw; // nearest neighbour of every frame-i descriptor
+  std::vector<features::Match> filtered; // after the distance filter
   int d_min = 0, d_max = 0;
-  std::vector<Correspondence> correspondences;  // one per filtered match, in the same order
+  std::vector<Correspondence>
+      correspondences; // one per filtered match, in the same order
 };
 
-PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj, const PngImage &depth_i,
-                        const PngImage &depth_j, const Intrinsics &K, const FrontendParams &params);
+PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj,
+                        const PngImage &depth_i, const PngImage &depth_j,
+                        const Intrinsics &K, const FrontendParams &params);
 
-}  // namespace scratch
+} // namespace scratch

@@ -8,7 +8,7 @@ composition math itself -- it only reads the files the existing C++
 pipeline already produces:
   - data/meshes/bunny/bun_zipper.ply          (Stanford Bunny mesh)
   - data/synthetic_bunny/intrinsics.txt       ("width height fx fy cx cy")
-  - data/synthetic_bunny/slam_trajectory.csv  (per-frame GT/PnP/ICP positions,
+  - icp_cpp_results/blender_trajectory.csv  (per-frame GT/PnP/ICP positions,
                                                 quaternions, and errors --
                                                 see tests/synthetic/slam_trajectory_test.cpp)
   - data/synthetic_bunny/groundtruth.txt,
@@ -83,7 +83,7 @@ INTRINSICS_PATH = os.path.join(DATASET_DIR, "intrinsics.txt")
 GROUNDTRUTH_PATH = os.path.join(DATASET_DIR, "groundtruth.txt")
 PNP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "pnp_trajectory.txt")
 ICP_TRAJECTORY_PATH = os.path.join(DATASET_DIR, "icp_trajectory.txt")
-TRAJECTORY_CSV_PATH = os.path.join(DATASET_DIR, "slam_trajectory.csv")
+TRAJECTORY_CSV_PATH = os.path.join(REPO_ROOT, "icp_cpp_results", "blender_trajectory.csv")
 # Written by pnp_from_scratch/: the trajectory of its complete, self-contained
 # pipeline (own features + RANSAC around the scratch linear PnP; produced by
 # pnp_from_scratch/build/scratch_pipeline). Same T_wc format as the
@@ -91,11 +91,11 @@ TRAJECTORY_CSV_PATH = os.path.join(DATASET_DIR, "slam_trajectory.csv")
 # matches, no RANSAC), which can be shown instead by pointing this path at it.
 # May hold fewer poses than the dataset; only the poses it contains are shown.
 SCRATCH_TRAJECTORY_CSV_PATH = os.path.join(REPO_ROOT, "pnp_from_scratch", "results", "pipeline", "trajectory.csv")
-SAVE_PATH = os.path.join(VISUALIZATION_ROOT, "scenes", "bunny_slam_demo.blend")
-RENDER_OUTPUT_PATH = os.path.join(VISUALIZATION_ROOT, "output", "render", "frame_")
-# Stored in the .blend relative to the .blend itself (visualization/scenes/),
+SAVE_PATH = os.path.join(REPO_ROOT, "outputs", "blender", "bunny_slam_demo.blend")
+RENDER_OUTPUT_PATH = os.path.join(REPO_ROOT, "outputs", "render", "frame_")
+# Stored relative to outputs/blender/,
 # so the saved scene contains no machine-specific absolute path.
-RENDER_OUTPUT_BLEND_PATH = "//../output/render/frame_"
+RENDER_OUTPUT_BLEND_PATH = "//../render/frame_"
 
 # =========================================================================
 # Visualization options. These are the INITIAL values of the toggles in the
@@ -306,37 +306,17 @@ def merge_scratch(rows, scratch):
 
 
 def verify_trajectory_conventions(rows):
-    """Checks, rather than assumes, that the CSV-sourced trajectories share
-    the same convention/anchor before anything is drawn: (a) the CSV's GT,
-    PnP and ICP columns match the standalone groundtruth.txt /
-    pnp_trajectory.txt / icp_trajectory.txt files (confirms the CSV wasn't
-    regenerated from something stale/different), and (b) all trajectories
-    start at the same frame-0 pose (confirms PnP/ICP were actually anchored
-    to the GT frame-0 pose as documented, not left in some other frame).
-    """
-    from slam_coords import pose_from_row
-
-    print("\n=== TRAJECTORY CONVENTION CHECK ===")
-    for label, path, prefix in (("groundtruth.txt", GROUNDTRUTH_PATH, "gt"),
-                                ("pnp_trajectory.txt", PNP_TRAJECTORY_PATH, "pnp"),
-                                ("icp_trajectory.txt", ICP_TRAJECTORY_PATH, "icp")):
-        if not os.path.isfile(path):
-            print(f"{label}: not found, skipped")
-            continue
-        txt = read_tum_trajectory(path)
-        if len(txt) != len(rows):
-            print(f"{label}: {len(txt)} poses vs CSV {len(rows)} -- MISMATCH in frame count!")
-            continue
-        diff = max((pose_from_row(r, prefix)[0] - p["pos"]).length for r, p in zip(rows, txt))
-        print(f"CSV {prefix}_* vs {label}: max position diff {diff:.6f} m "
-              f"({'OK' if diff < 1e-4 else 'MISMATCH -- CSV disagrees with ' + label + '!'})")
-
-    gt0 = pose_from_row(rows[0], "gt")[0]
-    for prefix in ("pnp", "icp"):
-        d = (gt0 - pose_from_row(rows[0], prefix)[0]).length
-        print(f"frame 0: GT vs {prefix.upper()} position diff: {d:.6f} m "
-              f"({'OK, common anchor confirmed' if d < 1e-4 else 'MISMATCH -- not anchored to GT!'})")
-    print("=== END TRAJECTORY CONVENTION CHECK ===\n")
+    """Fail before clearing the scene if any displayed pose/metric differs."""
+    from trajectory_data import load_corrected
+    expected, metadata = load_corrected(REPO_ROOT)
+    if len(rows) != len(expected):
+        raise RuntimeError("Corrected trajectory frame count mismatch")
+    for actual, want in zip(rows, expected):
+        for key, value in want.items():
+            if key not in actual or not math.isfinite(float(actual[key])) or abs(actual[key]-value)>1e-8:
+                raise RuntimeError(f"Trajectory mismatch at frame {want['frame']}, {key}")
+    print(f"[corrected ICP] {metadata['method']}: {metadata['trajectory']}, "
+          f"ATE={metadata['ATE_RMSE_m']*1000:.3f} mm, failed pairs={metadata['failed_pairs']}")
 
 
 def native_poses(rows, prefix, n=None):
@@ -570,9 +550,9 @@ def build_camera_data(intr, name, display_size):
     image dimension (the width here), measured from the image centre with
     +x right and +y UP (image v runs down):
         shift_x = (width/2 - cx) / width  = -0.00797
-        shift_y = (cy - height/2) / width = +0.01516
+        shift_y = (cy - height/2) / width * fx/fy = +0.01515
     fy is honoured through the render pixel aspect (setup_render():
-    pixel_aspect_y = fy / fx = 1.000192) at resolution width x height
+    pixel_aspect_y = fx / fy = 0.999808) at resolution width x height
     (640 x 480). This is the camera set-up verified earlier by rendering
     through a Blender camera placed along ground truth: the bunny
     silhouettes matched the dataset images (IoU 0.999).
@@ -582,7 +562,7 @@ def build_camera_data(intr, name, display_size):
     cam_data.sensor_width = 36.0
     cam_data.lens = intr["fx"] / intr["width"] * cam_data.sensor_width
     cam_data.shift_x = (intr["width"] / 2 - intr["cx"]) / intr["width"]
-    cam_data.shift_y = (intr["cy"] - intr["height"] / 2) / intr["width"]
+    cam_data.shift_y = (intr["cy"] - intr["height"] / 2) / intr["width"] * intr["fx"] / intr["fy"]
     cam_data.clip_start = 0.01
     cam_data.clip_end = 100.0
     cam_data.display_size = display_size
@@ -708,7 +688,11 @@ def create_animated_camera(key, poses, intr, unit, collection):
     # LINEAR between frames, so the camera stays on the drawn (straight-
     # segment) trajectory line; Blender's default BEZIER would bow off it.
     ad = obj.animation_data
-    for fc in anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves:
+    if hasattr(anim_utils, 'action_get_channelbag_for_slot') and hasattr(ad, 'action_slot'):
+        curves = anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot).fcurves
+    else:
+        curves = ad.action.fcurves
+    for fc in curves:
         for kp in fc.keyframe_points:
             kp.interpolation = "LINEAR"
     return obj
@@ -794,17 +778,27 @@ def setup_render(scene, intr, n_frames):
     scene.frame_end = n_frames - 1
     scene.render.fps = ANIMATION_FPS
     # The trajectory cameras ARE the dataset camera: render (and camera view)
-    # at its 640x480 with pixel aspect fy/fx (see build_camera_data()).
+    # at its 640x480 with pixel aspect fx/fy (see build_camera_data()).
     scene.render.resolution_x = intr["width"]
     scene.render.resolution_y = intr["height"]
     scene.render.resolution_percentage = 100
-    scene.render.pixel_aspect_x = 1.0
-    scene.render.pixel_aspect_y = intr["fy"] / intr["fx"]
+    # Blender clamps each pixel-aspect component to >=1. Encode the ratio
+    # using two valid components rather than assigning a sub-unit Y value.
+    scene.render.pixel_aspect_x = max(1.0, intr["fy"] / intr["fx"])
+    scene.render.pixel_aspect_y = max(1.0, intr["fx"] / intr["fy"])
     # No depth-EXR compositor (it belonged to the removed trajectory-
     # following camera); clear it (also when rebuilding over an old .blend).
-    scene.compositing_node_group = None
+    if hasattr(scene, 'compositing_node_group'):
+        scene.compositing_node_group = None
+    else:
+        scene.use_nodes = False
+        if scene.node_tree:
+            scene.node_tree.nodes.clear()
     scene.view_layers[0].use_pass_z = False
-    scene.render.engine = "BLENDER_EEVEE"
+    try:
+        scene.render.engine = "BLENDER_EEVEE_NEXT"
+    except TypeError:
+        scene.render.engine = "BLENDER_EEVEE"
     scene.render.filepath = RENDER_OUTPUT_BLEND_PATH
     # The frame-change handler edits curves/visibility; lock the UI while
     # rendering so it never races the render thread.
@@ -840,12 +834,17 @@ def embed_autoload_text():
         "# Re-registers the trajectory-comparison runtime (sidebar, HUD, frame handler).\n"
         "# Generated by visualization/scripts/build_scene.py.\n"
         "import os, sys, bpy\n"
-        "_candidates = [bpy.path.abspath('//../scripts')]  # relative to this .blend\n"
+        "_candidates = [bpy.path.abspath('//../../visualization/scripts')]  # relative to this .blend\n"
         "for _d in _candidates:\n"
         "    if os.path.isfile(os.path.join(_d, 'slam_hud_panel.py')):\n"
         "        if _d not in sys.path:\n"
         "            sys.path.insert(0, _d)\n"
         "        break\n"
+        "from trajectory_data import load_corrected\n"
+        "_root = os.path.abspath(os.path.join(_d, '..', '..'))\n"
+        "_, _source = load_corrected(_root)\n"
+        "if _source['source_sha256'] != bpy.context.scene.get('slam_corrected_source', {}).get('source_sha256'):\n"
+        "    raise RuntimeError('Trajectory files changed: rebuild the Blender scene with scripts/rebuild_blender.sh')\n"
         "import slam_hud_panel\n"
         "slam_hud_panel.register()\n")
     text.use_module = True
@@ -907,13 +906,17 @@ def apply_initial_settings(scene):
 # =========================================================================
 
 def main():
-    clear_previous_scene_objects()
-
+    from trajectory_data import load_corrected
     intr = read_intrinsics(INTRINSICS_PATH)
-    rows = read_slam_trajectory_csv(TRAJECTORY_CSV_PATH)
+    rows, corrected_source = load_corrected(REPO_ROOT, write=True)
     n = len(rows)
     print(f"[build_scene] {n} frames, intrinsics: {intr}")
     verify_trajectory_conventions(rows)
+    clear_previous_scene_objects()
+    METHOD_STYLES['ICP']['label'] = ('ICP + loop closure' if corrected_source['method']=='pose_graph' else 'Point-to-plane ICP')
+    METHOD_STYLES['PnP']['label'] = 'PnP (legacy)'
+    if SHOW_SCRATCH_PNP and not os.path.isfile(SCRATCH_TRAJECTORY_CSV_PATH):
+        raise RuntimeError("Scratch PnP output is missing. Run bash scripts/rebuild_blender.sh")
     scratch = read_scratch_trajectory(SCRATCH_TRAJECTORY_CSV_PATH, rows)
     if scratch:
         merge_scratch(rows, scratch)
@@ -989,6 +992,7 @@ def main():
     remove_empty_default_collection()
 
     setup_render(scene, intr, n)
+    scene["slam_corrected_source"] = corrected_source
     scene["slam_intrinsics"] = intr
     scene["slam_trajectory"] = rows  # HUD/animation read positions+errors from this directly
     scene["slam_viz_methods"] = methods
@@ -1001,7 +1005,7 @@ def main():
     apply_initial_settings(scene)
     # Blender needs *a* scene camera for F12 renders; start with the GT one.
     # Nothing switches it automatically -- choose any camera yourself.
-    slam_hud_panel.set_active_camera(slam_hud_panel.get_gt_camera())
+    slam_hud_panel.set_active_camera(slam_hud_panel.get_icp_camera())
     embed_autoload_text()
     scene.frame_set(0)
     slam_animation.update_animation(scene)  # initialize for frame 0 before first draw

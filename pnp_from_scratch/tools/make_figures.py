@@ -55,7 +55,6 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from png_reader import read_png  # noqa: E402
-import correspondence_regions as cr  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DS = ROOT / "data" / "synthetic_bunny"
@@ -167,59 +166,42 @@ class PairPanel:
     def b(self, m, sel):
         return np.c_[m["uj"][sel] - self.box[0] + self.off, m["vj"][sel] - self.box[2]]
 
-    def keypoints(self, m, s=4, alpha=0.45):
+    def keypoints(self, m, s=5, alpha=0.5):
         for k in (0, 1):
             p = m["kp"][k]
             u, v = p[:, 0] - self.box[0], p[:, 1] - self.box[2]
             ok = (u >= 0) & (u < self.W) & (v >= 0) & (v < self.H)
             self.ax.scatter(u[ok] + self.off * k, v[ok], s=s, c="white", alpha=alpha, linewidths=0, zorder=1)
 
-    def matches(self, m, col, show_inliers=True, show_outliers=True, show_nodepth=True, scale=1.0, numbers=False,
-                flag=None):
-        """Two independent cues per match.
-        Geometric status (RANSAC export), on the markers: filled dot = inlier, hollow ring = outlier.
-        Neighbourhood consistency (flag, a visual warning only): consistent = thin solid line in the
-        neighbourhood colour; flagged = magenta dashed line and a magenta X at the frame-1 end.
-        No depth (not a PnP input): grey dotted line, grey diamonds."""
+    def matches(self, m, col, show_inliers=True, show_outliers=True, show_nodepth=True, scale=1.0, numbers=False):
         inl, use = m["inlier"], m["used"]
         out, nod = use & ~inl, ~use
-        flag = np.zeros(len(inl), bool) if flag is None else np.asarray(flag, bool)
-        shown = (inl & show_inliers) | (out & show_outliers)
-        ok, warn = shown & ~flag, shown & flag
-        dot = 13 * scale
+        size = 14 + 30 * (1 - np.clip((np.nan_to_num(m["z"], nan=0.5) - 0.44) / 0.14, 0, 1))  # near = larger
         if show_nodepth and nod.any():
             self.ax.add_collection(LineCollection(np.stack([self.a(m, nod), self.b(m, nod)], 1), colors=[NODEPTH],
-                                                  linewidths=0.4 * scale, alpha=0.3, linestyles=(0, (1, 2)), zorder=2))
+                                                  linewidths=0.5 * scale, alpha=0.3, linestyles=(0, (1, 2)), zorder=2))
             for pts in (self.a(m, nod), self.b(m, nod)):
-                self.ax.scatter(pts[:, 0], pts[:, 1], s=8 * scale, marker="D", c=[NODEPTH], edgecolors="0.25",
-                                linewidths=0.3, zorder=4)
-        if ok.any():
-            self.ax.add_collection(LineCollection(np.stack([self.a(m, ok), self.b(m, ok)], 1), colors=col[ok],
-                                                  linewidths=0.6 * scale, alpha=0.6, zorder=3))
-        if warn.any():
-            self.ax.add_collection(LineCollection(np.stack([self.a(m, warn), self.b(m, warn)], 1), colors=[OUTLIER],
-                                                  linewidths=0.8 * scale, alpha=0.85, linestyles=(0, (3, 2)),
-                                                  zorder=4))
-        for sel, filled in ((shown & inl, True), (shown & out, False)):
-            if not sel.any():
-                continue
-            ends = (self.a(m, sel), self.b(m, sel & ~flag))
-            cols = (col[sel], col[sel & ~flag])
-            for pts, c in zip(ends, cols):
-                if filled:
-                    self.ax.scatter(pts[:, 0], pts[:, 1], s=dot, c=c, edgecolors="black", linewidths=0.35, zorder=6)
-                else:
-                    self.ax.scatter(pts[:, 0], pts[:, 1], s=1.5 * dot, facecolors="none", edgecolors=c,
-                                    linewidths=1.0, zorder=6)
-        if warn.any():
-            pts = self.b(m, warn)
-            self.ax.scatter(pts[:, 0], pts[:, 1], s=2.2 * dot, marker="X", c=[OUTLIER], edgecolors="white",
-                            linewidths=0.4, zorder=7)
-        if numbers and show_outliers and out.any():
-            for n, idx in enumerate(np.nonzero(out)[0], 1):
-                for p in (self.a(m, [idx])[0], self.b(m, [idx])[0]):
-                    self.ax.annotate(str(n), p, xytext=(4, 3), textcoords="offset points", fontsize=7.5,
-                                     weight="bold", color=col[idx], zorder=9, path_effects=STROKE)
+                self.ax.scatter(pts[:, 0], pts[:, 1], s=10 * scale, marker="D", c=[NODEPTH], edgecolors="0.25",
+                                linewidths=0.4, zorder=4)
+        if show_inliers and inl.any():
+            self.ax.add_collection(LineCollection(np.stack([self.a(m, inl), self.b(m, inl)], 1), colors=col[inl],
+                                                  linewidths=0.85 * scale, alpha=0.6, zorder=3))
+            for pts in (self.a(m, inl), self.b(m, inl)):
+                self.ax.scatter(pts[:, 0], pts[:, 1], s=size[inl] * scale, c=col[inl], edgecolors="black",
+                                linewidths=0.5, zorder=6)
+        if show_outliers and out.any():
+            self.ax.add_collection(LineCollection(np.stack([self.a(m, out), self.b(m, out)], 1),
+                                                  colors=col[out] if numbers else [OUTLIER],
+                                                  linewidths=(1.5 if numbers else 1.0) * scale, alpha=0.9,
+                                                  linestyles="-" if numbers else (0, (4, 2.5)), zorder=4))
+            for pts in (self.a(m, out), self.b(m, out)):
+                self.ax.scatter(pts[:, 0], pts[:, 1], s=size[out] * scale, c=col[out], edgecolors=OUTLIER,
+                                linewidths=1.6, zorder=7)
+            if numbers:
+                for n, idx in enumerate(np.nonzero(out)[0], 1):
+                    for p in (self.a(m, [idx])[0], self.b(m, [idx])[0]):
+                        self.ax.annotate(str(n), p, xytext=(5, 4), textcoords="offset points", fontsize=8.5,
+                                         weight="bold", color=col[idx], zorder=9, path_effects=STROKE)
 
 
 def save(fig, name):
@@ -268,38 +250,33 @@ def level_legend(fig, x, y, levels):
 
 # --------------------------------------------------------------- figures ---
 
-def correspondence_maps(rgb, depth, box, s, pair):
-    v = cr.classify(s)
-    col, flag = v["colour"], v["neighbourhood_changed"]
+def correspondence_maps(rgb, box, s, pair):
+    col = id_colours(s)
     n_use, n_inl = int(s["used"].sum()), int(s["inlier"].sum())
-    n_flag_in, n_flag_out = int((flag & s["inlier"]).sum()), int((flag & s["used"] & ~s["inlier"]).sum())
     counts = (f"{pair['keypoints_i']} / {pair['keypoints_j']} keypoints  ·  {pair['filtered_matches']} filtered matches  ·  "
-              f"{n_use} valid 3D→2D  ·  {n_inl} RANSAC inliers  ·  neighbourhood warnings: {n_flag_in} inliers, "
-              f"{n_flag_out} RANSAC outliers")
-    key = (f"colour = local neighbourhood of the frame-0 keypoint ({cr.K} groups), same colour at both ends  ·  "
-           "● filled = RANSAC inlier, ○ ring = RANSAC outlier  ·  magenta dashed + ✕ = frame-1 end lands outside its "
-           "neighbourhood (warning, not a geometric test)  ·  grey ◇ = no depth  ·  white = other keypoints")
+              f"{n_use} valid 3D→2D  ·  {n_inl} RANSAC inliers")
+    key = ("colour = correspondence (same colour in both frames)  ·  marker size = depth, near = larger  ·  "
+           "solid = RANSAC inlier  ·  magenta dashed + ring = outlier  ·  grey ◇ = no depth  ·  white = other keypoints")
     for name, kw, title, line in (
             ("bunny_correspondences_0_1", {}, "Scratch correspondences  ·  Frame 0 → Frame 1", counts),
             ("bunny_correspondences_0_1_inliers", dict(show_outliers=False, show_nodepth=False),
-             "Scratch correspondences  ·  RANSAC inliers only",
-             f"{n_inl} of {n_use} valid 3D→2D correspondences  ·  {n_flag_in} with a neighbourhood warning"),
+             "Scratch correspondences  ·  RANSAC inliers only", f"{n_inl} of {n_use} valid 3D→2D correspondences"),
             ("bunny_correspondences_0_1_outliers", dict(show_inliers=False, show_nodepth=False, numbers=True),
              "Scratch correspondences  ·  RANSAC outliers only",
-             f"{n_use - n_inl} of {n_use} rejected (reprojection error ≥ 8 px under the RANSAC pose)  ·  "
-             f"{n_flag_out} with a neighbourhood warning")):
+             f"{n_use - n_inl} of {n_use} rejected (reprojection error ≥ 8 px under the RANSAC pose)")):
         W, H = box[1] - box[0], box[3] - box[2]
         fig = plt.figure(figsize=(13, 13 * H / (2.08 * W) + 0.8))
         ax = fig.add_axes([0.01, 0.03, 0.98, 0.86])
         P = PairPanel(ax, rgb, box)
         if name.endswith("outliers"):
             for pts in (P.a(s, s["inlier"]), P.b(s, s["inlier"])):  # inliers as faint context
-                ax.scatter(pts[:, 0], pts[:, 1], s=6, c="white", alpha=0.5, linewidths=0, zorder=2)
+                ax.scatter(pts[:, 0], pts[:, 1], s=10, c="white", edgecolors="0.3", linewidths=0.3, zorder=2)
         else:
             P.keypoints(s)
-        P.matches(s, col, flag=flag, **kw)
+        P.matches(s, col, **kw)
         header(fig, title, line)
-        fig.text(0.99, 0.005, key, fontsize=6.6, color="0.45", ha="right")
+        fig.text(0.99, 0.005, key if name == "bunny_correspondences_0_1" else
+                 "colour = correspondence (same colour in both frames)", fontsize=7, color="0.45", ha="right")
         save(fig, name)
 
 
@@ -347,7 +324,7 @@ def feature_comparison(rgb, box, s, r, pair):
         axm = fig.add_axes([(margin + unit + gap) / fig_w, y0, 2.08 * unit / fig_w, row_h / fig_h])
         P = PairPanel(axm, rgb, box)
         P.keypoints(m, s=4, alpha=0.45)
-        P.matches(m, cr.classify(m)["colour"], scale=0.85)
+        P.matches(m, id_colours(m), scale=0.85)
         n_f, n_u, n_i = len(m["ui"]), int(m["used"].sum()), int(m["inlier"].sum())
         fig.text(margin / fig_w, (y_top - 0.12) / fig_h, name, fontsize=13, weight="bold", color=colr, va="top",
                  path_effects=[pe.withStroke(linewidth=0.6, foreground="0.3")])
@@ -356,8 +333,8 @@ def feature_comparison(rgb, box, s, r, pair):
                  color="0.3", va="top")
     level_legend(fig, 0.60, 1.0, 8)
     fig.text(0.99, 0.002, "left: keypoints (colour = pyramid level, tick = orientation)  ·  right: "
-             "correspondences (colour = local neighbourhood of the frame-0 keypoint; ● = RANSAC inlier, ○ = outlier, "
-             "grey ◇ = no depth)  ·  different detectors → different keypoints and matches",
+             "correspondences (colour = correspondence identity within each row; solid = RANSAC inlier, magenta dashed "
+             "= outlier, grey ◇ = no depth)  ·  different detectors → different keypoints and matches",
              fontsize=7, color="0.45", ha="right")
     save(fig, "feature_comparison_0_1")
 
@@ -556,7 +533,7 @@ def main():
     ref_traj = rows(BASE / "slam_trajectory.csv")
     runs = {name: (colr, rows(d / "pairs.csv"), rows(d / "trajectory.csv"))
             for name, (colr, d) in RUNS.items() if (d / "pairs.csv").exists()}
-    correspondence_maps(rgb, depth, box, s, pairs[0])
+    correspondence_maps(rgb, box, s, pairs[0])
     orb_keypoints(rgb, box, r)
     feature_comparison(rgb, box, s, r, pairs[0])
     if int(s["kp"][0][:, 4].max()) > 0:

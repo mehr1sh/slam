@@ -1,0 +1,10 @@
+option(BUILD_ORB_BENCHMARK "Build the OpenCV ORB comparison executable" ON)
+if(BUILD_ORB_BENCHMARK)
+  get_filename_component(_orb_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+  find_library(ORB_FEATURES2D_LIBRARY NAMES opencv_features2d REQUIRED)
+  add_executable(orb_benchmark ${_orb_root}/apps/orb_benchmark.cpp)
+  target_link_libraries(orb_benchmark PRIVATE rgbd_icp ${ORB_FEATURES2D_LIBRARY})
+  target_compile_options(orb_benchmark PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME orb_benchmark_smoke COMMAND orb_benchmark
+    ${_orb_root}/data/synthetic_bunny ${CMAKE_CURRENT_BINARY_DIR}/orb-smoke --frames 2 --repeats 1)
+endif()

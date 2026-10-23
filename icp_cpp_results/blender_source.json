@@ -1,0 +1,9 @@
+{
+  "method": "pose_graph",
+  "trajectory": "icp_cpp_results/pose_graph_trajectory.txt",
+  "source_sha256": "42aef7376c319afebe1a1bfa836c5b141669f18c4f7b20af2239215132497bee",
+  "frames": 36,
+  "failed_pairs": 0,
+  "ATE_RMSE_m": 0.0012000574387782382,
+  "pnp_note": "Legacy PnP comparison; not changed by corrected ICP"
+}

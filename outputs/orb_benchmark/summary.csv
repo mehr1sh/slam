@@ -1,0 +1,3 @@
+method,frames,pairs,solved_pairs,failed_pairs,mean_keypoints,mean_matches,mean_valid_3d,mean_ransac_inliers,gt_precision_3d,median_extraction_ms,mean_matching_ms,mean_registration_ms,ATE_RMSE_m,mean_accepted_rotation_error_deg,mean_accepted_translation_error_m
+project_orb_style,36,35,35,0,1013.94444444,275.571428571,214.485714286,208.542857143,0.970027973891,81.3453975,170.324178171,190.2391254,0.00168843638096,0.0280027177448,0.000203897195447
+opencv_orb,36,35,35,0,993.861111111,286.342857143,213.2,207.657142857,0.97065129992,4.404881,213.80222,236.306091343,0.00169182895394,0.0280272674413,0.000204123383633

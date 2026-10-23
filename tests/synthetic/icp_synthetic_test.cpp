@@ -1,4 +1,4 @@
-// Tests the EXISTING, unmodified ICP implementation (src/tracking/icp.cpp,
+// Tests the legacy fixed-correspondence compatibility API (src/tracking/icp.cpp,
 // via the identical call pattern tests/icp_test.cpp already uses) on one
 // frame pair from the synthetic bunny dataset.
 //
@@ -12,7 +12,7 @@
 // is T_{j<-i}. The two are related by simple inversion: T_{j<-i} =
 // (T_{i<-j})^-1, i.e. R_common = R_icp^T, t_common = -R_icp^T * t_icp.
 // This conversion happens once, right here, at the point ICP's result
-// meets the common convention -- ICP's own math is never touched.
+// meets the common convention -- the compatibility API keeps the historical direction.
 
 #include <iomanip>
 #include <fstream>
@@ -138,13 +138,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // Existing book code, unmodified: closed-form SVD (pose_estimation_3d3d),
+  // Compatibility API: closed-form SVD (pose_estimation_3d3d),
   // exactly as tests/icp_test.cpp calls it.
   Mat R_svd, t_svd;
   pose_estimation_3d3d(pts1, pts2, R_svd, t_svd);
   Mat R_svd_copy = R_svd.clone(), t_svd_copy = t_svd.clone();
 
-  // Existing book code, unmodified: g2o refinement (bundleAdjustment),
+  // Compatibility API: SVD compatibility refit (bundleAdjustment),
   // overwrites R_svd/t_svd in place exactly as tests/icp_test.cpp does.
   bundleAdjustment(pts1, pts2, R_svd, t_svd);
 
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
   cout << "Translation error: " << t_err << " metres" << endl;
 
   // Point-to-point alignment residual (same diagnostic tests/icp_test.cpp
-  // already reports), using the FINAL (post-bundleAdjustment) R,t in ICP's
+  // already reports), using the FINAL (post-compatibility-refit) R,t in ICP's
   // own raw convention -- p1 ~= R*p2+t.
   vector<double> errs;
   for (size_t k = 0; k < pts1.size(); ++k) {
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
   cout << "Number of valid depth pixels (frame " << frame_j << "): " << valid_depth_j << endl;
   cout << "Number of feature matches: " << matches.size() << endl;
   cout << "Number of 3D-3D correspondences: " << pts1.size() << endl;
-  cout << "ICP iterations: 10 (fixed, hardcoded in bundleAdjustment(), see src/tracking/icp.cpp)"
+  cout << "Fixed-correspondence SVD compatibility path; use icp_sequence for iterative RGB-D ICP"
        << endl;
   cout << "Final point-to-point alignment error (m) mean/median/rms/max: "
        << err_stats.mean << " / " << err_stats.median << " / " << err_stats.rms << " / "

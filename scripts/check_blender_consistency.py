@@ -2,7 +2,7 @@
 the scene and saves nothing.
 
 Run from the repository root:
-    blender -b visualization/scenes/bunny_slam_demo.blend \
+    blender -b outputs/blender/bunny_slam_demo.blend \
         --python scripts/check_blender_consistency.py -- diagnostics/blender_consistency.csv
 
 For every frame 0..N-1 and each of GT / PnP / ICP it compares, against
@@ -30,8 +30,10 @@ import slam_animation  # noqa: E402
 from slam_coords import R_FIX  # noqa: E402
 
 out_path = Path(sys.argv[sys.argv.index("--") + 1]) if "--" in sys.argv else ROOT / "diagnostics" / "blender_consistency.csv"
-rows = list(csv.DictReader(open(ROOT / "data" / "synthetic_bunny" / "slam_trajectory.csv")))
-rows = [{k: float(v) for k, v in r.items()} for r in rows]
+from trajectory_data import load_corrected
+rows, source = load_corrected(ROOT)
+if bpy.context.scene.get("slam_corrected_source", {}).get("source_sha256") != source['source_sha256']:
+    raise RuntimeError("Saved scene is stale or predates corrected ICP. Rebuild it.")
 # Optional 4th trajectory (pnp_from_scratch); only its existing frames are checked.
 # The file the scene was built from is recorded by build_scene.py in
 # scene["slam_scratch_source"] (scenes built before that fall back to the
@@ -145,3 +147,29 @@ for f in (0, 1, 2, 10, 11, 35):
               f"pos diff {rec['camera_position_error_m']:.1e} m  rot diff {rec['camera_rotation_error_deg']:.1e} deg  "
               f"look-at {rec['lookat_blender_deg']:7.2f} deg (data {rec['lookat_data_deg']:7.2f})  "
               f"hidden {cam.hide_viewport}")
+
+# Reject silently stale scenes and pose-axis conversion errors.
+assert scene.frame_start == 0 and scene.frame_end == N-1, "Incorrect animation range"
+for rec in records:
+    assert all(math.isfinite(v) for k,v in rec.items() if k not in ('frame','method')), rec
+    assert rec['curve_point_error_m'] < 1e-5, rec
+    assert rec['view_direction_error_deg'] < .05, rec
+    assert rec['hud_translation_value_diff'] < 1e-5, rec
+    assert rec['hud_rotation_value_diff'] < .01, rec
+    assert rec['camera_position_error_m'] < 1e-5, rec
+    assert rec['camera_rotation_error_deg'] < .05, rec
+print("PASS: corrected-source fingerprint, all camera positions and rotations, frame range")
+
+from bpy_extras.object_utils import world_to_camera_view
+intr=scene['slam_intrinsics']
+projection_error=0.0
+for method in PREFIX:
+    cam=bpy.data.objects[f'{method}_Animated_Camera']
+    for x,y,z in ((0,0,1),(.1,.05,1),(-.1,-.05,1),(.05,-.08,.6)):
+        world=cam.matrix_world@mathutils.Vector((x,-y,-z))
+        ndc=world_to_camera_view(scene,cam,world)
+        actual=(ndc.x*intr['width'],(1-ndc.y)*intr['height'])
+        expected=(intr['fx']*x/z+intr['cx'],intr['fy']*y/z+intr['cy'])
+        projection_error=max(projection_error,max(abs(a-b) for a,b in zip(actual,expected)))
+assert projection_error<.001, f'Incorrect Blender intrinsics: {projection_error} pixels'
+print(f'PASS: intrinsic projection max error {projection_error:.6f} pixels')

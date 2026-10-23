@@ -1,0 +1,28 @@
+{
+  "frames": [
+    0,
+    1
+  ],
+  "feature_counts": {
+    "0": {
+      "00_fast_all": 838,
+      "01_harris_all": 838,
+      "02_fast_quotas": 838,
+      "03_harris_quotas": 838
+    },
+    "1": {
+      "00_fast_all": 815,
+      "01_harris_all": 815,
+      "02_fast_quotas": 815,
+      "03_harris_quotas": 815
+    }
+  },
+  "matching_counts": {
+    "raw_nearest": 838,
+    "forward_ratio": 468,
+    "mutual_final": 246,
+    "rejected": 592
+  },
+  "ratio_threshold": 0.87,
+  "line_limit": 100
+}

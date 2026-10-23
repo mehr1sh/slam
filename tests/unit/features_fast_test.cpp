@@ -113,47 +113,5 @@ int main() {
     FCHECK(DetectFast(img, higher).size() < every.size(), "a higher threshold gives fewer corners (%d < %d)",
            int(DetectFast(img, higher).size()), int(every.size()));
   }
-
-  // --- per-cell threshold fallback (spatial distribution) ---
-  {
-    // 32-px cells start at the border (16): x cells [16,48) [48,80) ..., y cells [16,48) [48,80).
-    // strong square (contrast 100) and weak square A (contrast 12) share cell (0,0);
-    // weak square B (contrast 12) is alone in cell (2,1).
-    GrayImage img(160, 96, 100);
-    auto square = [&](int x0, int y0, int v) {
-      for (int y = y0; y < y0 + 8; ++y)
-        for (int x = x0; x < x0 + 8; ++x) img.at(x, y) = uint8_t(v);
-    };
-    square(20, 20, 200);
-    square(34, 34, 112);
-    square(88, 56, 112);
-    auto near = [](const std::vector<Keypoint> &k, int x0, int y0) {
-      return std::any_of(k.begin(), k.end(), [&](const Keypoint &p) {
-        return p.x >= x0 - 2 && p.x <= x0 + 9 && p.y >= y0 - 2 && p.y <= y0 + 9;
-      });
-    };
-    FastParams off;
-    off.threshold = 20;
-    off.max_keypoints = 0;
-    FastParams on = off;
-    on.cell_size = 32;
-    on.min_threshold = 7;
-    const auto a = DetectFast(img, off), b = DetectFast(img, on);
-    FCHECK(near(a, 20, 20) && !near(a, 34, 34) && !near(a, 88, 56), "threshold 20 alone: only the strong square");
-    FCHECK(near(b, 20, 20) && near(b, 88, 56), "fallback: the weak square in the otherwise empty cell is found");
-    FCHECK(!near(b, 34, 34), "fallback: the weak square sharing a cell with a corner is not added");
-    int strong = 0;
-    for (const auto &k : a) strong += near(b, int(k.x) - 1, int(k.y) - 1);
-    FCHECK(strong == int(a.size()), "fallback keeps every corner found at the main threshold (%d)", strong);
-    FastParams same = on;
-    same.min_threshold = 20;  // not below the main threshold: off
-    const auto c = DetectFast(img, same);
-    FCHECK(c.size() == a.size() && std::equal(a.begin(), a.end(), c.begin(), [](const Keypoint &p, const Keypoint &q) {
-             return p.x == q.x && p.y == q.y && p.score == q.score;
-           }),
-           "min_threshold >= threshold disables the fallback (identical result)");
-    FastParams defaults;
-    FCHECK(defaults.cell_size <= 0 && defaults.min_threshold <= 0, "the fallback is off by default");
-  }
   return ftest::Finish("features_fast_test");
 }

@@ -133,7 +133,7 @@ RansacEssentialResult RansacEssential(const Points2 &x1, const Points2 &x2, doub
   };
   std::mt19937 rng(params.seed);
   Score best;
-  Eigen::Matrix3d bestE;
+  Eigen::Matrix3d bestE=Eigen::Matrix3d::Zero();
   std::vector<bool> best_mask;
   for (int it = 0; it < params.iterations; ++it) {
     const std::vector<int> s = SampleIndices(rng, n, kSample);

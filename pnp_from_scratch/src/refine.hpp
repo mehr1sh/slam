@@ -23,28 +23,36 @@
 namespace scratch {
 
 struct RefineParams {
+  double huber_delta_px =
+      0; // 0: historical least squares; >0: robust reprojection loss
   int max_iterations = 50;
-  double lambda0 = 1e-3;       // initial damping, relative to the mean diagonal of J^T J
-  double min_step = 1e-10;     // stop when |xi| falls below this
-  double min_rel_decrease = 1e-12;  // stop when the cost decreases by less than this fraction
+  double lambda0 =
+      1e-3; // initial damping, relative to the mean diagonal of J^T J
+  double min_step = 1e-10; // stop when |xi| falls below this
+  double min_rel_decrease =
+      1e-12; // stop when the cost decreases by less than this fraction
 };
 
 struct RefineResult {
-  bool ok = false;               // false: fewer than 3 points, or a point behind the camera at the start
+  bool ok = false; // false: fewer than 3 points, or a point behind the camera
+                   // at the start
   Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
   Eigen::Vector3d t = Eigen::Vector3d::Zero();
-  int iterations = 0;            // accepted LM steps
-  double cost_initial = 0;       // sum of squared pixel residuals / 2, at the linear pose
+  int iterations = 0; // accepted LM steps
+  double cost_initial =
+      0; // sum of squared pixel residuals / 2, at the linear pose
   double cost_final = 0;
   double rms_initial_px = 0, rms_final_px = 0;
 };
 
 // X: 3D points (camera i), uv: pixels (frame i+1), use[k]: refine with point k.
-RefineResult RefinePnP(const std::vector<Eigen::Vector3d> &X, const std::vector<Eigen::Vector2d> &uv,
-                       const std::vector<bool> &use, const Intrinsics &K, const Eigen::Matrix3d &R0,
-                       const Eigen::Vector3d &t0, const RefineParams &params = RefineParams());
+RefineResult RefinePnP(const std::vector<Eigen::Vector3d> &X,
+                       const std::vector<Eigen::Vector2d> &uv,
+                       const std::vector<bool> &use, const Intrinsics &K,
+                       const Eigen::Matrix3d &R0, const Eigen::Vector3d &t0,
+                       const RefineParams &params = RefineParams());
 
 // Rotation vector -> rotation matrix (Rodrigues formula, from scratch).
 Eigen::Matrix3d ExpSO3(const Eigen::Vector3d &phi);
 
-}  // namespace scratch
+} // namespace scratch

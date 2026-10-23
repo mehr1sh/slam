@@ -1,0 +1,4 @@
+point_solver=damped_gauss_newton
+plane_solver=huber_damped_gauss_newton
+initialization=feature_3d_ransac_svd
+update=left_SO3_R3_retraction

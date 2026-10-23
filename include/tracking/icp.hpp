@@ -3,7 +3,7 @@
 #include <opencv2/core/core.hpp>
 #include <vector>
 
-// Book code starts
+// Compatibility API for paired 3D points; target=pts1, source=pts2.
 // pose_estimation_3d3d.cpp
 void pose_estimation_3d3d(
   const std::vector<cv::Point3f> &pts1,
@@ -13,7 +13,7 @@ void pose_estimation_3d3d(
 
 void bundleAdjustment(
   const std::vector<cv::Point3f> &points_3d,
-  const std::vector<cv::Point3f> &points_2d,
+  const std::vector<cv::Point3f> &source_points_3d,
   cv::Mat &R, cv::Mat &t
 );
-// Book code ends
+// For full RGB-D ICP use tracking/rgbd_icp.hpp and the icp_sequence executable.

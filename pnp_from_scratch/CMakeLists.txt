@@ -61,3 +61,12 @@ endforeach()
 add_test(NAME milestone1_pnp_from_scratch COMMAND pnp_from_scratch WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME milestone2_pnp_full_sequence COMMAND pnp_full_sequence WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_test(NAME milestone3_scratch_pipeline COMMAND scratch_pipeline WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(test_improvements tests/test_improvements.cpp)
+target_link_libraries(test_improvements PRIVATE scratch_core)
+add_test(NAME scratch_improvements COMMAND test_improvements)
+
+# Controlled frontend diagnostics; uses the same C++ feature functions as estimation.
+add_executable(feature_audit src/feature_audit.cpp)
+target_link_libraries(feature_audit PRIVATE scratch_core)
+add_test(NAME feature_audit_pair_0_1 COMMAND feature_audit --repo ${CMAKE_CURRENT_SOURCE_DIR}/..)

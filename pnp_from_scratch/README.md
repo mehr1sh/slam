@@ -1,3 +1,13 @@
+# Current final workflow
+
+See [FINAL_WORKFLOW.md](../FINAL_WORKFLOW.md) for the authoritative build/view commands, new
+scratch frontend, robust PnP, own fundamental estimator, current measurements
+and four-camera Blender scene. The default scratch executable now uses the
+improved settings; `--legacy` selects historical settings. The notes and old
+measurements below are preserved for history and earlier ablations.
+
+---
+
 # PnP from scratch: a self-contained visual-odometry pipeline
 
 This is the from-scratch track of the project's visual SLAM system: the
@@ -278,7 +288,7 @@ This is the expected motivation for the next milestone, **RANSAC from scratch**.
 | PNG decoding | `src/png.{hpp,cpp}` | DEFLATE (RFC 1951; stored, fixed and dynamic Huffman blocks), zlib wrapper with Adler-32, chunk CRC-32, the five scanline filters; 8/16-bit grey/RGB(A) |
 | grayscale | `feature_core` `GrayFromRGB` | BT.601 luma, 14-bit fixed point |
 | pyramid | `feature_core` `BuildPyramid`, `ExtractMultiscale` | 8 levels × 1.2 by default (`--pyramid-levels`); detection, orientation and BRIEF per level; see "Image pyramid" |
-| FAST | `feature_core` `DetectFast` | 16-pixel circle, arc ≥ 9, **threshold 20** (configurable), per-cell fallback (30-px cells with no corner are searched again at threshold 7; `--fast-cell`, `--fast-min-threshold`, 0 = off), corner score, 3×3 non-maximum suppression, border 16, strongest 500 |
+| FAST | `feature_core` `DetectFast` | 16-pixel circle, arc ≥ 9, **threshold 20** (configurable), corner score, 3×3 non-maximum suppression, border 16, strongest 500 |
 | orientation | `feature_core` `AssignOrientations` | intensity centroid, angle = atan2(m01, m10), radius 15 |
 | rotated BRIEF | `feature_core` `ComputeBrief` | Gaussian smoothing (σ 2, 9×9), 256 tests from a fixed Gaussian pattern (seed `0x5B21EF`), rotated by the keypoint angle |
 | matching | `feature_core` `MatchBruteForce`, `FilterMatchesByDistance` | brute-force Hamming nearest neighbour; keep distance ≤ max(2·d_min, 30) (floor configurable) |
@@ -352,7 +362,7 @@ geometric one, over the **same RANSAC inliers** (the inlier set is not changed):
 - `pairs.csv` keeps the linear pose's errors and reprojection statistics (`linear_*`)
   next to the refined ones.
 
-### Result: all 35 pairs (measured before the FAST cell fallback; current default: see "Keypoint distribution")
+### Result: all 35 pairs (`results/pipeline/summary.txt`, the default)
 
 | | Single scale, linear | Pyramid, linear | **Pyramid + refinement (default)** | Reference |
 |---|---|---|---|---|
@@ -420,20 +430,13 @@ to 0.14° (`test_ransac`).
 |---|---|
 | `features_{fast,orientation,brief,matcher,pyramid}_test` | the shared feature modules (built from `../tests/unit`): segment test, score, NMS, border, cap, determinism; orientation; BRIEF pattern, smoothing, **rotation invariance**, **Hamming distance**; matching and the filter; pyramid level sizes (640x480 … 179x134) and scales, constant/linear-ramp resampling, coordinate mapping, own-level orientation and descriptor, 1 level = single-scale path bit for bit |
 | `test_png` | CRC-32 and Adler-32 check values; stored, fixed and back-reference DEFLATE streams from an independent encoder; a dynamic-Huffman dataset image; RGB and depth samples equal to an independent decoder's; 202/202 depth values equal to the baseline export's |
-| `test_frontend` | frames 0→1: counts, back-projection, geometric quality of the matches against the true motion; **match indexing** (raw → filtered → correspondence: indices, distances, pixels and levels of both keypoints); **distribution** (object-cell occupancy with the cell fallback above the threshold-only result, threshold-20 keypoints kept); determinism |
-| `features_fast_test` (fallback part) | a weak corner in an empty cell is found, one sharing a cell with a corner is not, corners at the main threshold are kept, off by default |
+| `test_frontend` | frames 0→1: counts, back-projection, geometric quality of the matches against the true motion, determinism |
 | `test_essential` | exact recovery, (s, s, 0), the four candidates, cheirality, 8-point minimum, noise, Sampson distance |
 | `test_ransac` | 30 % gross outliers: linear PnP alone 28° off, RANSAC 0.47° (as good as the solver on the true inliers only); mask quality; seeds; failures; RANSAC essential on a wide scene |
 | `test_refine` | Rodrigues exponential; one undamped step from 0.45° / 5 mm lands within 0.003° / 0.06 mm (checks the Jacobian); exact convergence from 5° / 3 cm on noise-free data; with 1 px noise the error drops in 40/40 trials (0.61° → 0.17° mean); masked-out outliers have no effect; failures; determinism |
 | `test_pipeline_0_1` | the whole default pipeline on frames 0→1: pose within 3° / 3 cm (1.30° / 0.0095 m), inliers, reprojection, proper R, mask, comparison without RANSAC; refinement lowers the inlier reprojection error (2.07 → 1.96 px) and keeps the inlier set; `--no-refine` keeps the linear pose; determinism |
 | `test_multiscale_0_1` | the 8-level front end on frames 0→1: keypoints on every level, level 0 = single scale, coordinate mapping; **level → original → depth → 3D**: every correspondence uses (level + 0.5)·scale − 0.5 per axis, depth is read from the 640×480 image at the mapped pixel, the 3D point back-projects it; coarse-level matches reproject within 1.94 px (median) under the true motion, while their level coordinates used directly would have no depth for 87/87; pipeline pose within 3° / 3 cm |
 | `milestone1/2/3_*` | the three programs exit 0 |
-
-Outside ctest (Python, NumPy): `python3 tools/test_correspondence_regions.py` checks the
-correspondence-figure data: deterministic neighbourhood labels and colours, the neighbourhood
-warning on a synthetic misplaced match, inlier / outlier / no-depth status taken from the
-export and never changed by the warning, and that every exported
-match of pair 0→1 indexes the right keypoints.
 
 ### Image pyramid (`--pyramid-levels L`; default 8)
 
@@ -451,7 +454,7 @@ The scratch pipeline has the same pyramid, without any library:
   position is x0 = (x + 0.5)·sx − 0.5, y0 = (y + 0.5)·sy − 0.5, with sx = 640 / level width and
   sy = 480 / level height (they differ by up to 0.2 %). Matching, depth lookup, RANSAC and PnP
   use the original position; the depth is read from the 640×480 depth image there.
-- No Harris ranking and no per-level quotas (the reference ORB has both).
+- Historical `--legacy` has no Harris ranking or quotas. The improved CLI default now implements both; see FINAL_WORKFLOW.md.
 - `--pyramid-levels 1 --no-refine` reproduces the earlier single-scale results exactly.
 
 Frame 0 keypoints per level:
@@ -477,37 +480,6 @@ Single scale → pyramid, both with the linear PnP (`results/pipeline_single/`, 
 - The frame-35 error is slightly larger than single scale's. Single scale's small final error
   comes from errors of mixed sign cancelling; the pyramid's mean over frames is 2.5× smaller.
 - The nonlinear refinement then halves the per-pair errors; see "Result: all 35 pairs".
-
-### Keypoint distribution (per-cell FAST fallback)
-
-With one global threshold of 20, FAST fires almost only on strong contrast (the
-silhouette and a few shading creases): about 30 % of the object's 16-px grid
-cells had no keypoint, and 35 % of the keypoints sat in the busiest 10 % of
-cells. The detector now retries, at threshold 7, every 30-px cell (per pyramid
-level) that has no corner at 20; the values are ORB-SLAM's (20 / 7, ~30-px
-cells), chosen before measuring. Corners found at 20 are kept; the rest of
-the pipeline is unchanged. The fallback is a `FastParams` option, off by
-default, so the reference program is unaffected.
-
-Mean over 36 frames / 35 pairs (`--fast-cell 0` reproduces "before" exactly):
-
-| | Before | After (default) |
-|---|---|---|
-| keypoints per frame (frame 0) | 484.1 (398) | 531.1 (448) |
-| object-cell occupancy, 16-px cells (worst frame) | 70.1 % (56.0 %) | 78.2 % (61.7 %) |
-| keypoints in the busiest 10 % of object cells | 34.9 % | 31.7 % |
-| keypoints at a depth edge or without depth / interior keypoints per frame | 75.2 % / 125.9 | 72.4 % / 152.2 |
-| filtered matches / 3D→2D / RANSAC inliers (min) | 395.6 / 313.6 / 240.3 (154) | 432.0 / 346.0 / 256.1 (169) |
-| inlier ratio | 76.2 % | 73.4 % |
-| pair rotation error mean / median / max | 1.164° / 1.025° / 2.56° | 1.127° / 0.867° / 3.11° |
-| pair translation error, mean | 0.0107 m | 0.0103 m |
-| summed signed rotation error | −30.4° | −27.9° |
-| trajectory error mean; final (frame 35) | 0.147 m / 18.2°; 0.284 m / 31.9° | 0.131 m / 16.2°; 0.253 m / 29.4° |
-
-Other settings move in the same direction (20-px cells: occupancy 84.7 %;
-40-px: 73.2 %; fallback 5 or 10: 80.2 % / 75.5 %); the chosen values were not
-tuned on the pose error. Most keypoints are still on the silhouette, so the
-systematic under-rotation remains (see checkpoint 05).
 
 ## Figures and the comparison with the reference pipeline
 
@@ -536,7 +508,7 @@ correspondence maps show positions only (no orientation ticks).
 
 | Figure | Shows |
 |---|---|
-| `bunny_correspondences_0_1` | scratch correspondences on the real frames 0 and 1, on the clean images. Colour = local neighbourhood of the frame-0 keypoint (12 groups from a deterministic k-means of the frame-0 endpoints, `tools/correspondence_regions.py`), the same at both ends. Geometric status from the exported RANSAC flags: ● filled = inlier, ○ ring = outlier; grey ◇ = no depth. Magenta dashed line + ✕ = the frame-1 end lands where none of its neighbourhood went (none of its 5 nearest inlier endpoints in frame 1 shares its label): a visual warning, not a geometric test. Pair 0→1: 50 of the 60 RANSAC outliers and none of the 217 inliers are flagged |
+| `bunny_correspondences_0_1` | scratch correspondences on the real frames 0 and 1, with the same colour for the same match in both frames: RANSAC inliers (solid), outliers (magenta dashed), matches without depth (grey), other keypoints (white) |
 | `bunny_correspondences_0_1_inliers` | the RANSAC inliers only (206 of 249 in the default run) |
 | `bunny_correspondences_0_1_outliers` | the rejected matches, numbered. Several ear-tip features of frame 0 are matched to the same frame-1 keypoint (nearest-neighbour matching is many-to-one); RANSAC rejects them |
 | `fig03_orb_keypoints` | the reference ORB keypoints (366 / 367) with pyramid level and orientation |
@@ -572,7 +544,7 @@ python3 pnp_from_scratch/tools/trajectory_figures.py   # after build/scratch_pip
 python3 pnp_from_scratch/tools/descriptor_figure.py
 pnp_from_scratch/build/depth_edge_experiment           # read-only experiment -> results/depth_edge/
 python3 pnp_from_scratch/tools/depth_edge_audit.py     # -> results/figures/depth_edge/
-blender -b visualization/scenes/bunny_slam_demo.blend --python scripts/render_trajectory_overview.py \
+blender -b outputs/blender/bunny_slam_demo.blend --python scripts/render_trajectory_overview.py \
     -- pnp_from_scratch/results/figures/blender_trajectories_overview.png
 ```
 
@@ -641,10 +613,8 @@ cd .. && blender --python visualization/scripts/build_scene.py
 ## Limitations
 
 - **Milestones 1–2 have no outlier rejection** (by design). Milestone 3 adds RANSAC.
-- **The refinement is plain least squares** on the RANSAC inliers (no robust loss, no
-  re-selection of inliers).
-- **Silhouette features bias the rotation** (about −0.87° per pair); the front end does
-  not yet reject points at depth discontinuities. See "How to read it" above.
+- **Legacy refinement is plain least squares.** The improved default now uses Huber weighting and inlier reselection.
+- **Legacy silhouette features bias rotation.** The improved default rejects invalid/discontinuous source-depth neighbourhoods. Residual drift still needs evaluation.
 - **The essential matrix is a diagnostic only** on this dataset; see "Essential-matrix stage".
 - Milestones 1–2 read correspondences exported by the reference pipeline. Milestone 3
   computes its own from the images.

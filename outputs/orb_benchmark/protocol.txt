@@ -1,0 +1,12 @@
+OpenCV 4.6.0; C++ 201703; cv_threads=1; seed=42
+Extraction: one warmup then median of 3 runs per frame; includes BT.601 gray conversion, detector creation and descriptor adapter.
+Matching: one warmup then median of 3 runs; identical project mutual Hamming ratio matcher.
+Method order alternates per frame/pair. Image I/O excluded. Registration timed once; includes matching, depth lifting, RANSAC and both GN stages.
+Both: requested budget=1400, scale=1.2, levels=8, FAST=10, Harris ranking, border=16, 256 bits; actual counts reported.
+Ratio=0.87 bidirectional + mutual; 3x3 depth edge=0.012m; RANSAC threshold=0.009m, 650 iterations.
+Frontend comparison, not identical implementations or an ORB-SLAM benchmark. Different scores, smoothing, sampling and descriptor patterns remain.
+Same dense clouds, rejection, source(j)->target(i) convention, RANSAC seeds, point-GN and Huber plane-GN.
+GT is read only after all estimation; GT precision=pooled correct valid-depth pairs / valid-depth pairs, threshold=0.009m.
+Keypoint CSVs contain every retained position, pyramid level and orientation from the timed extraction. Export is untimed.
+No descriptor is compared across methods. No loop closure; ATE includes flagged constant-velocity fallbacks, frame-zero anchor, no fitted alignment/scale.
+Accepted relative error means exclude failed pairs; failures are separately reported. Timings are machine dependent.

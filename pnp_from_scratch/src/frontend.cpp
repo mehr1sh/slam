@@ -7,38 +7,52 @@
 
 namespace scratch {
 
-bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame, std::string *error) {
+bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame,
+                   std::string *error) {
   char name[32];
   std::snprintf(name, sizeof(name), "%06d", index);
   const std::string base = dataset_dir + "/" + name;
-  if (!LoadPng(base + ".png", frame.rgb, error) || !LoadPng(base + "_depth.png", frame.depth, error)) return false;
+  if (!LoadPng(base + ".png", frame.rgb, error) ||
+      !LoadPng(base + "_depth.png", frame.depth, error))
+    return false;
   if (frame.rgb.bit_depth != 8 || frame.rgb.channels < 3) {
-    if (error) *error = base + ".png: expected 8-bit RGB(A)";
+    if (error)
+      *error = base + ".png: expected 8-bit RGB(A)";
     return false;
   }
   if (frame.depth.bit_depth != 16 || frame.depth.channels != 1) {
-    if (error) *error = base + "_depth.png: expected 16-bit single-channel depth";
+    if (error)
+      *error = base + "_depth.png: expected 16-bit single-channel depth";
     return false;
   }
-  if (frame.rgb.width != frame.depth.width || frame.rgb.height != frame.depth.height) {
-    if (error) *error = base + ": RGB and depth sizes differ";
+  if (frame.rgb.width != frame.depth.width ||
+      frame.rgb.height != frame.depth.height) {
+    if (error)
+      *error = base + ": RGB and depth sizes differ";
     return false;
   }
   return true;
 }
 
-FrameFeatures ExtractFeatures(const PngImage &rgb, const FrontendParams &params) {
-  const std::vector<uint8_t> bytes(rgb.samples.begin(), rgb.samples.end());  // 8-bit samples
+FrameFeatures ExtractFeatures(const PngImage &rgb,
+                              const FrontendParams &params) {
+  const std::vector<uint8_t> bytes(rgb.samples.begin(),
+                                   rgb.samples.end()); // 8-bit samples
   FrameFeatures f;
-  f.gray = features::GrayFromRGB(bytes.data(), rgb.width, rgb.height, size_t(rgb.width) * rgb.channels, rgb.channels);
-  // per pyramid level: FAST -> orientation -> rotated BRIEF on that level's image
-  const features::MultiscaleFeatures m =
-      features::ExtractMultiscale(features::BuildPyramid(f.gray, params.pyramid), params.fast);
+  f.gray =
+      features::GrayFromRGB(bytes.data(), rgb.width, rgb.height,
+                            size_t(rgb.width) * rgb.channels, rgb.channels);
+  // per pyramid level: FAST -> orientation -> rotated BRIEF on that level's
+  // image
+  const features::MultiscaleFeatures m = features::ExtractMultiscale(
+      features::BuildPyramid(f.gray, params.pyramid), params.fast,
+      params.selection);
   f.descriptors = m.descriptors;
   f.per_level_count = m.per_level_count;
   for (const features::MultiscaleKeypoint &k : m.keypoints) {
     features::Keypoint o = k.level_kp;
-    o.x = k.x;  // original-image coordinates (identical to the level ones at level 0)
+    o.x = k.x; // original-image coordinates (identical to the level ones at
+               // level 0)
     o.y = k.y;
     f.keypoints.push_back(o);
     f.level.push_back(k.level);
@@ -49,13 +63,19 @@ FrameFeatures ExtractFeatures(const PngImage &rgb, const FrontendParams &params)
   return f;
 }
 
-PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj, const PngImage &depth_i,
-                        const PngImage &depth_j, const Intrinsics &K, const FrontendParams &params) {
+PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj,
+                        const PngImage &depth_i, const PngImage &depth_j,
+                        const Intrinsics &K, const FrontendParams &params) {
   PairMatches pm;
   pm.raw = features::MatchBruteForce(fi.descriptors, fj.descriptors);
-  pm.filtered = features::FilterMatchesByDistance(pm.raw, params.match_floor, &pm.d_min, &pm.d_max);
+  pm.filtered = features::FilterMatchesByDistance(pm.raw, params.match_floor,
+                                                  &pm.d_min, &pm.d_max);
+  if (params.mutual_ratio)
+    pm.filtered = features::MatchMutualRatio(fi.descriptors, fj.descriptors,
+                                             params.ratio);
   for (const features::Match &m : pm.filtered) {
-    const features::Keypoint &a = fi.keypoints[m.query], &b = fj.keypoints[m.train];
+    const features::Keypoint &a = fi.keypoints[m.query],
+                             &b = fj.keypoints[m.train];
     Correspondence c;
     c.query = m.query;
     c.train = m.train;
@@ -65,16 +85,37 @@ PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj, const 
     c.uv_i = Eigen::Vector2d(a.x, a.y);
     c.uv_j = Eigen::Vector2d(b.x, b.y);
     // depth at the truncated pixel, as in the reference pipeline
-    c.depth_raw_i = depth_i.samples[size_t(int(a.y)) * depth_i.width + int(a.x)];
-    c.depth_raw_j = depth_j.samples[size_t(int(b.y)) * depth_j.width + int(b.x)];
+    c.depth_raw_i =
+        depth_i.samples[size_t(int(a.y)) * depth_i.width + int(a.x)];
+    c.depth_raw_j =
+        depth_j.samples[size_t(int(b.y)) * depth_j.width + int(b.x)];
     c.has_3d = c.depth_raw_i > 0;
+    if (c.has_3d && params.depth_edge_m > 0) {
+      int x = int(a.x), y = int(a.y);
+      double lo = 1e30, hi = 0;
+      if (x < 1 || y < 1 || x >= depth_i.width - 1 || y >= depth_i.height - 1)
+        c.has_3d = false;
+      else
+        for (int dy = -1; dy <= 1; ++dy)
+          for (int dx = -1; dx <= 1; ++dx) {
+            double v =
+                depth_i.samples[size_t(y + dy) * depth_i.width + x + dx] /
+                params.depth_scale;
+            if (v <= 0)
+              c.has_3d = false;
+            lo = std::min(lo, v);
+            hi = std::max(hi, v);
+          }
+      c.has_3d = c.has_3d && hi - lo < params.depth_edge_m;
+    }
     if (c.has_3d) {
       const double Z = c.depth_raw_i / params.depth_scale;
-      c.X_i = Eigen::Vector3d((a.x - K.cx) / K.fx * Z, (a.y - K.cy) / K.fy * Z, Z);
+      c.X_i =
+          Eigen::Vector3d((a.x - K.cx) / K.fx * Z, (a.y - K.cy) / K.fy * Z, Z);
     }
     pm.correspondences.push_back(c);
   }
   return pm;
 }
 
-}  // namespace scratch
+} // namespace scratch

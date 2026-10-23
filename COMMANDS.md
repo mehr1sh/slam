@@ -1,3 +1,23 @@
+# Updated: Gauss–Newton ICP + ORB benchmark
+
+From this directory, run `bash scripts/run_gn_orb.sh`. For the complete Blender rebuild, run `bash scripts/run_gn_orb.sh --blender`.
+
+See [GN_ORB_GUIDE.md](GN_ORB_GUIDE.md) for dependency installation, precise changes, benchmark controls, and the complete maths. Current benchmark measurements are in `outputs/orb_benchmark/RESULTS.md`; dense ICP metadata is in `icp_cpp_results/solver_metadata.txt`.
+
+The production dense point and plane stages both use damped Gauss–Newton. SVD remains for robust feature initialization. Historical measurements and older method descriptions below refer to earlier revisions unless explicitly updated.
+
+---
+
+# Current final workflow
+
+See [FINAL_WORKFLOW.md](FINAL_WORKFLOW.md) for the authoritative build/view commands, new
+scratch frontend, robust PnP, own fundamental estimator, current measurements
+and four-camera Blender scene. The default scratch executable now uses the
+improved settings; `--legacy` selects historical settings. The notes and old
+measurements below are preserved for history and earlier ablations.
+
+---
+
 # Commands
 
 All commands start from the repository root unless a `cd` is shown. The C++
@@ -90,7 +110,7 @@ pixi run -e results diagnostics --skip-cpp   # reuse diagnostics/cpp/
 cd build && ./trajectory_diagnostics_test ../data/synthetic_bunny <out_dir>
 
 # read-only check that the Blender scene shows exactly the CSV poses and errors
-blender -b visualization/scenes/bunny_slam_demo.blend \
+blender -b outputs/blender/bunny_slam_demo.blend \
     --python scripts/check_blender_consistency.py -- diagnostics/blender_consistency.csv
 ```
 
@@ -125,19 +145,19 @@ cd build
 (cd pnp_from_scratch && cmake -S . -B build && cmake --build build -j && ./build/scratch_pipeline)
 
 # read-only check: every camera equals its data, and looks at the bunny (look-at angle)
-blender -b visualization/scenes/bunny_slam_demo.blend --python scripts/check_blender_consistency.py -- /tmp/blender_check.csv
+blender -b outputs/blender/bunny_slam_demo.blend --python scripts/check_blender_consistency.py -- /tmp/blender_check.csv
 
-# build the scene, save it to visualization/scenes/bunny_slam_demo.blend, and open it
+# build the scene, save it to outputs/blender/bunny_slam_demo.blend, and open it
 blender --python visualization/scripts/build_scene.py
 
 # headless build (save only)
 blender --background --python visualization/scripts/build_scene.py
 
 # reopen the saved scene (-y lets its embedded script re-register the HUD/sidebar)
-blender -y visualization/scenes/bunny_slam_demo.blend
+blender -y outputs/blender/bunny_slam_demo.blend
 
-# render the animation (from the active scene camera) to visualization/output/render/
-blender -b -y visualization/scenes/bunny_slam_demo.blend -a
+# render the animation (from the active scene camera) to outputs/render/
+blender -b -y outputs/blender/bunny_slam_demo.blend -a
 ```
 
 To choose the camera to look through, run one of these in Blender's Python

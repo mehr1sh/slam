@@ -1,0 +1,1 @@
+PASS: 43 keypoint, trajectory and summary files byte-identical to the uploaded ZIP.

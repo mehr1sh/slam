@@ -1,4 +1,4 @@
-# Usage (repository root): blender -b visualization/scenes/bunny_slam_demo.blend --python docs/migration/04_scratch_refinement/blender_orbit_check.py
+# Usage (repository root): blender -b outputs/blender/bunny_slam_demo.blend --python docs/migration/04_scratch_refinement/blender_orbit_check.py
 # Read-only: orbit direction, per-frame azimuth step, forward and up vectors of
 # GT_Animated_Camera vs ScratchPnP_Animated_Camera, measured in the saved scene.
 import bpy, math, mathutils

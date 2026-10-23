@@ -162,7 +162,7 @@ def update_drift_vectors(scene, i):
 
 def error_at(scene, method, i):
     """(translation_error_m, rotation_error_deg) for `method` at pose i, read
-    straight from the C++-computed CSV columns -- or None when the CSV has
+    straight from the verified display CSV columns -- or None when the CSV has
     no such columns (GT). Never recomputed here."""
     prefix = method.get("error_prefix")
     if not prefix:

@@ -4,7 +4,7 @@ camera above the orbit. Nothing in the scene is changed on disk (the file is
 not saved); the four animated cameras stay as they are.
 
 Run from the repository root:
-    blender -b visualization/scenes/bunny_slam_demo.blend \
+    blender -b outputs/blender/bunny_slam_demo.blend \
         --python scripts/render_trajectory_overview.py -- OUT.png
 """
 import sys

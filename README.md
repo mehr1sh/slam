@@ -1,3 +1,63 @@
+# Updated: Gauss–Newton ICP + ORB benchmark
+
+From this directory, run `bash scripts/run_gn_orb.sh`. For the complete Blender rebuild, run `bash scripts/run_gn_orb.sh --blender`.
+
+See [GN_ORB_GUIDE.md](GN_ORB_GUIDE.md) for dependency installation, precise changes, benchmark controls, and the complete maths. Current benchmark measurements are in `outputs/orb_benchmark/RESULTS.md`; dense ICP metadata is in `icp_cpp_results/solver_metadata.txt`.
+
+The production dense point and plane stages both use damped Gauss–Newton. SVD remains for robust feature initialization. Historical measurements and older method descriptions below refer to earlier revisions unless explicitly updated.
+
+---
+
+# Direct images and Blender output
+
+All current visual outputs are in `outputs/`. Open the folder directly:
+
+```bash
+xdg-open outputs
+```
+
+- `outputs/frontend/pair_15_16/`: PNG before/after comparisons for Harris ranking,
+  eight-level quotas and mutual ratio matching, with complete CSV evidence.
+- `outputs/frontend/pair_0_1/`: the same comparisons for a pair where quotas do
+  not remove any candidates.
+- `outputs/icp/`: cloud alignment, iteration updates, trajectory/error PNGs and CSVs.
+- `outputs/00_pipeline_flowchart.png`: actual ICP and independent PnP flow.
+- `outputs/blender/bunny_slam_demo.blend`: the Blender animation scene.
+
+No HTML gallery or browser is required. PNGs and the Blender scene are already
+included; rebuilding reproduces them. See `AUDIT_REPORT.md`, `FRONTEND_VISUALS.md`
+and `FINAL_WORKFLOW.md` for the verification, interpretation and commands.
+
+---
+
+# Current final workflow
+
+See [FINAL_WORKFLOW.md](FINAL_WORKFLOW.md) for the authoritative build/view commands, new
+scratch frontend, robust PnP, own fundamental estimator, current measurements
+and four-camera Blender scene. The default scratch executable now uses the
+improved settings; `--legacy` selects historical settings. The notes and old
+measurements below are preserved for history and earlier ablations.
+
+---
+
+# Start here: corrected C++ ICP and Blender
+
+Open `outputs/blender/bunny_slam_demo.blend` with Blender, allowing the
+included visualization scripts (`blender -y outputs/blender/bunny_slam_demo.blend`).
+The saved scene uses the corrected ICP + loop-closure results and starts through
+the ICP camera. For the complete rebuild and checks, run:
+
+```bash
+bash scripts/rebuild_blender.sh
+```
+
+See [visualization/README.md](visualization/README.md) for controls and data sources,
+and [ICP_CPP_README.md](ICP_CPP_README.md) for the C++ algorithm/build details.
+Existing reports and legacy test commands below describe the historical pipeline;
+they are not the source used by the corrected Blender scene.
+
+---
+
 # Visual SLAM from scratch (C++)
 
 An ongoing, incremental implementation of a **visual SLAM pipeline in C++**,
@@ -15,16 +75,16 @@ visualization and debugging.
 | Stage | Status | Where |
 |---|---|---|
 | Feature detection / description | **from scratch**: image pyramid, FAST, intensity-centroid orientation, rotated BRIEF | `src/features/` (`feature_core`, no OpenCV) |
-| Feature matching | **from scratch**: brute-force Hamming, distance filter | `src/features/matcher.cpp` |
+| Feature matching | **from scratch**: Hamming, bidirectional ratio tests and mutual matching | `src/features/matcher.cpp` |
 | Camera geometry | **from scratch** in the scratch pipeline (pinhole projection, back-projection); the book-derived `camera/` module uses OpenCV types | `pnp_from_scratch/src/projection.*`, `src/camera/` |
 | Relative pose (2D–2D) | from-scratch 8-point essential matrix + decomposition (diagnostic); the book-derived module uses OpenCV | `pnp_from_scratch/src/essential.*`, `src/tracking/essential_matrix.cpp`, `src/geometry/` |
 | PnP | **from scratch**: linear DLT, RANSAC, Levenberg–Marquardt refinement | `pnp_from_scratch/src/{pnp,ransac,refine}.*` |
-| 3D–3D alignment (ICP) | reference: closed-form SVD + g2o refinement on feature correspondences | `src/tracking/icp.cpp` |
+| 3D–3D alignment (ICP) | **implemented**: robust feature initialization, iterative NN point/plane ICP | `src/tracking/rgbd_icp.cpp` |
 | Triangulation | reference only (OpenCV) | `src/geometry/` |
 | Motion estimation / tracking | frame-to-frame odometry with trajectory chaining (no keyframes) | `pnp_from_scratch/src/pipeline*`, `tests/synthetic/slam_trajectory_test.cpp` |
 | Landmark management, local mapping | not started | — |
-| Pose graph optimization, loop closure | not started | — |
-| Bundle adjustment | not started (g2o is used only for single-pose refinement in the book-derived PnP/ICP) | — |
+| Pose graph optimization, loop closure | **implemented in corrected ICP**: verified loops and robust pose graph; short-sequence candidate search | `src/tracking/rgbd_icp.cpp` |
+| Bundle adjustment | not implemented as joint multi-camera/landmark BA; reference PnP retains single-pose refinement | — |
 | Full visual SLAM system | not started | — |
 
 The repository currently has two tracks:
@@ -108,7 +168,7 @@ COMMANDS.md              every command in one place
 Generated artifacts are not tracked: `build/`, `output/` (images, PLYs and
 CSVs written by the programs), `pnp_from_scratch/build/` and
 `pnp_from_scratch/results/`, and the Blender scene
-`visualization/scenes/bunny_slam_demo.blend`.
+`outputs/blender/bunny_slam_demo.blend`.
 
 ## Dependencies
 
@@ -242,8 +302,7 @@ compiler and Eigen:
 
 ```
 RGB-D PNG (own decoder) → grayscale → 8-level pyramid (scale 1.2)
-  → FAST (threshold 20; cells of 30 px with no corner retried at 7)
-  → intensity-centroid orientation → rotated BRIEF
+  → FAST (threshold 20) → intensity-centroid orientation → rotated BRIEF
   → Hamming matching, distance ≤ max(2·d_min, 30) → depth-backed 3D→2D
   → RANSAC (6-point linear PnP, 300 iterations, 8 px) → LM refinement
   → trajectory T_wc[i+1] = T_wc[i]·T_rel⁻¹ → Blender (ScratchPnP_Animated_Camera)
@@ -261,10 +320,10 @@ Measured on the 35 pairs (no ranking; details and figures in
 
 | | Scratch | Reference PnP | Reference ICP |
 |---|---|---|---|
-| RANSAC inliers per pair, mean | 256.1 | 132.0 | — |
-| mean pair rotation / translation error | 1.13° / 0.010 m | 1.39° / 0.012 m | 2.81° / 0.023 m |
-| mean trajectory error | 0.131 m / 16.2° | 0.180 m / 21.4° | 0.270 m / 30.3° |
-| final error (frame 35) | 0.253 m / 29.4° | 0.277 m / 32.1° | 0.525 m / 64.9° |
+| RANSAC inliers per pair, mean | 240.3 | 132.0 | — |
+| mean pair rotation / translation error | 1.16° / 0.011 m | 1.39° / 0.012 m | 2.81° / 0.023 m |
+| mean trajectory error | 0.147 m / 18.2° | 0.180 m / 21.4° | 0.270 m / 30.3° |
+| final error (frame 35) | 0.284 m / 31.9° | 0.277 m / 32.1° | 0.525 m / 64.9° |
 
 The remaining drift is a systematic under-rotation traced to depth-edge
 (silhouette) correspondences; see the checkpoint-05 report.
@@ -289,7 +348,7 @@ blender --python visualization/scripts/build_scene.py
 ```
 
 This builds and opens the scene, and saves it to
-`visualization/scenes/bunny_slam_demo.blend` (generated, not tracked).
+`outputs/blender/bunny_slam_demo.blend` (generated, not tracked).
 
 The scene contains:
 
@@ -354,3 +413,8 @@ are listed in `COMMANDS.md`.
   Sturm et al., IROS 2012).
 
 See `THIRD_PARTY_NOTICES.md` for the full notices.
+
+
+## Corrected C++ RGB-D ICP
+
+See [ICP_CPP_README.md](ICP_CPP_README.md) for the full C++ pipeline, build commands, tests and measured results. Run the `icp_sequence` target for corrected multi-frame ICP.

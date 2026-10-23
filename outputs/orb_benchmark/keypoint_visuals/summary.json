@@ -1,0 +1,116 @@
+[
+  {
+    "frame": 0,
+    "level_filter": null,
+    "stem": "frame_000000",
+    "project_count": 838,
+    "opencv_count": 789,
+    "spatial_pairs": 627,
+    "project_unpaired": 211,
+    "opencv_unpaired": 162,
+    "tolerance_pixels": 2.0,
+    "criterion": "greedy one-to-one, same pyramid level, original-image coordinates",
+    "crop": [
+      234,
+      415,
+      158,
+      347
+    ],
+    "project_levels": [
+      247,
+      171,
+      123,
+      88,
+      67,
+      58,
+      47,
+      37
+    ],
+    "opencv_levels": [
+      226,
+      157,
+      121,
+      90,
+      68,
+      49,
+      43,
+      35
+    ]
+  },
+  {
+    "frame": 15,
+    "level_filter": null,
+    "stem": "frame_000015",
+    "project_count": 1313,
+    "opencv_count": 1292,
+    "spatial_pairs": 932,
+    "project_unpaired": 381,
+    "opencv_unpaired": 360,
+    "tolerance_pixels": 2.0,
+    "criterion": "greedy one-to-one, same pyramid level, original-image coordinates",
+    "crop": [
+      233,
+      414,
+      156,
+      360
+    ],
+    "project_levels": [
+      304,
+      254,
+      211,
+      176,
+      132,
+      100,
+      74,
+      62
+    ],
+    "opencv_levels": [
+      304,
+      253,
+      211,
+      164,
+      131,
+      96,
+      70,
+      63
+    ]
+  },
+  {
+    "frame": 15,
+    "level_filter": 0,
+    "stem": "frame_000015_level0",
+    "project_count": 304,
+    "opencv_count": 304,
+    "spatial_pairs": 251,
+    "project_unpaired": 53,
+    "opencv_unpaired": 53,
+    "tolerance_pixels": 2.0,
+    "criterion": "greedy one-to-one, same pyramid level, original-image coordinates",
+    "crop": [
+      233,
+      413,
+      156,
+      358
+    ],
+    "project_levels": [
+      304,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "opencv_levels": [
+      304,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+]

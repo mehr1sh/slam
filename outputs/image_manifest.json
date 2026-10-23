@@ -1,0 +1,260 @@
+[
+  {
+    "path": "00_pipeline_flowchart.png",
+    "width": 1500,
+    "height": 1800,
+    "sha256": "50db3fb3ef23e4bc84f8f9b2e71a88ef4901dd7bf7d2924bb971c0a701ac2f24"
+  },
+  {
+    "path": "frontend/pair_0_1/04_pyramid_quotas.png",
+    "width": 1950,
+    "height": 750,
+    "sha256": "cb8f0e8318989c46f20b28ecd6fa0d9d8cc2513d933837d22b63f27516b1cb18"
+  },
+  {
+    "path": "frontend/pair_0_1/05_matching_before_after.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "18c5b1383fe4c00fe3a86a3f62330700f925a795c5c3357e53cb68bdfed60306"
+  },
+  {
+    "path": "frontend/pair_0_1/06_matching_filter_counts.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "ca1c6945950a34a8cefc379bb68b8449aad9548c15e169c362df3c3af89aa328"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000000_00_feature_stages.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "9b95e4814671aae42f9a0a2473e297b547d27525bf9cf9e0bd73878e3dc33b4d"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000000_01_harris_ranking_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "50e5e307b57a7a6a0ed5dffe0c64a248ddd08f6907b23b2bdb4fa42f9083009d"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000000_02_quotas_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "0c04ee6616a578f8613d8a4d7a5ae820d798e88557194b4d20075136cfa7d6ec"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000000_03_ranking_same_quota.png",
+    "width": 2400,
+    "height": 750,
+    "sha256": "da53530ad3ad7866c43a6c8ca0291f789e958f24c1da9d9cc0bcd133e26a9714"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000000_identifier_changes.png",
+    "width": 1650,
+    "height": 1050,
+    "sha256": "3b985c1715965857d3fcab45f29c79e2fb7d47bcaa36f4fdd42337249b96e22c"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000001_00_feature_stages.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "e6b46cc76a7d1c7c6d855ecf481087bc6994b1a1172c81794c0beeb7112e2f78"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000001_01_harris_ranking_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "e4b9d00903361c53dedbb81790162cafcbfbfdb776f4f710b6088da5ec94b093"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000001_02_quotas_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "cf8fd419e53ff87c8ae97dc7b363a7c963ce77144f520fabc13e67655c2bf7d5"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000001_03_ranking_same_quota.png",
+    "width": 2400,
+    "height": 750,
+    "sha256": "0d19f4347254f2287313805b3746178fea9420907446e34af9a4f4387c07241c"
+  },
+  {
+    "path": "frontend/pair_0_1/frame_000001_identifier_changes.png",
+    "width": 1650,
+    "height": 1050,
+    "sha256": "3362cfdd439a8123a97be46c78ac6af0ae2ef7aace2eddce9b919439b6791565"
+  },
+  {
+    "path": "frontend/pair_0_1/matches_forward_ratio.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "2eb70a65c82cedfb4a876f67c601acc3c2b69b77285f88e2702406f2e1968709"
+  },
+  {
+    "path": "frontend/pair_0_1/matches_mutual_final.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "047f52e5bad497c8718263175a764426d2e5e7a0b6b1f28e542c6637705f2ee0"
+  },
+  {
+    "path": "frontend/pair_0_1/matches_raw_nearest.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "2429751adbd7167eaceef6212f581264663c8db04c10d62b42e4237e86d57363"
+  },
+  {
+    "path": "frontend/pair_0_1/matches_rejected.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "14e4584a63cf2cc50725fd91a4feb91f52dc08d57a7ab638c93c917988f9ea7e"
+  },
+  {
+    "path": "frontend/pair_15_16/04_pyramid_quotas.png",
+    "width": 1950,
+    "height": 750,
+    "sha256": "3f5c89f8e30da4e00a9dd9c87a5c1eb8aec231580c41d848ebc7d01a82c9250a"
+  },
+  {
+    "path": "frontend/pair_15_16/05_matching_before_after.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "3dfd3beabc1e7518708b8ba3c96702cb509a437893d14710e20231cb18af76c0"
+  },
+  {
+    "path": "frontend/pair_15_16/06_matching_filter_counts.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "c1c87bad136f022129ccb1f69cd8c6a1e772e3a67dee59110407022decb69945"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000015_00_feature_stages.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "1418375d4b350b86ceeae30b48e17ed37d52b49aa71b65f2d6b411c7094e47da"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000015_01_harris_ranking_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "82b2b5d9753b27b2b7fbf45457e5fb5202d8105691a9366dc04d2ff546695b64"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000015_02_quotas_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "d99628aa5c46088eeeb32f57666a93a89cfeaa7c3bd77f604427f64f44723746"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000015_03_ranking_same_quota.png",
+    "width": 2400,
+    "height": 750,
+    "sha256": "5028e3f84dc0a378a3cd478035d5777303bcdaed0aa552ca3db273856e79f487"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000015_identifier_changes.png",
+    "width": 1650,
+    "height": 1050,
+    "sha256": "36ae0b046d27582c86a376c283ab4d79bbc3604657b72be62388c80140500df2"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000016_00_feature_stages.png",
+    "width": 1800,
+    "height": 1500,
+    "sha256": "3c55d5067fb77bb70d0837e375c12252704f4de1b69d38e19c8317136ebd5aa9"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000016_01_harris_ranking_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "d0fc0bb56aa119c46c9fea6669823ef04a34bdc68be3c769bec8ade5259db51d"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000016_02_quotas_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "5dcd188864b67bc93744ec7b6996ca3708e9503a6210c2791bc5ec4c65bba419"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000016_03_ranking_same_quota.png",
+    "width": 2400,
+    "height": 750,
+    "sha256": "3ff25aa47bb634dc213e28414b388b5c7780cf21637919ba2f31c46214d97f78"
+  },
+  {
+    "path": "frontend/pair_15_16/frame_000016_identifier_changes.png",
+    "width": 1650,
+    "height": 1050,
+    "sha256": "99f675535f175d2e15813e887e8fe27cf6639a7da2694f92a65c63a6486c19f8"
+  },
+  {
+    "path": "frontend/pair_15_16/matches_forward_ratio.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "a9eb9690ff03c0dce08ac5116efcb6c5dff539ef3d620b45e8772790db13f427"
+  },
+  {
+    "path": "frontend/pair_15_16/matches_mutual_final.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "c9de78756902976ff4e8f29209b6f715ed161d82eee3bd692e9ecb9681feb43f"
+  },
+  {
+    "path": "frontend/pair_15_16/matches_raw_nearest.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "ce35977fb0ee0944110f9befe412845856a0f3b192d68cc2497ff4b0ba3be3c8"
+  },
+  {
+    "path": "frontend/pair_15_16/matches_rejected.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "81008ba275a80d71e1e510630aa70aa25d1ce5e496f750696b33d6d69937d62f"
+  },
+  {
+    "path": "icp/01_trajectory_stages.png",
+    "width": 2250,
+    "height": 1500,
+    "sha256": "ec82a22f07037f6cfb417229f9312a99f7858842a9b518ff1ebbfa4401ee2327"
+  },
+  {
+    "path": "icp/02_position_errors.png",
+    "width": 1950,
+    "height": 750,
+    "sha256": "2ab610671f07a8e38c478116e628d3c1b449968ca7b9444547b3c45ec17c378d"
+  },
+  {
+    "path": "icp/03_iteration_updates.png",
+    "width": 1800,
+    "height": 1200,
+    "sha256": "a209b5e4350327c33944dac13b415cfb9babfb68f3195de433f778185e2a4210"
+  },
+  {
+    "path": "icp/04_nearest_neighbour_refresh.png",
+    "width": 1800,
+    "height": 600,
+    "sha256": "58901cab04ee3edf6483532987133c1970d55b4f4726a9b369de5687865786fe"
+  },
+  {
+    "path": "icp/05_cloud_alignment_before_after.png",
+    "width": 2400,
+    "height": 1200,
+    "sha256": "129a4ee0a0cfdc3968395b59cd84be540e8bb4e21057f9188be7b83d7134b1fd"
+  },
+  {
+    "path": "icp/06_pnp_refinement_before_after.png",
+    "width": 1800,
+    "height": 750,
+    "sha256": "7820bdfea27cb4cc520ce11eeec08bd857f518d70134e40654e16014c8ce985a"
+  },
+  {
+    "path": "orb_benchmark/01_benchmark_summary.png",
+    "width": 2080,
+    "height": 1280,
+    "sha256": "946db1fc9b35d73f295698d83bdc3b523ed6059816f9ed08f755ecb0e39e5ba9"
+  },
+  {
+    "path": "orb_benchmark/02_counts_and_timing.png",
+    "width": 1920,
+    "height": 640,
+    "sha256": "f2e65b58e8ba98648fd1ffd718baf232498e2d7b61af9c73dbc7cb50cede43f1"
+  }
+]
