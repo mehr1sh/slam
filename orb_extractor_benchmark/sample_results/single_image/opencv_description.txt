@@ -1,0 +1,9 @@
+Extractor: opencv
+Detected keypoints (all): 89
+Displayed dots (spatially separated): 32
+Extraction time: 2.10 ms
+Pyramid levels: 2
+Features per level setting: 150
+Descriptors: 89 x 256 bits
+Note: Display-only thinning does not remove features from CSV.
+For correspondences + inlier/outlier descriptions, run benchmark.py.

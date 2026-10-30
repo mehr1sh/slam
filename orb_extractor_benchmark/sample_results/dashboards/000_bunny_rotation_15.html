@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>ORB comparison — synthetic / bunny / rotation_15</title><style>
+:root { font-family: Inter, Arial, Helvetica, sans-serif; color: #242930; background: #f4f6f9; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { background: white; padding: 22px 28px; border-bottom: 1px solid #e1e5ec; }
+header h1 { margin: 0 0 6px; font-size: 23px; }
+header p { color: #535e6d; margin: 0; font-size: 14px; line-height: 1.5; }
+main { max-width: 1800px; margin: 18px auto; padding: 0 16px; }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px),1fr)); gap: 18px; align-items: start; }
+.panel { background: white; padding: 18px; border: 1px solid #e1e5ec; border-radius: 8px; min-width: 0; }
+h2 { font-size: 19px; margin: 2px 0 12px; display: flex; align-items: center; gap: 9px; }
+.swatch { display:inline-block; width:13px; height:13px; border-radius:3px; background:var(--accent); flex: 0 0 auto; }
+.description { min-height: 74px; color:#596472; font-size: 14px; line-height:1.55; margin:0 0 10px; }
+img.matches { display:block; width:100%; height:auto; background:#f5f5f5; border:1px solid #ddd; }
+.legend { color:#617080; font-size:12px; margin:10px 0; }
+table { width: 100%; border-collapse: collapse; font-size:14px; }
+th,td { border-top:1px solid #e2e6ea; padding:9px 8px; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+th { color:#454e58; font-weight:500; width:49%; } td { font-weight:500; }
+.explain { font-size: 14px; line-height: 1.6; background:#fff; border:1px solid #e1e5ec; border-radius:8px; margin-top:16px; padding:15px 20px; }
+.explain h3 { margin:0 0 8px; } .explain p { margin:6px 0; }
+a { color:#136eb5; text-decoration:none; } a:hover { text-decoration:underline; }
+li { margin-bottom:7px; }
+</style></head>
+      <body><header><h1>ORB comparison — synthetic / bunny / rotation_15</h1><p>OpenCV versus original scratch C++ ORB. Both evaluated with the same mutual Hamming matcher.</p></header>
+      <main><div class="compare"><section class="panel" style="--accent:#e5555c">
+      <h2><span class="swatch"></span>OpenCV ORB correspondences</h2>
+      <p class="description">OpenCV ORB detector and BRIEF-style descriptors. 2 pyramid levels, scale 1.2, FAST threshold 30, 150 features/level (nominal for scratch). Mutual nearest-neighbour Hamming matching, no distance cutoff. Ground-truth homography, reprojection error ≤ 3px. Display only: 30 spatially separated matches (of 46).</p>
+      <img class="matches" src="../visualizations/000_opencv_rotation_15.jpg" alt="Correspondence lines between two frames for OpenCV ORB correspondences" loading="lazy">
+      <div class="legend">Blue-green: correct under ground-truth homography · Red: incorrect. Yellow dots mark matched feature centres.</div>
+      <table><tr><th>Dataset / sequence</th><td>synthetic / bunny</td></tr>
+<tr><th>Pair</th><td>rotation_15</td></tr>
+<tr><th>Image files</th><td>bunny.png → bunny.png</td></tr>
+<tr><th>Keypoints i / j</th><td>89 / 69</td></tr>
+<tr><th>Raw mutual Hamming matches</th><td>46</td></tr>
+<tr><th>Filtered matches</th><td>46</td></tr>
+<tr><th>GT correct matches</th><td>42</td></tr>
+<tr><th>GT incorrect matches</th><td>4</td></tr>
+<tr><th>Matching precision (GT)</th><td>91.3%</td></tr>
+<tr><th>Keypoint repeatability (GT)</th><td>49.4%</td></tr>
+<tr><th>Extract image i / j</th><td>2.060 / 1.184 ms</td></tr>
+<tr><th>Descriptor matching time</th><td>0.280 ms</td></tr>
+<tr><th>Drawn matches (visual only)</th><td>30</td></tr></table>
+    </section>
+<section class="panel" style="--accent:#16b7be">
+      <h2><span class="swatch"></span>Scratch ORB correspondences</h2>
+      <p class="description">Original C++ FAST/Harris-style pyramid + rotated BRIEF descriptors. 2 pyramid levels, scale 1.2, FAST threshold 30, 150 features/level (nominal for scratch). Mutual nearest-neighbour Hamming matching, no distance cutoff. Ground-truth homography, reprojection error ≤ 3px. Display only: 28 spatially separated matches (of 46).</p>
+      <img class="matches" src="../visualizations/000_scratch_rotation_15.jpg" alt="Correspondence lines between two frames for Scratch ORB correspondences" loading="lazy">
+      <div class="legend">Blue-green: correct under ground-truth homography · Red: incorrect. Yellow dots mark matched feature centres.</div>
+      <table><tr><th>Dataset / sequence</th><td>synthetic / bunny</td></tr>
+<tr><th>Pair</th><td>rotation_15</td></tr>
+<tr><th>Image files</th><td>bunny.png → bunny.png</td></tr>
+<tr><th>Keypoints i / j</th><td>103 / 67</td></tr>
+<tr><th>Raw mutual Hamming matches</th><td>46</td></tr>
+<tr><th>Filtered matches</th><td>46</td></tr>
+<tr><th>GT correct matches</th><td>45</td></tr>
+<tr><th>GT incorrect matches</th><td>1</td></tr>
+<tr><th>Matching precision (GT)</th><td>97.8%</td></tr>
+<tr><th>Keypoint repeatability (GT)</th><td>54.4%</td></tr>
+<tr><th>Extract image i / j</th><td>30.561 / 32.115 ms</td></tr>
+<tr><th>Descriptor matching time</th><td>0.184 ms</td></tr>
+<tr><th>Drawn matches (visual only)</th><td>28</td></tr></table>
+    </section></div><section class="explain"><h3>How to read these results</h3>
+      <p><strong>Keypoints:</strong> counts reported by the extractors, without visualization thinning.
+      <strong>Raw mutual matches:</strong> reciprocal nearest-neighbour descriptor matches by Hamming distance.
+      <strong>Filtered matches:</strong> after any optional descriptor-distance cutoff (default: none).</p>
+      <p><strong>Inliers / outliers:</strong> for Oxford, HPatches, or synthetic pairs, correctness is decided
+      from a supplied homography at the chosen pixel threshold. For TUM, KITTI, and arbitrary video,
+      an estimated fundamental matrix is used to label geometric consistency;
+      it is <strong>not ground truth, a PnP classification, or proof of pose accuracy.</strong></p>
+      <p><strong>Visualization:</strong> just a small spatially separated selection of matches is drawn.
+      No match or keypoint is discarded from the CSV or numerical metrics due to drawing limits.
+      <strong>Extraction time:</strong> algorithm runtime (excludes image loading / subprocess overhead).</p></section></main></body></html>

@@ -1,0 +1,3 @@
+extractor,pairs,mean_keypoints_1,mean_keypoints_2,mean_matches,mean_correct_matches,mean_match_precision,mean_repeatability,mean_fundamental_ransac_inlier_ratio,mean_extract_1_ms,mean_extract_2_ms,mean_match_ms
+opencv,2,89.0,71.5,48.0,45.0,0.93652,0.53371,,2.06028,0.98098,0.21215
+scratch,2,103.0,69.0,47.0,44.5,0.94746,0.53883,,30.5613,32.1188,0.26455

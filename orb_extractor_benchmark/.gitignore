@@ -1,0 +1,42 @@
+# --- Large datasets (download separately; see README.md) ---
+datasets/
+datasets.zip
+
+# --- Generated results (reproduce by running benchmark.py; see README.md) ---
+results/
+results.zip
+results1.zip
+
+# --- CMake / C++ build artifacts ---
+build/
+bin/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- editors / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

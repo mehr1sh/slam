@@ -1,0 +1,23 @@
+{
+  "dataset": "synthetic",
+  "root": null,
+  "image": "sample_data/bunny.png",
+  "output": "sample_results",
+  "binary": "/mnt/data/orb_viz_update/orb_extractor_benchmark/bin/orb_extract",
+  "extractor": "both",
+  "levels": 2,
+  "scale_factor": 1.2,
+  "fast_threshold": 30,
+  "features_per_level": 150,
+  "cell_size": 0,
+  "min_threshold": 0,
+  "epsilon": 3.0,
+  "step": 3,
+  "max_pairs": 2,
+  "max_source_images": 3,
+  "visualizations": 2,
+  "viz_max_matches": 55,
+  "viz_min_spacing": 7,
+  "viz_marker_radius": 2,
+  "max_hamming_distance": 0
+}

@@ -1,0 +1,5 @@
+dataset,sequence,pair,extractor,image_1,image_2,keypoints_1,keypoints_2,raw_matches,matches,correct_matches,match_precision,repeatable_keypoints,eligible_keypoints,repeatability,fundamental_ransac_inliers,fundamental_ransac_inlier_ratio,extract_1_ms,extract_2_ms,match_ms,geometry
+synthetic,bunny,rotation_15,opencv,sample_data/bunny.png,sample_data/bunny.png,89,69,46,46,42,0.9130434782608695,44,89,0.4943820224719101,,,2.0602839999810385,1.1838529999295133,0.2798919999804639,homography_ground_truth
+synthetic,bunny,rotation_15,scratch,sample_data/bunny.png,sample_data/bunny.png,103,67,46,46,45,0.9782608695652174,56,103,0.5436893203883495,,,30.5613,32.1153,0.18429100009598187,homography_ground_truth
+synthetic,bunny,rotation_45,opencv,sample_data/bunny.png,sample_data/bunny.png,89,74,50,50,48,0.96,51,89,0.5730337078651685,,,2.0602839999810385,0.7781159997648501,0.14441299981626798,homography_ground_truth
+synthetic,bunny,rotation_45,scratch,sample_data/bunny.png,sample_data/bunny.png,103,71,48,48,44,0.9166666666666666,55,103,0.5339805825242718,,,30.5613,32.1223,0.3448170000410755,homography_ground_truth
