@@ -17,6 +17,8 @@
 
 #include <Eigen/Core>
 
+#include "projection.hpp"
+
 namespace scratch {
 
 using Points2 = std::vector<Eigen::Vector2d>;
@@ -66,5 +68,19 @@ bool RecoverPoseFromEssential(const Eigen::Matrix3d &E, const Points2 &x1, const
 // First-order geometric (Sampson) distance of one correspondence to E, in
 // normalized-coordinate units squared (multiply by f^2 for pixels^2).
 double SampsonDistance(const Eigen::Matrix3d &E, const Eigen::Vector2d &x1, const Eigen::Vector2d &x2);
+
+// --- epipolar geometry in PIXEL coordinates (visualization and checks) ---
+// The constraint above holds for normalized coordinates. Keypoints are in
+// pixels, p = K x, so for pixels it reads p2^T F p1 = 0 with
+//   F = K^-T E K^-1.
+Eigen::Matrix3d FundamentalFromEssential(const Eigen::Matrix3d &E, const Intrinsics &K);
+
+// Epipolar line in image 2 of pixel p1 of image 1: l = F [p1; 1], scaled so
+// that a^2 + b^2 = 1; then l . [p2; 1] is the signed distance of pixel p2 to
+// the line, in pixels. (The line in image 1 of a pixel of image 2 is F^T p2.)
+Eigen::Vector3d EpipolarLine(const Eigen::Matrix3d &F, const Eigen::Vector2d &p1);
+
+// Distance in pixels of p2 to the epipolar line of p1 (one-sided, in image 2).
+double EpipolarDistance(const Eigen::Matrix3d &F, const Eigen::Vector2d &p1, const Eigen::Vector2d &p2);
 
 }  // namespace scratch

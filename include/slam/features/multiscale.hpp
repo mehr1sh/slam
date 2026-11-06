@@ -31,6 +31,8 @@ struct MultiscaleFeatures {
   std::vector<BriefDescriptor>
       descriptors;                  // one per keypoint, computed on its level
   std::vector<int> per_level_count; // keypoints found on each level
+  std::vector<bool> valid;          // ComputeBrief's flag per keypoint: every test inside the level image
+                                    // (false: all-zero descriptor; MatchRanked excludes it)
 };
 
 struct SelectionParams {

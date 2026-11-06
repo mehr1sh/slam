@@ -6,7 +6,7 @@
 //                directory and from the executable's directory)
 //   --corr FILE  a pair-0->1 correspondence export of the reference pipeline
 //                (default: the frozen baseline export,
-//                 <repo>/docs/migration/baseline/correspondences/pair_0_1_correspondences.csv;
+//                 <repo>/tests/fixtures/reference_baseline/correspondences/pair_0_1_correspondences.csv;
 //                 its pair_metrics.csv is looked up next to it or one level up)
 
 #include <algorithm>
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
     return 2;
   }
   if (corr_path.empty())
-    corr_path = repo / "docs" / "migration" / "baseline" / "correspondences" / "pair_0_1_correspondences.csv";
+    corr_path = repo / "tests" / "fixtures" / "reference_baseline" / "correspondences" / "pair_0_1_correspondences.csv";
   fs::path metrics_path = corr_path.parent_path() / "pair_metrics.csv";
   if (!fs::exists(metrics_path)) metrics_path = corr_path.parent_path().parent_path() / "pair_metrics.csv";
   const fs::path ds = repo / "data" / "synthetic_bunny";
@@ -144,8 +144,8 @@ int main(int argc, char **argv) {
   Csv corr;
   if (!corr.load(corr_path)) {
     std::cerr << "missing " << corr_path << "\n"
-              << "The default input is the frozen baseline export under docs/migration/baseline/;\n"
-              << "a fresh export of the reference pipeline can be made with pnp_from_scratch/export_correspondences.sh\n";
+              << "The default input is the frozen baseline export under tests/fixtures/reference_baseline/;\n"
+              << "a fresh export of the reference pipeline can be made with tools/pipeline_analysis/export_correspondences.sh\n";
     return 2;
   }
   // PnP correspondences exactly as the C++ pipeline built them: rows with
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
   Validate(B, baseline);
 
   // ---- write results ----
-  const fs::path out_dir = repo / "pnp_from_scratch" / "results";
+  const fs::path out_dir = repo / "results" / "runs" / "milestones";
   fs::create_directories(out_dir);
   {
     std::ofstream f(out_dir / "frame_0_1_reprojection.csv");
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
       << "\nt = " << A.T.t.transpose() << "\n"
       << "# ground truth (T_wc[1]^-1 T_wc[0])\nR =\n" << G.R << "\nt = " << G.t.transpose() << "\n";
   }
-  std::cout << "\nwrote pnp_from_scratch/results/frame_0_1_reprojection.csv, frame_0_1_pose.txt\n";
+  std::cout << "\nwrote results/runs/milestones/frame_0_1_reprojection.csv, frame_0_1_pose.txt\n";
   std::cout << (g_failures == 0 ? "All counted sanity checks passed (scratch DLT on the inlier subset is a valid pose).\n"
                                 : std::to_string(g_failures) + " sanity check(s) FAILED (see above).\n");
   return g_failures == 0 ? 0 : 1;

@@ -12,23 +12,28 @@ bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame,
   char name[32];
   std::snprintf(name, sizeof(name), "%06d", index);
   const std::string base = dataset_dir + "/" + name;
-  if (!LoadPng(base + ".png", frame.rgb, error) ||
-      !LoadPng(base + "_depth.png", frame.depth, error))
+  return LoadRgbdFiles(base + ".png", base + "_depth.png", frame, error);
+}
+
+bool LoadRgbdFiles(const std::string &rgb_path, const std::string &depth_path,
+                   RgbdFrame &frame, std::string *error) {
+  if (!LoadPng(rgb_path, frame.rgb, error) ||
+      !LoadPng(depth_path, frame.depth, error))
     return false;
   if (frame.rgb.bit_depth != 8 || frame.rgb.channels < 3) {
     if (error)
-      *error = base + ".png: expected 8-bit RGB(A)";
+      *error = rgb_path + ": expected 8-bit RGB(A)";
     return false;
   }
   if (frame.depth.bit_depth != 16 || frame.depth.channels != 1) {
     if (error)
-      *error = base + "_depth.png: expected 16-bit single-channel depth";
+      *error = depth_path + ": expected 16-bit single-channel depth";
     return false;
   }
   if (frame.rgb.width != frame.depth.width ||
       frame.rgb.height != frame.depth.height) {
     if (error)
-      *error = base + ": RGB and depth sizes differ";
+      *error = rgb_path + ": RGB and depth sizes differ";
     return false;
   }
   return true;
@@ -48,6 +53,7 @@ FrameFeatures ExtractFeatures(const PngImage &rgb,
       features::BuildPyramid(f.gray, params.pyramid), params.fast,
       params.selection);
   f.descriptors = m.descriptors;
+  f.descriptor_valid = m.valid;
   f.per_level_count = m.per_level_count;
   for (const features::MultiscaleKeypoint &k : m.keypoints) {
     features::Keypoint o = k.level_kp;
@@ -67,13 +73,34 @@ PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj,
                         const PngImage &depth_i, const PngImage &depth_j,
                         const Intrinsics &K, const FrontendParams &params) {
   PairMatches pm;
-  pm.raw = features::MatchBruteForce(fi.descriptors, fj.descriptors);
-  pm.filtered = features::FilterMatchesByDistance(pm.raw, params.match_floor,
-                                                  &pm.d_min, &pm.d_max);
-  if (params.mutual_ratio)
-    pm.filtered = features::MatchMutualRatio(fi.descriptors, fj.descriptors,
-                                             params.ratio);
-  for (const features::Match &m : pm.filtered) {
+  std::vector<const features::RankedMatch *> info; // ranked path: the kept match behind each filtered entry
+  if (!params.ranked_matcher) {
+    pm.raw = features::MatchBruteForce(fi.descriptors, fj.descriptors);
+    pm.filtered = features::FilterMatchesByDistance(pm.raw, params.match_floor,
+                                                    &pm.d_min, &pm.d_max);
+    if (params.mutual_ratio)
+      pm.filtered = features::MatchMutualRatio(fi.descriptors, fj.descriptors,
+                                               params.ratio);
+  } else {
+    std::vector<float> tx, ty, qx, qy;
+    for (const features::Keypoint &k : fj.keypoints) tx.push_back(k.x), ty.push_back(k.y);
+    for (const features::Keypoint &k : fi.keypoints) qx.push_back(k.x), qy.push_back(k.y);
+    features::MatcherParams mp = params.matcher;
+    mp.floor_distance = params.match_floor;
+    features::MatchSet ms = features::MatchRanked(fi.descriptors, fj.descriptors, tx, ty, fi.level, fj.level, mp,
+                                                  fi.descriptor_valid, fj.descriptor_valid, qx, qy);
+    pm.ranked = true;
+    pm.counters = ms.counters;
+    pm.d_min = ms.counters.d_min, pm.d_max = ms.counters.d_max;
+    for (const features::RankedMatch &m : ms.raw) pm.raw.push_back(m.match());
+    for (const features::RankedMatch &m : ms.kept) pm.filtered.push_back(m.match());
+    pm.ranked_raw = std::move(ms.raw);
+    std::vector<int> raw_of_query(fi.descriptors.size(), -1);
+    for (size_t k = 0; k < pm.ranked_raw.size(); ++k) raw_of_query[pm.ranked_raw[k].query] = int(k);
+    for (const features::Match &m : pm.filtered) info.push_back(&pm.ranked_raw[raw_of_query[m.query]]);
+  }
+  for (size_t f = 0; f < pm.filtered.size(); ++f) {
+    const features::Match &m = pm.filtered[f];
     const features::Keypoint &a = fi.keypoints[m.query],
                              &b = fj.keypoints[m.train];
     Correspondence c;
@@ -112,6 +139,11 @@ PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj,
       const double Z = c.depth_raw_i / params.depth_scale;
       c.X_i =
           Eigen::Vector3d((a.x - K.cx) / K.fx * Z, (a.y - K.cy) / K.fy * Z, Z);
+    }
+    if (!info.empty()) {
+      const features::RankedMatch &r = *info[f];
+      c.has_second = r.has_second, c.second_distance = r.second_distance, c.ratio = r.ratio();
+      c.mutual = r.mutual, c.rank = r.rank;
     }
     pm.correspondences.push_back(c);
   }

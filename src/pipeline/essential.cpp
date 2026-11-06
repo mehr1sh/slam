@@ -131,4 +131,20 @@ double SampsonDistance(const Eigen::Matrix3d &E, const Eigen::Vector2d &x1, cons
   return den > 0 ? r * r / den : 0.0;
 }
 
+Eigen::Matrix3d FundamentalFromEssential(const Eigen::Matrix3d &E, const Intrinsics &K) {
+  Eigen::Matrix3d Kinv;
+  Kinv << 1.0 / K.fx, 0, -K.cx / K.fx, 0, 1.0 / K.fy, -K.cy / K.fy, 0, 0, 1;
+  return Kinv.transpose() * E * Kinv;
+}
+
+Eigen::Vector3d EpipolarLine(const Eigen::Matrix3d &F, const Eigen::Vector2d &p1) {
+  const Eigen::Vector3d l = F * Eigen::Vector3d(p1.x(), p1.y(), 1.0);
+  const double n = std::hypot(l.x(), l.y());
+  return n > 0 ? Eigen::Vector3d(l / n) : l;
+}
+
+double EpipolarDistance(const Eigen::Matrix3d &F, const Eigen::Vector2d &p1, const Eigen::Vector2d &p2) {
+  return std::abs(EpipolarLine(F, p1).dot(Eigen::Vector3d(p2.x(), p2.y(), 1.0)));
+}
+
 }  // namespace scratch

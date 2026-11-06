@@ -44,7 +44,7 @@ int main(int argc,char**argv){try{
  fs::path repo=fs::current_path();int i=0,j=1;
  for(int a=1;a<argc;++a){std::string arg=argv[a];if(a+1>=argc)throw std::runtime_error("Expected --repo DIR --i N --j N");if(arg=="--repo")repo=argv[++a];else if(arg=="--i")i=std::stoi(argv[++a]);else if(arg=="--j")j=std::stoi(argv[++a]);else throw std::runtime_error("Unknown audit option: "+arg);}
  if(i<0||j<0||i==j)throw std::runtime_error("Choose two different nonnegative frame indices");
- repo=fs::absolute(repo);fs::path out=repo/"outputs"/"frontend"/("pair_"+std::to_string(i)+"_"+std::to_string(j));fs::create_directories(out);
+ repo=fs::absolute(repo);fs::path out=repo/"results"/"reports"/"figures"/"frontend"/("pair_"+std::to_string(i)+"_"+std::to_string(j));fs::create_directories(out);
  auto a=exportFrame(repo,out,i),b=exportFrame(repo,out,j);auto& A=a.stages[3];auto& B=b.stages[3];if(A.descriptors.size()<2||B.descriptors.size()<2)throw std::runtime_error("Not enough descriptors to audit ratios");
  auto ab=decisions(A.descriptors,B.descriptors),ba=decisions(B.descriptors,A.descriptors);auto accepted=features::MatchMutualRatio(A.descriptors,B.descriptors,.87);std::set<std::pair<int,int>> expected;for(auto m:accepted)expected.insert({m.query,m.train});
  std::ofstream csv(out/"matching_decisions.csv");csv<<"query,train,query_id,train_id,u_i,v_i,u_j,v_j,d1,d2,ratio_forward,reverse_d1,reverse_d2,ratio_reverse,mutual_best,accepted\n"<<std::setprecision(12);

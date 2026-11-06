@@ -18,6 +18,7 @@
 #include <Eigen/Core>
 
 #include "features/fast.hpp"
+#include "features/matcher.hpp"
 #include "features/multiscale.hpp"
 #include "features/pyramid.hpp"
 #include "features/types.hpp"
@@ -39,6 +40,10 @@ struct FrontendParams {
       30; // keep matches with distance <= max(2 * d_min, match_floor)
   double depth_scale = 5000.0; // depth PNG value = metres * depth_scale (TUM
                                // convention); 0 = no depth
+  // Stage 3 (ported from main): features::MatchRanked instead of the matcher above (default off;
+  // takes precedence over mutual_ratio). match_floor is used as matcher.floor_distance.
+  bool ranked_matcher = false;
+  features::MatcherParams matcher;
   FrontendParams() { fast.threshold = 20; }
 };
 
@@ -51,6 +56,9 @@ struct RgbdFrame {
 // formats.
 bool LoadRgbdFrame(const std::string &dataset_dir, int index, RgbdFrame &frame,
                    std::string *error = nullptr);
+// The same checks for explicit files (TUM sequences: rgb/<t>.png, depth/<t>.png).
+bool LoadRgbdFiles(const std::string &rgb_path, const std::string &depth_path,
+                   RgbdFrame &frame, std::string *error = nullptr);
 
 struct FrameFeatures {
   features::GrayImage gray;
@@ -59,6 +67,7 @@ struct FrameFeatures {
   std::vector<features::Keypoint> keypoints;
   std::vector<features::BriefDescriptor>
       descriptors;                     // computed on each keypoint's level
+  std::vector<bool> descriptor_valid;  // every BRIEF test inside the level image
   std::vector<int> level;              // pyramid level of each keypoint
   std::vector<float> scale;            // original size / level size
   std::vector<float> level_x, level_y; // position on its level
@@ -80,6 +89,12 @@ struct Correspondence {
   bool has_3d = false;      // depth_raw_i > 0
   Eigen::Vector3d X_i =
       Eigen::Vector3d::Zero(); // ((u-cx)/fx Z, (v-cy)/fy Z, Z) in camera i
+  // ranked matcher only (FrontendParams::ranked_matcher); defaults otherwise
+  bool has_second = false;
+  int second_distance = -1;
+  double ratio = 0;
+  bool mutual = false;
+  int rank = -1;
 };
 
 struct PairMatches {
@@ -89,6 +104,10 @@ struct PairMatches {
   int d_min = 0, d_max = 0;
   std::vector<Correspondence>
       correspondences; // one per filtered match, in the same order
+  // ranked matcher only: every raw match with its fate, and the counters
+  bool ranked = false;
+  std::vector<features::RankedMatch> ranked_raw;
+  features::MatchCounters counters;
 };
 
 PairMatches MatchFrames(const FrameFeatures &fi, const FrameFeatures &fj,

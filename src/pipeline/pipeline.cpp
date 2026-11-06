@@ -36,6 +36,23 @@ void InlierStats(const std::vector<double> &res, const std::vector<bool> &mask,
 
 } // namespace
 
+void ApplyImprovedDefaults(PipelineParams &params) {
+  params.frontend.selection = {true, 1400};
+  params.frontend.fast.threshold = 10;
+  params.frontend.mutual_ratio = true;
+  params.frontend.depth_edge_m = .012;
+  params.refine_params.huber_delta_px = 2.;
+  params.reselect_inliers = true;
+  params.pnp_ransac.iterations = 650;
+  params.pnp_ransac.threshold_px = 3.;
+}
+
+void ApplyStage2Frontend(PipelineParams &params) {
+  params = PipelineParams{};
+  params.frontend.fast.cell_size = 30;
+  params.frontend.fast.min_threshold = 7;
+}
+
 PairResult ProcessPair(int i, int j, const FrameFeatures &fi,
                        const FrameFeatures &fj, const RgbdFrame &frame_i,
                        const RgbdFrame &frame_j, const Intrinsics &K,
@@ -52,6 +69,9 @@ PairResult ProcessPair(int i, int j, const FrameFeatures &fi,
   r.d_min = pm.d_min;
   r.d_max = pm.d_max;
   r.correspondences = std::move(pm.correspondences);
+  r.ranked_matcher = pm.ranked;
+  r.match_details = std::move(pm.ranked_raw);
+  r.match_counters = pm.counters;
 
   // --- two-view stage: essential matrix on all filtered matches ---
   Points2 x1, x2;
@@ -90,14 +110,19 @@ PairResult ProcessPair(int i, int j, const FrameFeatures &fi,
   const RansacPnPResult p = RansacPnP(X, uv, K, params.pnp_ransac);
   r.pnp_ok = p.ok;
   r.pnp_reason = p.reason;
-  if (!p.ok)
+  if (!p.ok) {
+    r.validity = EvaluatePose(false, p.reason, r.R, r.t, {},
+                              params.pnp_ransac.threshold_px, params.validity);
+    r.validity.pnp_inputs = int(X.size());
     return r;
+  }
   r.R = r.R_linear = p.R;
   r.t = r.t_linear = p.t;
   r.pnp_inliers = p.num_inliers;
   r.pnp_best_sample_inliers = p.best_sample_inliers;
   r.pnp_mask =
       p.inlier_mask; // the inlier set; the refinement does not change it
+  r.ransac_mask = p.inlier_mask;
   r.pnp_residual_px = p.residual_px;
   InlierStats(p.residual_px, p.inlier_mask, r.linear_reproj_inlier_mean,
               r.linear_reproj_inlier_median, r.linear_reproj_inlier_max);
@@ -149,6 +174,21 @@ PairResult ProcessPair(int i, int j, const FrameFeatures &fi,
     if (std::isfinite(v))
       all.push_back(v);
   r.reproj_all_median = Median(all);
+
+  // --- pose-validity gate (ported from main): the FINAL pose and mask (after inlier
+  // re-selection), the correspondences, nothing else ---
+  std::vector<ValidityRow> rows(r.pnp_index.size());
+  for (size_t k = 0; k < rows.size(); ++k) {
+    const Correspondence &c = r.correspondences[r.pnp_index[k]];
+    rows[k].src = c.query, rows[k].dst = c.train;
+    rows[k].uv_src = c.uv_i, rows[k].uv_dst = c.uv_j;
+    rows[k].residual_px = r.pnp_residual_px[k];
+    rows[k].inlier = r.pnp_mask[k];
+  }
+  r.validity = EvaluatePose(r.pnp_ok, r.pnp_reason, r.R, r.t, rows,
+                            params.pnp_ransac.threshold_px, params.validity);
+  r.validity.pnp_inputs = int(rows.size());
+  r.pose_accepted = r.pnp_ok && (!params.validity.enabled || r.validity.accepted());
   return r;
 }
 

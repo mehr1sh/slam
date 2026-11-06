@@ -9,6 +9,7 @@
 #include <Eigen/Geometry>
 
 #include "check.hpp"
+#include "frontend.hpp"
 #include "pnp.hpp"
 #include "ransac.hpp"
 
@@ -141,6 +142,42 @@ int main() {
     CHECK(tp > 0.8 * std::count(outl.begin(), outl.end(), false) && fp < 0.1 * tp,
           "essential inlier mask: %d true inliers kept, %d outliers accepted (outliers near their epipolar line pass)",
           tp, fp);
+    CHECK(e.num_inliers >= e.best_sample_inliers && (!e.refit_used || e.refit_inliers >= e.best_sample_inliers),
+          "refit guard (wide scene): best sample %d inliers, refit %d -> %s, final %d", e.best_sample_inliers,
+          e.refit_inliers, e.refit_used ? "accepted" : "rejected", e.num_inliers);
+  }
+
+  // --- refit guard regression: real frame pair 0 -> 1, where the 8-point refit loses inliers ---
+  // (deterministic: fixed images, features and seed). Without the guard the final model had
+  // 214 inliers although the best sample had 225.
+  {
+    const auto repo = scratch_test::Repo();
+    const std::string ds = (repo / "data" / "synthetic_bunny").string();
+    RgbdFrame f0, f1;
+    LoadRgbdFrame(ds, 0, f0);
+    LoadRgbdFrame(ds, 1, f1);
+    const FrontendParams fp;
+    const PairMatches pm = MatchFrames(ExtractFeatures(f0.rgb, fp), ExtractFeatures(f1.rgb, fp), f0.depth, f1.depth, K, fp);
+    Points2 a, b;
+    for (const Correspondence &c : pm.correspondences) {
+      a.emplace_back((c.uv_i.x() - K.cx) / K.fx, (c.uv_i.y() - K.cy) / K.fy);
+      b.emplace_back((c.uv_j.x() - K.cx) / K.fx, (c.uv_j.y() - K.cy) / K.fy);
+    }
+    RansacParams ep;
+    ep.iterations = 2000;  // the pipeline's essential settings
+    ep.threshold_px = 2.0;
+    ep.seed = 54321;
+    const RansacEssentialResult e = RansacEssential(a, b, K.fx, ep);
+    CHECK(e.ok && e.refit_inliers >= 0 && e.refit_inliers < e.best_sample_inliers,
+          "pair 0->1: the 8-point refit scores %d inliers, fewer than the best sample's %d", e.refit_inliers,
+          e.best_sample_inliers);
+    CHECK(!e.refit_used && e.num_inliers == e.best_sample_inliers,
+          "the worse refit is rejected: final model = best sample, %d inliers", e.num_inliers);
+    int mask = 0;
+    for (bool m : e.inlier_mask) mask += m;
+    CHECK(mask == e.num_inliers, "inlier mask matches the final model (%d)", mask);
+    const RansacEssentialResult e2 = RansacEssential(a, b, K.fx, ep);
+    CHECK(e2.E == e.E && e2.inlier_mask == e.inlier_mask, "deterministic: identical result on a second run");
   }
   return scratch_test::Finish("test_ransac");
 }

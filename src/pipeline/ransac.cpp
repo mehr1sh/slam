@@ -154,8 +154,14 @@ RansacEssentialResult RansacEssential(const Points2 &x1, const Points2 &x2, doub
   }
   out.best_sample_inliers = best.inliers;
   const std::vector<int> in = MaskIndices(best_mask);
-  Eigen::Matrix3d E;
-  if (!EstimateEssential8Point(Select(x1, in), Select(x2, in), E)) E = bestE;
+  Eigen::Matrix3d E = bestE, refit;
+  if (EstimateEssential8Point(Select(x1, in), Select(x2, in), refit)) {
+    out.refit_inliers = Evaluate(residuals(refit), params.threshold_px).inliers;
+    if (out.refit_inliers >= best.inliers) {  // guard: never accept a refit that loses inliers
+      E = refit;
+      out.refit_used = true;
+    }
+  }
   out.E = E;
   out.num_inliers = Evaluate(residuals(E), params.threshold_px, &out.inlier_mask).inliers;
   const std::vector<int> fin = MaskIndices(out.inlier_mask);

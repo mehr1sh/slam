@@ -58,11 +58,16 @@ struct RansacEssentialResult {
   bool ok = false;
   std::string reason;
   Eigen::Matrix3d E = Eigen::Matrix3d::Zero();
-  RecoveredPose pose;               // from the refit E, on the inliers
-  std::vector<bool> inlier_mask;    // Sampson distance under the refit E < threshold
+  RecoveredPose pose;               // from the final E, on its inliers
+  std::vector<bool> inlier_mask;    // Sampson distance under the final E < threshold
   int num_inliers = 0;
   int best_sample_inliers = 0;
   int models_tried = 0;
+  // Refit guard: the 8-point refit on the best sample's inliers is scored with the
+  // same correspondences, metric and threshold, and kept only if it has at least
+  // as many inliers; otherwise the best sample's E is the final one.
+  bool refit_used = false;
+  int refit_inliers = -1;           // inliers of the refit E (-1: the refit failed)
 };
 
 // x1, x2: normalized coordinates; the threshold is converted to normalized

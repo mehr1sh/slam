@@ -90,7 +90,7 @@ int main() {
   {
     // exact 16-bit values: every filtered match of the frozen baseline export
     Csv c;
-    c.load(repo / "docs" / "migration" / "baseline" / "correspondences" / "pair_0_1_correspondences.csv");
+    c.load(repo / "tests" / "fixtures" / "reference_baseline" / "correspondences" / "pair_0_1_correspondences.csv");
     int ok = 0;
     for (size_t r = 0; r < c.rows.size(); ++r) {
       const int ui = int(c.d(r, "u_i")), vi = int(c.d(r, "v_i")), uj = int(c.d(r, "u_j")), vj = int(c.d(r, "v_j"));

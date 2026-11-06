@@ -2,7 +2,7 @@
 # orientation, rotated BRIEF, brute-force Hamming matching, image pyramid and
 # multiscale extraction). C++ standard
 # library only. Single definition, included by the root CMakeLists.txt and
-# by pnp_from_scratch/CMakeLists.txt.
+# by experiments/rgbd_icp/icp_cpp/CMakeLists.txt. Public headers: include/slam/features/.
 get_filename_component(_feature_core_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 add_library(feature_core
   ${_feature_core_root}/src/features/types.cpp
@@ -12,4 +12,4 @@ add_library(feature_core
   ${_feature_core_root}/src/features/matcher.cpp
   ${_feature_core_root}/src/features/pyramid.cpp
   ${_feature_core_root}/src/features/multiscale.cpp)
-target_include_directories(feature_core PUBLIC ${_feature_core_root}/include)
+target_include_directories(feature_core PUBLIC ${_feature_core_root}/include/slam)

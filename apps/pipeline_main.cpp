@@ -11,9 +11,9 @@
 //   --no-refine         keep the linear RANSAC pose (no nonlinear
 //   reprojection-error refinement)
 //   --out DIR           output directory (default
-//   pnp_from_scratch/results/pipeline;
+//   results/runs/pipeline;
 //                       relative paths are relative to the repository root)
-// Output (generated, gitignored): pnp_from_scratch/results/pipeline/ (or --out)
+// Output (generated, gitignored): results/runs/pipeline/ (or --out)
 //   pairs.csv                      one row per pair (counts, inliers, poses,
 //   errors) trajectory.csv / trajectory.txt   36 poses T_wc (CSV with errors;
 //   TUM format) correspondences/pair_<i>_<j>.csv  every filtered match with
@@ -24,6 +24,25 @@
 //                                  pyramid level, x scale, level x, y; 256-bit
 //                                  descriptor in hex)
 //   summary.txt                    the summary printed at the end
+//
+// Integration options (branch integration/teammate; all opt-in, defaults unchanged):
+//   --stage2-frontend   the Stage-1/2 front end of main: PipelineParams{} + FAST per-cell fallback 30/7
+//   --fast-cell C / --fast-min-threshold T2   FAST per-cell fallback (0 = off)
+//   --no-harris / --feature-budget N (0 = 500 per level) / --no-mutual-ratio / --ratio R /
+//   --depth-edge-m M (0 = off) / --huber-delta PX (0 = least squares) / --no-reselect
+//                       switch one component of the improved defaults (ablations)
+//   --pose-gate         the Stage-2 pose-validity gate (validity.hpp): only accepted poses are accumulated,
+//                       pose_validity.csv is written, pairs.csv pnp_ok = accepted (off by default here)
+//   --gate-min-distinct-locations N / --gate-min-coverage-cells N / --gate-min-inlier-ratio R
+//   --ranked-matcher / --match-mutual / --match-mutual-location-aware / --match-ratio R /
+//   --match-max-level-diff N / --match-rank / --match-same-location-radius PX / --export-match-details
+//                       features::MatchRanked (Stage 3, ported from main; replaces the matcher, incl. mutual_ratio);
+//                       writes matcher.csv, optionally matches/pair_<i>_<j>.csv, and four trailing correspondence
+//                       columns (second_distance, ratio, mutual, rank)
+//   --tum-frames CSV --tum-sequence DIR --intrinsics fx,fy,cx,cy   (all three together)
+//                       a TUM RGB-D sequence instead of the Bunny: frames, RGB / depth files and ground truth
+//                       T_wc from a frames.csv written by tum_trajectory_eval (paths relative to DIR); depth =
+//                       raw / 5000; the CSV is copied to <out>/frames.csv and the command line to command.txt
 
 #include <cmath>
 #include <cstdio>
@@ -33,6 +52,7 @@
 #include <string>
 #include <vector>
 
+#include "accumulate.hpp"
 #include "common.hpp"
 #include "pipeline.hpp"
 
@@ -40,18 +60,6 @@ using namespace scratch;
 
 namespace {
 
-Pose Inverse(const Pose &T) {
-  Pose r;
-  r.R = T.R.transpose();
-  r.t = -r.R * T.t;
-  return r;
-}
-Pose Compose(const Pose &A, const Pose &B) {
-  Pose r;
-  r.R = A.R * B.R;
-  r.t = A.R * B.t + A.t;
-  return r;
-}
 std::string F(double v, int p = 4) {
   if (!std::isfinite(v))
     return "";
@@ -70,6 +78,7 @@ struct Stat {
 };
 Stat Stats(std::vector<double> v) {
   Stat s;
+  v.erase(std::remove_if(v.begin(), v.end(), [](double x) { return !std::isfinite(x); }), v.end());
   if (v.empty())
     return s;
   std::sort(v.begin(), v.end());
@@ -89,16 +98,12 @@ int main(int argc, char **argv) {
   PipelineParams params;
   // Improved frontend/robust PnP is the CLI default; --legacy reproduces old
   // ablations.
-  params.frontend.selection = {true, 1400};
-  params.frontend.fast.threshold = 10;
-  params.frontend.mutual_ratio = true;
-  params.frontend.depth_edge_m = .012;
-  params.refine_params.huber_delta_px = 2.;
-  params.reselect_inliers = true;
-  params.pnp_ransac.iterations = 650;
-  params.pnp_ransac.threshold_px = 3.;
+  ApplyImprovedDefaults(params);
   fs::path repo, out_arg;
   int max_frames = 0;
+  fs::path tum_frames, tum_sequence;
+  std::string intrinsics_arg;
+  bool export_match_details = false;
   for (int a = 1; a < argc; ++a) {
     const std::string s = argv[a];
     auto next = [&] {
@@ -124,6 +129,56 @@ int main(int argc, char **argv) {
       params.pnp_ransac.seed = uint32_t(std::stoul(next()));
     else if (s == "--no-refine")
       params.refine = false;
+    else if (s == "--stage2-frontend")
+      ApplyStage2Frontend(params);
+    else if (s == "--fast-cell")
+      params.frontend.fast.cell_size = std::stoi(next());
+    else if (s == "--fast-min-threshold")
+      params.frontend.fast.min_threshold = std::stoi(next());
+    else if (s == "--no-harris")
+      params.frontend.selection.harris = false;
+    else if (s == "--feature-budget")
+      params.frontend.selection.total_features = std::stoi(next());
+    else if (s == "--no-mutual-ratio")
+      params.frontend.mutual_ratio = false;
+    else if (s == "--ratio")
+      params.frontend.ratio = std::stod(next());
+    else if (s == "--depth-edge-m")
+      params.frontend.depth_edge_m = std::stod(next());
+    else if (s == "--huber-delta")
+      params.refine_params.huber_delta_px = std::stod(next());
+    else if (s == "--no-reselect")
+      params.reselect_inliers = false;
+    else if (s == "--ranked-matcher")
+      params.frontend.ranked_matcher = true;
+    else if (s == "--match-mutual")
+      params.frontend.ranked_matcher = params.frontend.matcher.mutual = true;
+    else if (s == "--match-mutual-location-aware")
+      params.frontend.ranked_matcher = params.frontend.matcher.mutual = params.frontend.matcher.mutual_location_aware = true;
+    else if (s == "--match-ratio")
+      params.frontend.ranked_matcher = true, params.frontend.matcher.ratio = std::stod(next());
+    else if (s == "--match-max-level-diff")
+      params.frontend.ranked_matcher = true, params.frontend.matcher.max_level_diff = std::stoi(next());
+    else if (s == "--match-rank")
+      params.frontend.ranked_matcher = params.frontend.matcher.rank = true;
+    else if (s == "--match-same-location-radius")
+      params.frontend.ranked_matcher = true, params.frontend.matcher.same_location_radius_px = std::stof(next());
+    else if (s == "--export-match-details")
+      export_match_details = true;
+    else if (s == "--pose-gate")
+      params.validity.enabled = true;
+    else if (s == "--gate-min-distinct-locations")
+      params.validity.min_distinct_locations = std::stoi(next());
+    else if (s == "--gate-min-coverage-cells")
+      params.validity.min_coverage_cells = std::stoi(next());
+    else if (s == "--gate-min-inlier-ratio")
+      params.validity.min_inlier_ratio = std::stod(next());
+    else if (s == "--tum-frames")
+      tum_frames = next();
+    else if (s == "--tum-sequence")
+      tum_sequence = next();
+    else if (s == "--intrinsics")
+      intrinsics_arg = next();
     else {
       std::cerr << "unknown option " << s << "\n";
       return 2;
@@ -138,13 +193,54 @@ int main(int argc, char **argv) {
     return 2;
   }
   const fs::path ds = repo / "data" / "synthetic_bunny";
+  const bool tum = !tum_frames.empty() || !tum_sequence.empty() || !intrinsics_arg.empty();
   Intrinsics K;
-  {
+  std::vector<Pose> Twc_gt;
+  std::vector<std::pair<std::string, std::string>> tum_files; // (rgb, depth) per frame
+  if (!tum) {
     std::ifstream f(ds / "intrinsics.txt");
     double w, h;
     f >> w >> h >> K.fx >> K.fy >> K.cx >> K.cy;
+    Twc_gt = ReadGroundtruthTwc(ds / "groundtruth.txt");
+  } else {
+    if (tum_frames.empty() || tum_sequence.empty() || intrinsics_arg.empty()) {
+      std::cerr << "--tum-frames, --tum-sequence and --intrinsics go together\n";
+      return 2;
+    }
+    if (std::sscanf(intrinsics_arg.c_str(), "%lf,%lf,%lf,%lf", &K.fx, &K.fy, &K.cx, &K.cy) != 4) {
+      std::cerr << "--intrinsics: expected fx,fy,cx,cy\n";
+      return 2;
+    }
+    if (tum_frames.is_relative()) tum_frames = repo / tum_frames;
+    if (tum_sequence.is_relative()) tum_sequence = repo / tum_sequence;
+    Csv fr;
+    if (!fr.load(tum_frames)) {
+      std::cerr << "cannot read " << tum_frames << "\n";
+      return 2;
+    }
+    try {
+      for (size_t r = 0; r < fr.rows.size(); ++r) {
+        if (fr.i(r, "frame") != int(r)) throw std::runtime_error("frames.csv: frame column is not 0, 1, 2, ...");
+        Pose p;
+        p.R = QuatToR(fr.d(r, "gt_qx"), fr.d(r, "gt_qy"), fr.d(r, "gt_qz"), fr.d(r, "gt_qw"));
+        p.t = Vector3d(fr.d(r, "gt_x"), fr.d(r, "gt_y"), fr.d(r, "gt_z"));
+        Twc_gt.push_back(p);
+        tum_files.emplace_back((tum_sequence / fr.rows[r].at(fr.col.at("rgb"))).string(),
+                               (tum_sequence / fr.rows[r].at(fr.col.at("depth"))).string());
+      }
+    } catch (const std::exception &e) {
+      std::cerr << tum_frames << ": " << e.what() << "\n";
+      return 2;
+    }
+    if (Twc_gt.size() < 2) {
+      std::cerr << tum_frames << ": fewer than 2 frames\n";
+      return 2;
+    }
   }
-  const std::vector<Pose> Twc_gt = ReadGroundtruthTwc(ds / "groundtruth.txt");
+  auto load_frame = [&](int k, RgbdFrame &frame, std::string *e) {
+    return tum ? LoadRgbdFiles(tum_files[k].first, tum_files[k].second, frame, e)
+               : LoadRgbdFrame(ds.string(), k, frame, e);
+  };
   int N = int(Twc_gt.size());
   if (max_frames > 1)
     N = std::min(N, max_frames);
@@ -164,10 +260,17 @@ int main(int argc, char **argv) {
 
   // ---- per pair ----
   const fs::path out = out_arg.empty()
-                           ? repo / "pnp_from_scratch" / "results" / "pipeline"
+                           ? repo / "results" / "runs" / "pipeline"
                            : (out_arg.is_absolute() ? out_arg : repo / out_arg);
   fs::create_directories(out / "correspondences");
   fs::create_directories(out / "keypoints");
+  if (tum) {
+    fs::copy_file(tum_frames, out / "frames.csv", fs::copy_options::overwrite_existing);
+    std::ofstream cmd(out / "command.txt");
+    for (int a = 0; a < argc; ++a)
+      cmd << (a ? " " : "") << argv[a];
+    cmd << "\n";
+  }
   auto write_keypoints =
       [&](int frame,
           const FrameFeatures &ff) { // every detected keypoint of a frame
@@ -197,7 +300,7 @@ int main(int argc, char **argv) {
   RgbdFrame prev_frame, cur_frame;
   FrameFeatures prev_feat, cur_feat;
   std::string err;
-  if (!LoadRgbdFrame(ds.string(), 0, prev_frame, &err)) {
+  if (!load_frame(0, prev_frame, &err)) {
     std::cerr << err << "\n";
     return 1;
   }
@@ -205,7 +308,7 @@ int main(int argc, char **argv) {
   write_keypoints(0, prev_feat);
   const std::vector<int> frame0_levels = prev_feat.per_level_count;
   for (int i = 0; i + 1 < N; ++i) {
-    if (!LoadRgbdFrame(ds.string(), i + 1, cur_frame, &err)) {
+    if (!load_frame(i + 1, cur_frame, &err)) {
       std::cerr << err << "\n";
       return 1;
     }
@@ -219,29 +322,33 @@ int main(int argc, char **argv) {
 
   // ---- trajectory: T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i] * T_{i+1<-i}^-1
   // (failed pair: previous pose held) ----
-  std::vector<Pose> Twc(N);
-  std::vector<std::string> source(N, "scratch_pipeline");
-  Twc[0] = Twc_gt[0];
-  source[0] = "gt_anchor";
-  for (int i = 0; i + 1 < N; ++i) {
-    if (pairs[i].pnp_ok) {
-      Pose rel;
-      rel.R = pairs[i].R;
-      rel.t = pairs[i].t;
-      Twc[i + 1] = Compose(Twc[i], Inverse(rel));
-    } else {
-      Twc[i + 1] = Twc[i];
-      source[i + 1] = "held_previous_pose_pair_failed";
-    }
+  // (accumulate.hpp; with --pose-gate a gate-rejected pair holds the previous pose too)
+  const bool gate = params.validity.enabled;
+  const bool ranked = params.frontend.ranked_matcher;
+  std::vector<RelativeStep> steps(pairs.size());
+  for (size_t k = 0; k < pairs.size(); ++k) {
+    steps[k].accepted = pairs[k].pose_accepted;
+    steps[k].held_source = pairs[k].pnp_ok ? "held_previous_pose_pair_rejected" : "held_previous_pose_pair_failed";
+    steps[k].T.R = pairs[k].R;
+    steps[k].T.t = pairs[k].t;
   }
+  const AccumulatedTrajectory acc = AccumulateTrajectory(Twc_gt[0], steps);
+  const std::vector<Pose> &Twc = acc.Twc;
+  const std::vector<std::string> &source = acc.source;
 
   // ---- errors vs ground truth ----
   std::vector<double> rot_err(pairs.size(), NAN), trans_err(pairs.size(), NAN),
       e_rot(pairs.size(), NAN), e_dir(pairs.size(), NAN),
-      lin_rot_err(pairs.size(), NAN), lin_trans_err(pairs.size(), NAN);
+      lin_rot_err(pairs.size(), NAN), lin_trans_err(pairs.size(), NAN),
+      returned_rot_err(pairs.size(), NAN), returned_trans_err(pairs.size(), NAN);
+  // (evaluation only: computed after every decision above)
   for (size_t k = 0; k < pairs.size(); ++k) {
     const Pose G = Compose(Inverse(Twc_gt[k + 1]), Twc_gt[k]); // T_{k+1<-k}
     if (pairs[k].pnp_ok) {
+      returned_rot_err[k] = RotErrDeg(G.R, pairs[k].R);
+      returned_trans_err[k] = (G.t - pairs[k].t).norm();
+    }
+    if (pairs[k].pose_accepted) {
       rot_err[k] = RotErrDeg(G.R, pairs[k].R);
       trans_err[k] = (G.t - pairs[k].t).norm();
       lin_rot_err[k] = RotErrDeg(G.R, pairs[k].R_linear);
@@ -279,7 +386,7 @@ int main(int argc, char **argv) {
       const PairResult &p = pairs[k];
       f << k << "," << p.i << "," << p.j << "," << p.keypoints_i << ","
         << p.keypoints_j << "," << p.raw_matches << "," << p.filtered_matches
-        << "," << p.d_min << "," << p.pnp_index.size() << "," << int(p.pnp_ok)
+        << "," << p.d_min << "," << p.pnp_index.size() << "," << int(p.pose_accepted)
         << "," << p.pnp_inliers << "," << p.pnp_best_sample_inliers << ","
         << F(p.reproj_inlier_mean) << "," << F(p.reproj_inlier_median) << ","
         << F(p.reproj_inlier_max) << "," << F(p.reproj_all_median) << ","
@@ -304,7 +411,8 @@ int main(int argc, char **argv) {
           ("pair_" + std::to_string(p.i) + "_" + std::to_string(p.j) + ".csv"));
       c << "match,query,train,hamming,level_i,level_j,u_i,v_i,u_j,v_j,depth_"
            "raw_i,depth_raw_j,X_i,Y_i,Z_i,"
-           "essential_inlier,pnp_used,pnp_inlier,pnp_residual_px\n";
+           "essential_inlier,pnp_used,pnp_inlier,pnp_residual_px"
+        << (ranked ? ",second_distance,ratio,mutual,rank" : "") << "\n";
       std::vector<int> pnp_of(p.correspondences.size(), -1);
       for (size_t q = 0; q < p.pnp_index.size(); ++q)
         pnp_of[p.pnp_index[q]] = int(q);
@@ -322,8 +430,11 @@ int main(int argc, char **argv) {
           c << ",,,";
         c << (m < p.essential_mask.size() ? int(p.essential_mask[m]) : 0) << ","
           << int(q >= 0) << "," << (q >= 0 && p.pnp_ok ? int(p.pnp_mask[q]) : 0)
-          << "," << (q >= 0 && p.pnp_ok ? F(p.pnp_residual_px[q], 4) : "")
-          << "\n";
+          << "," << (q >= 0 && p.pnp_ok ? F(p.pnp_residual_px[q], 4) : "");
+        if (ranked)
+          c << "," << (cc.has_second ? std::to_string(cc.second_distance) : "") << "," << F(cc.ratio, 6) << ","
+            << int(cc.mutual) << "," << cc.rank;
+        c << "\n";
       }
     }
   }
@@ -351,7 +462,8 @@ int main(int argc, char **argv) {
       << "# hud_note: own features + RANSAC + linear PnP"
       << (params.refine ? " + refinement" : "") << "\n"
       << "# accumulation: T_wc[0] = T_gt[0], T_wc[i+1] = T_wc[i] * "
-         "T_{i+1<-i}^-1 (failed pair: previous pose held)\n"
+         "T_{i+1<-i}^-1 ("
+      << (gate ? "solver-failed or gate-rejected pair" : "failed pair") << ": previous pose held)\n"
       << "frame,tx,ty,tz,r00,r01,r02,r10,r11,r12,r20,r21,r22,qx,qy,qz,qw,"
          "rotation_error_deg,translation_error_m,"
          "pnp_inliers,pose_source\n";
@@ -373,6 +485,56 @@ int main(int argc, char **argv) {
       t << std::fixed << std::setprecision(6) << double(k) << " "
         << Twc[k].t.x() << " " << Twc[k].t.y() << " " << Twc[k].t.z() << " "
         << q(0) << " " << q(1) << " " << q(2) << " " << q(3) << "\n";
+    }
+  }
+
+  if (ranked) { // ---- ranked matcher: counters per pair, optional per-match details ----
+    std::ofstream f(out / "matcher.csv");
+    f << "pair,frame_i,frame_j,queries,trains,invalid_query,invalid_train,raw,removed_distance,removed_mutual,"
+         "removed_ratio,removed_level,kept,d_min,d_max\n";
+    for (size_t k = 0; k < pairs.size(); ++k) {
+      const features::MatchCounters &mc = pairs[k].match_counters;
+      f << k << "," << pairs[k].i << "," << pairs[k].j << "," << mc.queries << "," << mc.trains << ","
+        << mc.invalid_query << "," << mc.invalid_train << "," << mc.raw << "," << mc.removed_distance << ","
+        << mc.removed_mutual << "," << mc.removed_ratio << "," << mc.removed_level << "," << mc.kept << ","
+        << mc.d_min << "," << mc.d_max << "\n";
+    }
+    if (export_match_details) {
+      fs::create_directories(out / "matches");
+      for (const PairResult &p : pairs) {
+        std::ofstream m(out / "matches" / ("pair_" + std::to_string(p.i) + "_" + std::to_string(p.j) + ".csv"));
+        m << "query,train,distance,second_distance,second_train,ratio,mutual,mutual_location,level_query,"
+             "level_train,fate,rank\n";
+        for (const features::RankedMatch &r : p.match_details)
+          m << r.query << "," << r.train << "," << r.distance << ","
+            << (r.has_second ? std::to_string(r.second_distance) : "") << ","
+            << (r.has_second ? std::to_string(r.second_train) : "") << "," << F(r.ratio(), 6) << "," << int(r.mutual)
+            << "," << int(r.mutual_location) << "," << r.level_query << "," << r.level_train << ","
+            << features::MatchFateName(r.fate) << "," << r.rank << "\n";
+      }
+    }
+  }
+
+  if (gate) { // ---- pose-validity gate, per pair ----
+    std::ofstream f(out / "pose_validity.csv");
+    f << "pair,frame_i,frame_j,status,solver_ok,accepted,pnp_inputs,inlier_rows,distinct_src,distinct_dst,"
+         "distinct_loc_src,distinct_loc_dst,inlier_ratio,cells_src,cells_dst,reproj_median_px,reproj_p90_px,"
+         "orthogonality_error,det_error,reason,returned_rot_err_deg,returned_trans_err_m\n";
+    for (size_t k = 0; k < pairs.size(); ++k) {
+      const PairResult &p = pairs[k];
+      const PoseValidity &v = p.validity;
+      std::string reason = v.reason;
+      for (char &c : reason)
+        if (c == ',') c = ' ';
+      char oe[32] = "", de[32] = "";
+      if (std::isfinite(v.orthogonality_error)) std::snprintf(oe, sizeof(oe), "%.3e", v.orthogonality_error);
+      if (std::isfinite(v.det_error)) std::snprintf(de, sizeof(de), "%.3e", v.det_error);
+      f << k << "," << p.i << "," << p.j << "," << PoseStatusName(v.status) << "," << int(p.pnp_ok) << ","
+        << int(p.pose_accepted) << "," << v.pnp_inputs << "," << v.inlier_rows << "," << v.distinct_src << ","
+        << v.distinct_dst << "," << v.distinct_loc_src << "," << v.distinct_loc_dst << "," << F(v.inlier_ratio, 6)
+        << "," << v.cells_src << "," << v.cells_dst << "," << F(v.reproj_median_px, 4) << ","
+        << F(v.reproj_p90_px, 4) << "," << oe << "," << de << "," << reason << "," << F(returned_rot_err[k], 6)
+        << "," << F(returned_trans_err[k], 6) << "\n";
     }
   }
 
@@ -403,15 +565,28 @@ int main(int argc, char **argv) {
       er.push_back(e_rot[k]), ed.push_back(e_dir[k]);
   size_t worst = 0;
   for (size_t k = 1; k < pairs.size(); ++k)
-    if (rot_err[k] > rot_err[worst])
+    if (rot_err[k] > rot_err[worst] || (std::isnan(rot_err[worst]) && std::isfinite(rot_err[k])))
       worst = k;
   std::ostringstream o;
   o << "========================================\n"
     << "SCRATCH PIPELINE -- FULL SEQUENCE\n"
     << "========================================\n"
     << "Pairs: " << pairs.size() << " attempted, " << pairs.size() - failed
-    << " solved by RANSAC PnP, " << failed << " failed (previous pose held)\n"
-    << "Poses: " << N << "\n\n"
+    << " solved by RANSAC PnP, " << failed << " failed (previous pose held)\n";
+  if (gate) {
+    int accepted = 0, rejected = 0;
+    std::string list;
+    for (const auto &p : pairs) {
+      accepted += p.pose_accepted;
+      if (p.validity.status == PoseStatus::kRejected) {
+        ++rejected;
+        list += (list.empty() ? "" : ", ") + std::to_string(p.i) + "->" + std::to_string(p.j);
+      }
+    }
+    o << "Pose-validity gate: " << accepted << " accepted, " << rejected << " rejected (previous pose held), "
+      << failed << " solver-failed" << (list.empty() ? "" : "; rejected pairs: " + list) << " (pose_validity.csv)\n";
+  }
+  o << "Poses: " << N << "\n\n"
     << "Pyramid: " << params.frontend.pyramid.levels
     << " level(s); frame 0 keypoints per level:";
   {
@@ -474,7 +649,8 @@ int main(int argc, char **argv) {
               << F(p.reproj_inlier_mean, 2) << "  |" << std::setw(6)
               << p.essential_inliers << std::setw(8) << F(e_rot[k], 2)
               << std::setw(10) << F(e_dir[k], 1)
-              << (p.pnp_ok ? "" : "  PnP FAILED: " + p.pnp_reason) << "\n";
+              << (p.pnp_ok ? "" : "  PnP FAILED: " + p.pnp_reason)
+              << (p.pnp_ok && !p.pose_accepted ? "  REJECTED: " + p.validity.reason : "") << "\n";
   }
   std::cout << "\n" << o.str();
   std::ofstream(out / "summary.txt") << o.str();

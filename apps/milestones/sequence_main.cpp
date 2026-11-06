@@ -9,8 +9,8 @@
 // Usage: pnp_full_sequence [--repo DIR] [--corr-dir DIR]
 //   --corr-dir DIR  directory with pair_<i>_<i+1>_correspondences.csv
 //                   (default: the frozen baseline export,
-//                    <repo>/docs/migration/baseline/correspondences; a fresh export
-//                    of the reference pipeline: pnp_from_scratch/export_correspondences.sh)
+//                    <repo>/tests/fixtures/reference_baseline/correspondences; a fresh export
+//                    of the reference pipeline: tools/pipeline_analysis/export_correspondences.sh)
 
 #include <cmath>
 #include <iomanip>
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     std::cerr << "cannot find the repository root; pass --repo DIR\n";
     return 2;
   }
-  if (corr_dir.empty()) corr_dir = repo / "docs" / "migration" / "baseline" / "correspondences";
+  if (corr_dir.empty()) corr_dir = repo / "tests" / "fixtures" / "reference_baseline" / "correspondences";
   const fs::path ds = repo / "data" / "synthetic_bunny";
   Intrinsics K;
   {
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
   const int N = static_cast<int>(Twc_gt.size());
   if (!fs::exists(corr_dir / "pair_0_1_correspondences.csv")) {
     std::cerr << "missing " << corr_dir / "pair_0_1_correspondences.csv" << "\n"
-              << "Create the raw correspondences of all pairs with:  pnp_from_scratch/export_correspondences.sh\n";
+              << "Create the raw correspondences of all pairs with:  tools/pipeline_analysis/export_correspondences.sh\n";
     return 2;
   }
 
@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
   }
 
   // -------------------------------------------------------------- output --
-  const fs::path out = repo / "pnp_from_scratch" / "results";
+  const fs::path out = repo / "results" / "runs" / "milestones";
   fs::create_directories(out);
   const std::string note =
       "Pure linear (DLT) PnP on ALL raw 3D->2D correspondences of every pair (filtered ORB matches with "
@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
               << (!r.success ? "  FAILED: " + r.reason : (!r.cheirality_ok ? "  INVALID: " + r.reason : "")) << "\n";
   std::cout << "\n" << o.str();
   std::ofstream(out / "scratch_pnp_full_sequence_summary.txt") << o.str();
-  std::cout << "wrote pnp_from_scratch/results/scratch_pnp_trajectory.{csv,txt}, scratch_pnp_pair_results.csv, "
+  std::cout << "wrote results/runs/milestones/scratch_pnp_trajectory.{csv,txt}, scratch_pnp_pair_results.csv, "
                "scratch_pnp_full_sequence_summary.txt\n";
   return 0;
 }

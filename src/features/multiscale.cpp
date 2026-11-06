@@ -87,8 +87,9 @@ MultiscaleFeatures ExtractMultiscale(const ImagePyramid &pyramid,
     if ((!quotas.empty() || limit > 0) && int(kps.size()) > limit)
       kps.resize(limit);
     AssignOrientations(img, kps);
+    std::vector<bool> valid;
     const std::vector<BriefDescriptor> desc =
-        ComputeBrief(GaussianSmooth(img), kps);
+        ComputeBrief(GaussianSmooth(img), kps, &valid);
     out.per_level_count.push_back(int(kps.size()));
     for (size_t k = 0; k < kps.size(); ++k) {
       MultiscaleKeypoint m;
@@ -99,6 +100,7 @@ MultiscaleFeatures ExtractMultiscale(const ImagePyramid &pyramid,
       m.y = LevelToBaseY(pyramid, int(l), kps[k].y);
       out.keypoints.push_back(m);
       out.descriptors.push_back(desc[k]);
+      out.valid.push_back(valid[k]);
     }
   }
   return out;
