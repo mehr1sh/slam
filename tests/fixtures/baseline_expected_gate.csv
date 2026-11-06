@@ -1,0 +1,4 @@
+name,gate_status,pose_accepted,gate_pnp_inputs,gate_inlier_rows,gate_distinct_src,gate_distinct_dst,gate_distinct_loc_src,gate_distinct_loc_dst,gate_inlier_ratio,gate_cells_src,gate_cells_dst,gate_reproj_median_px,gate_reproj_p90_px
+bunny_0_1,0,1,277,217,217,151,97,84,0.78339350180505418,18,18,1.6694889072898726,4.4056740888609482
+tum_xyz_stride4_46_47,1,0,1611,13,13,10,8,6,0.0080695220360024831,4,5,2.0816099379601929,2.7466402927665778
+tum_xyz_stride4_73_74,0,1,1511,514,514,401,273,240,0.34017207147584383,67,72,2.5513208522005382,5.3633331531564767

@@ -1,0 +1,8 @@
+name,run_dir,frames,ate_raw_rmse_m
+tum_xyz_n20,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/n20,20,0.011423414
+tum_xyz_n100,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/n100,100,0.024172668
+tum_xyz_n100_stride2,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/n100_stride2,100,0.050187991
+tum_xyz_n100_stride4,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/n100_stride4,100,0.514672706
+tum_xyz_n300,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/n300,300,0.065142225
+tum_xyz_full,tests/fixtures/stage1_ate_runs/scratch/rgbd_dataset_freiburg1_xyz/full,788,0.147469212
+bunny_36,tests/fixtures/stage1_bunny_export,36,0.143328109
