@@ -1,0 +1,1 @@
+pnp_from_scratch/build/scratch_experiments --fixtures pnp_from_scratch/tests/fixtures/stage3_pairs.csv --configs T0C,T0CG --seed-count 20 --out output/integration/fixtures_20seeds_T0C

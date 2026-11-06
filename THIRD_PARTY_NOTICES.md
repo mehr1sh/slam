@@ -16,16 +16,17 @@ Inside the source files these blocks are marked `// Book code starts` …
 
 | File(s) | Derived from (slambook2) | What |
 |---|---|---|
-| `src/camera/camera.cpp`, `include/camera/camera.hpp` | `ch7/pose_estimation_*.cpp` | `pixel2cam()` |
-| `src/features/features.cpp`, `include/features/features.hpp` | `ch7/pose_estimation_*.cpp`, `ch7/triangulation.cpp` | `find_feature_matches()` (ORB + brute-force Hamming + distance filter) |
-| `src/geometry/geometry.cpp`, `include/geometry/geometry.hpp` | `ch7/pose_estimation_2d2d.cpp`, `ch7/triangulation.cpp` | 2D-2D pose estimation, triangulation |
-| `include/optimization/g2o_types.hpp` | `ch7/pose_estimation_3d2d.cpp`, `ch7/pose_estimation_3d3d.cpp` | g2o `VertexPose` |
-| `src/tracking/pnp.cpp`, `include/tracking/pnp.hpp` | `ch7/pose_estimation_3d2d.cpp` | Gauss-Newton and g2o PnP bundle adjustment |
-| `src/tracking/icp.cpp`, `include/tracking/icp.hpp` | `ch7/pose_estimation_3d3d.cpp` | SVD 3D-3D alignment, g2o refinement |
-| `tests/integration/{feature_matching,two_view_pose,triangulation,pnp,icp}_test.cpp` | the matching `ch7/*.cpp` `main()` functions | adapted example programs |
-| `tests/unit/orb_from_scratch_test.cpp` | `ch7/orb_self.cpp` | near-verbatim copy |
-| `tests/unit/gauss_newton_curve_fit_test.cpp` | `ch6/gaussNewton.cpp` | near-verbatim copy |
-| `tests/unit/g2o_curve_fit_test.cpp` | `ch6/g2oCurveFitting.cpp` | near-verbatim copy |
+| `reference/opencv_slambook2/src/camera/camera.cpp`, `reference/opencv_slambook2/include/camera/camera.hpp` | `ch7/pose_estimation_*.cpp` | `pixel2cam()` |
+| `reference/opencv_slambook2/src/features/features.cpp`, `reference/opencv_slambook2/include/features/features.hpp` | `ch7/pose_estimation_*.cpp`, `ch7/triangulation.cpp` | `find_feature_matches()` (ORB + brute-force Hamming + distance filter) |
+| `reference/opencv_slambook2/src/geometry/geometry.cpp`, `reference/opencv_slambook2/include/geometry/geometry.hpp` | `ch7/pose_estimation_2d2d.cpp`, `ch7/triangulation.cpp` | 2D-2D pose estimation, triangulation |
+| `reference/opencv_slambook2/include/optimization/g2o_types.hpp` | `ch7/pose_estimation_3d2d.cpp`, `ch7/pose_estimation_3d3d.cpp` | g2o `VertexPose` |
+| `reference/opencv_slambook2/src/tracking/pnp.cpp`, `reference/opencv_slambook2/include/tracking/pnp.hpp` | `ch7/pose_estimation_3d2d.cpp` | Gauss-Newton and g2o PnP bundle adjustment |
+| `reference/opencv_slambook2/src/tracking/icp.cpp`, `reference/opencv_slambook2/include/tracking/icp.hpp` | `ch7/pose_estimation_3d3d.cpp` | SVD 3D-3D alignment, g2o refinement |
+| `reference/icp_main_variant/src/icp.cpp`, `reference/icp_main_variant/include/tracking/icp.hpp` (main's preserved variant; the book SVD and g2o refinement, plus project-added `FitRigid` / `EstimateRigidRansac`) | `ch7/pose_estimation_3d3d.cpp` | SVD 3D-3D alignment, g2o refinement |
+| `reference/opencv_slambook2/tests/integration/{feature_matching,two_view_pose,triangulation,pnp,icp}_test.cpp` | the matching `ch7/*.cpp` `main()` functions | adapted example programs |
+| `reference/opencv_slambook2/tests/unit/orb_from_scratch_test.cpp` | `ch7/orb_self.cpp` | near-verbatim copy |
+| `reference/opencv_slambook2/tests/unit/gauss_newton_curve_fit_test.cpp` | `ch6/gaussNewton.cpp` | near-verbatim copy |
+| `reference/opencv_slambook2/tests/unit/g2o_curve_fit_test.cpp` | `ch6/g2oCurveFitting.cpp` | near-verbatim copy |
 
 License of slambook2 (reproduced as its terms require):
 

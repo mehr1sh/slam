@@ -49,6 +49,27 @@ std::vector<Keypoint> DetectFast(const GrayImage &img, const FastParams &params)
       if (IsFastCorner(img, x, y, params.threshold, params.arc_length))
         score[size_t(y) * W + x] = std::max(1, FastScore(img, x, y, params.threshold));
 
+  // per-cell fallback: cells (within the border) with no corner are searched
+  // again at the lower threshold
+  const int cs = params.cell_size;
+  if (cs > 0 && params.min_threshold > 0 && params.min_threshold < params.threshold)
+    for (int y0 = b; y0 < H - b; y0 += cs)
+      for (int x0 = b; x0 < W - b; x0 += cs) {
+        const int y1 = std::min(y0 + cs, H - b), x1 = std::min(x0 + cs, W - b);
+        bool empty = true;
+        for (int y = y0; y < y1 && empty; ++y)
+          for (int x = x0; x < x1; ++x)
+            if (score[size_t(y) * W + x]) {
+              empty = false;
+              break;
+            }
+        if (!empty) continue;
+        for (int y = y0; y < y1; ++y)
+          for (int x = x0; x < x1; ++x)
+            if (IsFastCorner(img, x, y, params.min_threshold, params.arc_length))
+              score[size_t(y) * W + x] = std::max(1, FastScore(img, x, y, params.min_threshold));
+      }
+
   // 3x3 non-maximum suppression; a neighbour with an equal score suppresses
   // the centre only if it comes earlier in raster order (deterministic).
   for (int y = b; y < H - b; ++y)

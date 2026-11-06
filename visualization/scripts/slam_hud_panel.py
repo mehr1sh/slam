@@ -23,14 +23,14 @@
     redraw so the sidebar/HUD visibly update during playback, not only
     after it stops.
 
-Positions and errors come DIRECTLY from icp_cpp_results/blender_trajectory.csv
+Positions and errors come DIRECTLY from results/benchmarks/rgbd_icp/blender_trajectory.csv
 (stored by build_scene.py as scene["slam_trajectory"]) -- this module never
 recomputes a pose-estimation or trajectory-composition number itself.
 
 Registered by build_scene.py (slam_hud_panel.register()), by the
 "slam_viz_autoload.py" text block embedded in the saved .blend (when Python
 auto-run is allowed), or manually with
-    blender outputs/blender/bunny_slam_demo.blend --python visualization/scripts/slam_hud_panel.py
+    blender results/blender/bunny_slam_demo.blend --python visualization/scripts/slam_hud_panel.py
 """
 
 import os

@@ -1,0 +1,1 @@
+pnp_from_scratch/build/scratch_experiments --sequence-frames output/integration/bunny_frames.csv --tum-sequence data/synthetic_bunny --intrinsics 520.9,521,325.1,249.7 --configs T0C,T0CG --seed-count 10 --out output/integration/bunny_10seeds_T0C

@@ -1,0 +1,4 @@
+config,seed,frames,accepted,rejected,solver_failed,eval_ate_raw_rmse_m,eval_final_pos_err_m,eval_final_rot_err_deg,eval_rpe_trans_rmse_m,eval_rpe_rot_rmse_deg
+T0-ransac,12345,788,787,0,0,0.1249872,0.178577699,3.67762079,0.00536617721,0.356314332
+T0-ransac,1,788,787,0,0,0.1249872,0.178577701,3.67762058,0.00536617722,0.356314332
+T0-ransac,2,788,787,0,0,0.124345106,0.177495518,3.69407746,0.00536893529,0.356305823

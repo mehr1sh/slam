@@ -7,7 +7,7 @@ displayed R/t would be wrong.
 === Pose convention of every trajectory this package reads ===
 groundtruth.txt, pnp_trajectory.txt, icp_trajectory.txt and the per-method
 columns of slam_trajectory.csv all store T_wc (camera -> world), exactly as
-written by tests/synthetic/slam_trajectory_test.cpp:
+written by reference/opencv_slambook2/tests/synthetic/slam_trajectory_test.cpp:
   - translation = camera center in the C++ world frame (Y-up, metres)
   - quaternion  = rotation mapping CV camera-axis vectors
                   (+X right, +Y down, +Z forward) into world vectors
@@ -27,7 +27,7 @@ import mathutils
 R_FIX = mathutils.Matrix(((1, 0, 0), (0, -1, 0), (0, 0, -1)))
 
 # Fixed whole-rig display rotation: the C++/PLY world is Y-up (see
-# include/render/trajectory.hpp's world_up default), but Blender's own
+# reference/opencv_slambook2/include/render/trajectory.hpp's world_up default), but Blender's own
 # viewport floor grid and "up" convention is Z-up. Every visualization
 # object (bunny, camera, trajectory, ghosts, ground plane) is parented
 # under one "WorldRoot" empty carrying this fixed rotation, so each

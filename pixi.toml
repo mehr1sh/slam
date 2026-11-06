@@ -6,13 +6,15 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-configure = "cmake -B build -S ."
+# Full build: production pipeline + OpenCV reference library and experiments (all executables in build/).
+# Production only (Eigen, no OpenCV): cmake -S . -B build && cmake --build build -j
+configure = "cmake -B build -S . -DSLAM_WITH_OPENCV=ON"
 build = { cmd = "cmake --build build -j", depends-on = ["configure"] }
 
-icp-configure = "cmake -S icp_cpp -B build-icp -DCMAKE_BUILD_TYPE=Release"
+icp-configure = "cmake -S experiments/rgbd_icp/icp_cpp -B build-icp -DCMAKE_BUILD_TYPE=Release"
 icp-build = { cmd = "cmake --build build-icp -j2", depends-on = ["icp-configure"] }
-icp = { cmd = "./build-icp/icp_sequence data/synthetic_bunny icp_cpp_results", depends-on = ["icp-build"] }
-blender-rebuild = "bash scripts/rebuild_blender.sh"
+icp = { cmd = "./build-icp/icp_sequence data/synthetic_bunny results/benchmarks/rgbd_icp", depends-on = ["icp-build"] }
+blender-rebuild = "bash visualization/rebuild_blender.sh"
 
 [dependencies]
 opencv = ">=4,<5"
@@ -22,17 +24,17 @@ eigen = ">=5.0.1,<6"
 g2o = ">=2019.11.23,<2020"
 sophus = ">=1!1.24.6,<1!2"
 
-# Python environment for the figure/metrics pipeline (scripts/generate_results.py).
+# Python environment for the figure/metrics pipeline (tools/figures/generate_results.py).
 # Independent of the C++ build environment (no shared solve-group), so adding it
 # does not change any package of the default environment.
 [feature.results]
 dependencies = { python = "3.12.*", numpy = ">=2", matplotlib-base = ">=3.9" }
 
 [feature.results.tasks]
-results = { cmd = "python scripts/generate_results.py", env = { PYTHONNOUSERSITE = "1" } }
-diagnostics = { cmd = "python scripts/run_diagnostics.py", env = { PYTHONNOUSERSITE = "1" } }
-correspondences = { cmd = "python scripts/generate_correspondence_figure.py", env = { PYTHONNOUSERSITE = "1" } }
-correspondence-map = { cmd = "python scripts/generate_correspondence_map.py", env = { PYTHONNOUSERSITE = "1" } }
+results = { cmd = "python tools/figures/generate_results.py", env = { PYTHONNOUSERSITE = "1" } }
+diagnostics = { cmd = "python tools/evaluation/run_diagnostics.py", env = { PYTHONNOUSERSITE = "1" } }
+correspondences = { cmd = "python tools/figures/generate_correspondence_figure.py", env = { PYTHONNOUSERSITE = "1" } }
+correspondence-map = { cmd = "python tools/figures/generate_correspondence_map.py", env = { PYTHONNOUSERSITE = "1" } }
 
 [environments]
 results = { features = ["results"], no-default-feature = true }

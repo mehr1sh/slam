@@ -5,7 +5,33 @@ import csv
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
+
+# Inputs of the Bunny scene, relative to the repository root. They are the only paths the scene, its
+# autoload script, the consistency check and the bridge test use (build_scene.py imports them).
+#   ICP_RESULTS     the teammate's corrected-ICP run (tracked evidence)
+#   SCRATCH_SOURCE  the frozen T0 scratch_pipeline trajectory the scene shows (tests/fixtures; never a mutable run)
+ICP_RESULTS = 'results/benchmarks/rgbd_icp'
+SCRATCH_SOURCE = 'tests/fixtures/bunny_t0_scene/trajectory.csv'
+# A directory is the repository root if it holds both of these (the first is also the C++ FindRepo marker).
+ROOT_MARKERS = ('data/synthetic_bunny/intrinsics.txt', 'visualization/scripts/trajectory_data.py')
+
+
+def find_repo_root(start=None):
+    """Repository root: $SLAM_REPO_ROOT if set, else the nearest directory at or above `start` that holds
+    ROOT_MARKERS. Raises RuntimeError (no guessing) if neither works."""
+    env = os.environ.get('SLAM_REPO_ROOT')
+    if env:
+        root = Path(env).resolve()
+        if not all((root / m).is_file() for m in ROOT_MARKERS):
+            raise RuntimeError(f'SLAM_REPO_ROOT={env} is not the repository root (missing {ROOT_MARKERS})')
+        return root
+    if start is not None:
+        for d in [Path(start).resolve(), *Path(start).resolve().parents]:
+            if all((d / m).is_file() for m in ROOT_MARKERS):
+                return d
+    raise RuntimeError(f'Repository root not found above {start}; set SLAM_REPO_ROOT to the repository root')
 
 
 def read_tum(path):
@@ -43,9 +69,9 @@ def _hash(paths):
 def load_corrected(root,write=False):
     root=Path(root).resolve()
     data=root/'data/synthetic_bunny'
-    result=root/'icp_cpp_results'
+    result=root/ICP_RESULTS
     if not (result/'run_complete.txt').is_file():
-        raise RuntimeError('No completed corrected C++ run. Run scripts/rebuild_blender.sh first.')
+        raise RuntimeError('No completed corrected C++ run. Run visualization/rebuild_blender.sh first.')
     selected=(result/'selected_trajectory.txt').read_text().strip()
     if selected not in ('plane','pose_graph'):
         raise ValueError('Invalid corrected ICP method selection')
@@ -77,9 +103,9 @@ def load_corrected(root,write=False):
                 row[f'{prefix}_rotation_error']=r
         row['icp_valid']=1 if i==0 or pairs[i-1]['status']=='OK' else 0
         rows.append(row)
-    scratch=root/'pnp_from_scratch/results/pipeline/trajectory.csv'
+    scratch=root/SCRATCH_SOURCE
     if not scratch.is_file():
-        raise RuntimeError('Run the scratch pipeline before building Blender')
+        raise RuntimeError(f'Frozen scratch trajectory {SCRATCH_SOURCE} is missing (tests/fixtures/bunny_t0_scene_sha256.txt)')
     metadata={'method':selected,'trajectory':str(path.relative_to(root)),
               'source_sha256':_hash([data/'intrinsics.txt',root/'data/meshes/bunny/bun_zipper.ply',data/'groundtruth.txt',data/'pnp_trajectory.txt',path,result/'pair_metrics.csv',result/'selected_trajectory.txt',scratch]),
               'frames':len(rows),'failed_pairs':sum(p['status']!='OK' for p in pairs),

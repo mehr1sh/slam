@@ -1,0 +1,121 @@
+#pragma once
+
+// The complete scratch pipeline for one frame pair i -> i+1:
+//
+//   RGB-D frames
+//     -> front end (grayscale, FAST, orientation, rotated BRIEF, Hamming,
+//     filter)
+//     -> 2D-2D matches  -> RANSAC 8-point essential matrix -> decomposition
+//                          -> cheirality -> (R, t/|t|)       [two-view
+//                          estimate]
+//     -> 3D->2D correspondences (frame-i depth)
+//                       -> RANSAC around the scratch linear PnP -> refit on
+//                       inliers
+//                          -> Levenberg-Marquardt reprojection-error refinement
+//                             on the same inliers (refine.hpp)
+//                          -> (R, t) = T_{i+1<-i}           [metric pose]
+//
+// Both estimates use the same convention X_{i+1} = R X_i + t. The metric PnP
+// pose is the one accumulated into the trajectory; the essential-matrix
+// estimate is scale-free and is reported next to it for comparison.
+
+#include <string>
+#include <vector>
+
+#include <Eigen/Core>
+
+#include "frontend.hpp"
+#include "ransac.hpp"
+#include "refine.hpp"
+#include "validity.hpp"
+
+namespace scratch {
+
+struct PipelineParams {
+  FrontendParams frontend; // FAST threshold 20, strongest 500, match floor 30,
+                           // 8-level pyramid
+  RansacParams pnp_ransac; // 300 iterations, 8 px, seed 12345
+  bool refine = true; // nonlinear refinement of the RANSAC pose on its inliers
+  RefineParams refine_params;
+  bool reselect_inliers = false;
+  RansacParams essential_ransac;
+  // Stage-2 pose-validity gate (ported from main). On this branch it is DISABLED by default so that the
+  // teammate configuration is unmodified; it is always evaluated (PairResult::validity) and enabled with
+  // scratch_pipeline --pose-gate.
+  ValidityParams validity;
+  PipelineParams() {
+    validity.enabled = false;
+    essential_ransac.iterations =
+        2000; // the minimal 8-point sample is noise-sensitive: more samples
+    essential_ransac.threshold_px = 2.0; // Sampson distance
+    essential_ransac.seed = 54321;
+  }
+};
+
+struct PairResult {
+  int i = 0, j = 0;
+  int keypoints_i = 0, keypoints_j = 0, raw_matches = 0, filtered_matches = 0;
+  int d_min = 0, d_max = 0;
+  std::vector<Correspondence> correspondences; // all filtered matches
+  // ranked matcher (FrontendParams::ranked_matcher) only: every raw match with its fate, and the counters
+  bool ranked_matcher = false;
+  std::vector<features::RankedMatch> match_details;
+  features::MatchCounters match_counters;
+
+  // essential-matrix stage (all filtered matches, normalized coordinates)
+  bool fundamental_ok = false;
+  Eigen::Matrix3d F = Eigen::Matrix3d::Zero();
+  bool essential_ok = false;
+  std::string essential_reason;
+  int essential_inliers = 0, essential_in_front = 0;
+  Eigen::Matrix3d R_essential = Eigen::Matrix3d::Identity();
+  Eigen::Vector3d t_essential_dir = Eigen::Vector3d::Zero(); // unit vector
+  std::vector<bool> essential_mask; // per correspondence
+
+  // PnP stage (correspondences with frame-i depth)
+  std::vector<int> pnp_index; // correspondence index of each PnP input
+  bool pnp_ok = false;
+  std::string pnp_reason;
+  Eigen::Matrix3d R = Eigen::Matrix3d::Identity(); // T_{i+1<-i}
+  Eigen::Vector3d t = Eigen::Vector3d::Zero();
+  int pnp_inliers = 0, pnp_best_sample_inliers = 0;
+  std::vector<bool> pnp_mask;          // per PnP input (final: after inlier re-selection if enabled)
+  std::vector<bool> ransac_mask;       // RansacPnP's own inlier mask (equal to pnp_mask without re-selection)
+  std::vector<double> pnp_residual_px; // per PnP input, under the final pose
+  double reproj_inlier_mean = 0, reproj_inlier_median = 0,
+         reproj_inlier_max = 0, reproj_all_median = 0;
+
+  // the linear RANSAC pose before refinement (equal to R, t when refinement is
+  // off or failed)
+  Eigen::Matrix3d R_linear = Eigen::Matrix3d::Identity();
+  Eigen::Vector3d t_linear = Eigen::Vector3d::Zero();
+  double linear_reproj_inlier_mean = 0, linear_reproj_inlier_median = 0,
+         linear_reproj_inlier_max = 0;
+  bool refined = false; // the refinement ran and its pose is R, t
+  int refine_iterations = 0;
+  double refine_rms_initial_px = 0,
+         refine_rms_final_px = 0; // over the RANSAC inliers
+
+  // pose-validity gate (always evaluated on the final pose and mask; evidence from the
+  // correspondences only)
+  PoseValidity validity;
+  bool pose_accepted = false; // enters the trajectory: pnp_ok and (gate disabled or validity accepted)
+};
+
+// The teammate's improved frontend / robust PnP (004f4b8), the scratch_pipeline CLI default:
+// Harris ranking with a 1400-feature budget, FAST threshold 10, mutual + ratio 0.87 matching,
+// 12 mm depth-edge rejection, Huber delta 2 px, inlier re-selection, RANSAC 650 iterations / 3 px.
+// (Formerly assigned inside scratch_pipeline's main; moved here unchanged so that every tool uses
+// exactly the same values.)
+void ApplyImprovedDefaults(PipelineParams &params);
+// The Stage-1/2 front end of `main` (fb23599 + Stage 1-3): PipelineParams{} plus the FAST
+// per-cell fallback (30 px cells, threshold 7). Matching, RANSAC (300 it, 8 px) and LM are the
+// PipelineParams{} defaults.
+void ApplyStage2Frontend(PipelineParams &params);
+
+PairResult ProcessPair(int i, int j, const FrameFeatures &fi,
+                       const FrameFeatures &fj, const RgbdFrame &frame_i,
+                       const RgbdFrame &frame_j, const Intrinsics &K,
+                       const PipelineParams &params);
+
+} // namespace scratch
