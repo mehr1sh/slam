@@ -1,0 +1,1 @@
+pnp_from_scratch/build/scratch_experiments --sequence-frames output/scratch/rgbd_dataset_freiburg1_xyz/full/frames.csv --tum-sequence data/rgbd_dataset_freiburg1_xyz --intrinsics 517.3,516.5,318.6,255.3 --configs T0-ransac --seeds 12345,1,2 --out output/integration/full_3seeds_T0-ransac

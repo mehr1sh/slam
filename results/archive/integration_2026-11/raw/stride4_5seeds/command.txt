@@ -1,0 +1,1 @@
+pnp_from_scratch/build/scratch_experiments --sequence-frames output/scratch/rgbd_dataset_freiburg1_xyz/n100_stride4/frames.csv --tum-sequence data/rgbd_dataset_freiburg1_xyz --intrinsics 517.3,516.5,318.6,255.3 --configs M0,M3,L0,T0,T0G,T0R,T0M,T0Q,T0GR,T0E,T0H,T0-harris,T0-budget,T0-fast20,T0-mr,T0-reselect,T0-ransac --seed-count 5 --out output/integration/stride4_5seeds

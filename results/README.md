@@ -1,4 +1,25 @@
-# Results: reference pipeline on the synthetic evaluation sequence
+# Results and evidence
+
+Every file here comes from the C++ programs (Python only plots and checks their output). The directory
+tells you whether a file may be regenerated:
+
+| directory | in Git | who writes it | may it be overwritten? |
+|---|---|---|---|
+| `archive/integration_2026-11/` | yes | nobody | **never**: frozen evidence of the T0 decision (analysis, timing, raw CSVs; see its README) |
+| `reports/figures/` | yes | `feature_audit`, `orb_benchmark`, `tools/figures/render_*.py` | only by those programs, deliberately; review the diff |
+| `reports/diagnostics/` | `*.md` only | `tools/evaluation/run_diagnostics.py` (`worst_pairs.md`, ignored CSVs/figures); the other reports are hand-written | generated parts only |
+| `blender/` | yes | `visualization/rebuild_blender.sh` | only by a deliberate rebuild. The scene needs **Blender 5.x** (rebuilt 2026-11-06 with 5.2.0); it finds the repository at load time (no fixed depth). The previous Blender 4.0 scene is preserved outside the repository (`visualization/README.md`) |
+| `benchmarks/rgbd_icp/` | yes | `icp_sequence` **only when given this directory** (`pixi run icp`, `visualization/rebuild_blender.sh`, `tools/figures/run_gn_orb.sh`) | only deliberately; it is the Blender scene's ICP input (moved from `icp_cpp_results/` on 2026-11-06) |
+| `runs/` | no (ignored) | every program's default runtime output (`scratch_pipeline` → `runs/pipeline`, milestones → `runs/milestones`, `depth_edge_experiment`, `icp_sequence` → `runs/rgbd_icp`, `scratch_baseline`, `tum_trajectory_eval`, reference demos, dashboard runs, diagnostics, TUM scene exports) | yes: disposable; never put frozen data here |
+| `runs/reference_results/{data,figures,tables}/` | no (ignored, under `runs/`) | `tools/figures/generate_results.py`, `generate_correspondence_{figure,map}.py`, `tools/pipeline_analysis/export_correspondences.sh` | yes: disposable |
+| `render/` | no | Blender renders | yes: disposable |
+
+Frozen test baselines (locks, the Stage 1 Bunny export, the Stage 1 TUM export, the ATE-lock runs and the Blender
+scene's T0 trajectory `bunny_t0_scene/`, the reference-pipeline baseline `reference_baseline/`) are in `tests/fixtures/`,
+not here: tests and the scene read them, and no program writes them (`tests/fixtures/README.md`).
+Archive and datasets: `docs/DATA_AND_ARCHIVE.md`.
+
+## Results: reference pipeline on the synthetic evaluation sequence
 
 Figures, CSVs and tables comparing **ground truth**, **PnP-based trajectory
 estimation**, and the project's **feature-correspondence-based 3D→3D ICP**
@@ -13,17 +34,17 @@ This is frame-to-frame odometry only. The following are **not** part of it:
 - global optimization
 - dense nearest-neighbour ICP
 
-## Regenerate
+### Regenerate
 
 ```bash
 pixi run build              # C++ (once)
 pixi run -e results results # everything below; about 30 s
 ```
 
-`scripts/generate_results.py` does the following:
+`tools/figures/generate_results.py` does the following:
 1. Runs `build/slam_trajectory_test` on a temporary copy of
    `data/synthetic_bunny/`, with the export-only flags
-   `--export-dir results/data/cpp_export --export-pair 0`.
+   `--export-dir results/runs/reference_results/data/cpp_export --export-pair 0`.
 2. Checks that this run reproduces the committed `pnp_trajectory.txt`,
    `icp_trajectory.txt` and `slam_trajectory.csv` byte for byte.
 3. Reads those files, the dataset images and the bunny mesh.
@@ -34,12 +55,14 @@ pixi run -e results results # everything below; about 30 s
    - one keypoint back-projected by hand, compared with the C++ 3D point
 5. Writes everything below.
 
-`--skip-cpp` reuses the existing `results/data/cpp_export/`.
+`--skip-cpp` reuses the existing `results/runs/reference_results/data/cpp_export/`.
 
 No figure contains hand-typed numbers. Everything is read from these outputs.
-The generated directories (`figures/`, `data/`, `tables/`) are gitignored.
+Everything is written under `results/runs/reference_results/` (`figures/`, `data/`, `tables/`; ignored, disposable).
+Paths below are relative to that directory. (Until 2026-11-06 the output went to `results/{data,figures,tables}/`;
+the last generated set is in the external archive, `2026-11-04_main/results_generated/`.)
 
-## Where the numbers come from
+### Where the numbers come from
 
 | Data | Produced by |
 |---|---|
@@ -48,7 +71,7 @@ The generated directories (`figures/`, `data/`, `tables/`) are gitignored.
 | Keypoints, matches and 3D correspondences of pair 0→1 | `slam_trajectory_test --export-dir` → `cpp_export/pair_0_1_*.csv` |
 | Images, depth, intrinsics, mesh | `data/synthetic_bunny/`, `data/meshes/bunny/bun_zipper.ply` |
 
-## Metrics
+### Metrics
 
 - **Translation error (per frame):** ‖C_gt − C_est‖, the distance between the
   ground-truth and estimated camera centres, in metres.
@@ -65,7 +88,7 @@ The generated directories (`figures/`, `data/`, `tables/`) are gitignored.
 - **PnP inlier ratio:** RANSAC inliers / PnP correspondences. ICP has no
   outlier rejection, so it has no inlier ratio.
 
-## Files
+### Files
 
 | File | Content |
 |---|---|
@@ -74,7 +97,7 @@ The generated directories (`figures/`, `data/`, `tables/`) are gitignored.
 | `data/cpp_export/` | the raw C++ export (see above) plus the program log |
 | `tables/summary.md`, `tables/summary.json` | dataset facts, PnP vs ICP statistics, the pair 0→1 funnel |
 
-## Figures (`figures/*.png`, plus a `.pdf` of each)
+### Figures (`figures/*.png`, plus a `.pdf` of each)
 
 | Figure | Shows |
 |---|---|
@@ -93,9 +116,9 @@ The generated directories (`figures/`, `data/`, `tables/`) are gitignored.
 | `fig14_local_vs_global_error` | how chaining turns small local errors into large global drift, using the measured values |
 | `fig15_summary` | a one-slide summary: setup, matching, trajectories and a PnP vs ICP table |
 
-## Correspondence figures
+### Correspondence figures
 
-`scripts/generate_correspondence_map.py` (`pixi run -e results correspondence-map [--pair K]`)
+`tools/figures/generate_correspondence_map.py` (`pixi run -e results correspondence-map [--pair K]`)
 re-runs the C++ export for pair K → K+1 and checks every keypoint, match, depth value,
 3D point and RANSAC flag against the dataset and the C++ counts. It then writes these
 maps for visual auditing:
@@ -107,10 +130,10 @@ maps for visual auditing:
 Colour is the correspondence ID: it is fixed by the match's frame-i position, and the
 same colour marks its other end in frame i+1. Marker size encodes frame-i depth.
 
-`scripts/generate_correspondence_figure.py` (`... correspondences`) makes the annotated,
+`tools/figures/generate_correspondence_figure.py` (`... correspondences`) makes the annotated,
 explanatory versions (`bunny_correspondences_annotated_*`, `bunny_pnp_icp_correspondences*`).
 
-## Reading the main result
+### Reading the main result
 
 **Local errors are small; they add up over the circle.**
 - PnP's local rotation error is about 1.4° per pair on average; ICP's is about 2.8°.

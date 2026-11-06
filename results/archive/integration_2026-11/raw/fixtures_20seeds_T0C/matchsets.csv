@@ -1,0 +1,9 @@
+config,label,pair,frame_i,frame_j,keypoints_i,keypoints_j,raw,filtered,uniq_src_kp,uniq_dst_kp,uniq_src_loc,uniq_dst_loc,many_to_one,pnp_inputs,removed_distance,removed_mutual,removed_ratio,removed_level,passed_distance,strict_mutual,location_mutual,mutual_rescued,eval_correct_inputs,eval_correct_input_share,eval_rescued_with_depth,eval_rescued_correct,eval_strict_with_depth,eval_strict_correct
+T0C,bunny_0_1,0,0,1,838,815,838,246,246,246,155,153,0,182,592,0,0,0,,,,,176,0.967032967,,,,
+T0C,tum_xyz_stride4_46_47,1,46,47,3523,3629,3523,904,904,904,588,576,0,459,2619,0,0,0,,,,,413,0.899782135,,,,
+T0C,tum_xyz_stride4_73_74,2,73,74,3399,3726,3399,460,460,460,365,367,0,292,2939,0,0,0,,,,,225,0.770547945,,,,
+T0C,tum_xyz_stride4_81_82,3,81,82,3470,3675,3470,541,541,541,413,404,0,409,2929,0,0,0,,,,,363,0.887530562,,,,
+T0CG,bunny_0_1,0,0,1,838,815,838,246,246,246,155,153,0,182,592,0,0,0,,,,,176,0.967032967,,,,
+T0CG,tum_xyz_stride4_46_47,1,46,47,3523,3629,3523,904,904,904,588,576,0,459,2619,0,0,0,,,,,413,0.899782135,,,,
+T0CG,tum_xyz_stride4_73_74,2,73,74,3399,3726,3399,460,460,460,365,367,0,292,2939,0,0,0,,,,,225,0.770547945,,,,
+T0CG,tum_xyz_stride4_81_82,3,81,82,3470,3675,3470,541,541,541,413,404,0,409,2929,0,0,0,,,,,363,0.887530562,,,,

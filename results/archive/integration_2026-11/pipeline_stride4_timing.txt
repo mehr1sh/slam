@@ -1,0 +1,5 @@
+M0 89.58 s total 0.905 s/pair
+T0 47.44 s total 0.479 s/pair
+T0G 47.52 s total 0.48 s/pair
+T0C 283.34 s total 2.862 s/pair
+T0-ransac 46.65 s total 0.471 s/pair
