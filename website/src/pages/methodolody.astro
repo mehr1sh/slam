@@ -1,0 +1,54 @@
+
+---
+import '../styles/global.css';
+import '../styles/home.css';
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Methodology | SLAM Research</title>
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a class="brand" href="/slam/">SLAM Research</a>
+      <a class="nav-button" href="/slam/">Home</a>
+    </div>
+  </header>
+
+  <main class="container section">
+    <span class="section-label">METHODOLOGY</span>
+    <h1 class="section-title">The geometric pipeline</h1>
+
+    <p class="muted">
+      This section describes the algorithms implemented in the project.
+    </p>
+
+    <h2>1. Feature extraction and matching</h2>
+    <p>
+      Identify visual features in consecutive images and establish
+      correspondences between observations.
+    </p>
+
+    <h2>2. Perspective-n-Point</h2>
+    <p>
+      Estimate camera pose from 2D-3D correspondences. RANSAC
+      is used to handle outliers in the correspondence set.
+    </p>
+
+    <h2>3. Iterative Closest Point</h2>
+    <p>
+      Estimate relative motion through point-cloud alignment.
+    </p>
+
+    <h2>4. Trajectory accumulation</h2>
+    <p>
+      Compose relative transformations to obtain the camera trajectory.
+      The transform direction and inversion convention must be
+      specified consistently.
+    </p>
+  </main>
+</body>
+</html>

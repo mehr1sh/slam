@@ -1,0 +1,53 @@
+
+---
+import '../../styles/global.css';
+import '../../styles/home.css';
+
+const experiments = [
+  {
+    title: 'PnP and RANSAC',
+    description: 'Feature correspondences and camera pose estimation.',
+    status: 'Implemented — results require verification',
+  },
+  {
+    title: 'Image Pyramid',
+    description: 'Multi-scale feature detection and matching.',
+    status: 'Implemented — experiment record pending',
+  },
+  {
+    title: 'ICP',
+    description: 'Point-cloud alignment and relative pose estimation.',
+    status: 'Implemented — experiment record pending',
+  },
+  {
+    title: 'Synthetic Bunny',
+    description: 'Controlled geometric reconstruction and trajectory evaluation.',
+    status: 'Implemented — reference comparison needs investigation',
+  },
+];
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Experiments | SLAM Research</title>
+</head>
+<body>
+  <main class="container section">
+    <a href="/slam/">← Home</a>
+    <span class="section-label">EXPERIMENTS</span>
+    <h1 class="section-title">Experimental investigations</h1>
+
+    <div class="experiment-grid">
+      {experiments.map((experiment) => (
+        <article class="experiment-card">
+          <h3>{experiment.title}</h3>
+          <p>{experiment.description}</p>
+          <span class="muted">{experiment.status}</span>
+        </article>
+      ))}
+    </div>
+  </main>
+</body>
+</html>
