@@ -1,32 +1,27 @@
 
 ---
 import '../styles/global.css';
-import '../styles/home.css';
 
 const experiments = [
   {
-    number: '01',
     title: 'PnP Pose Estimation',
-    description: 'Feature-based camera pose estimation using correspondences and RANSAC.',
-    tag: 'Visual Odometry',
+    description:
+      'Feature-based camera pose estimation using image correspondences and RANSAC.',
   },
   {
-    number: '02',
     title: 'Image Pyramid',
-    description: 'Investigating multi-scale feature detection and matching.',
-    tag: 'Feature Extraction',
+    description:
+      'Investigation of multi-scale feature detection and matching.',
   },
   {
-    number: '03',
     title: 'ICP Registration',
-    description: 'Estimating relative motion through point-cloud alignment.',
-    tag: 'Point Clouds',
+    description:
+      'Estimation of relative motion through point-cloud alignment.',
   },
   {
-    number: '04',
     title: 'Synthetic Bunny',
-    description: 'Evaluating geometric estimation in a controlled synthetic scene.',
-    tag: 'Simulation',
+    description:
+      'Evaluation of geometric estimation in a controlled synthetic scene.',
   },
 ];
 ---
@@ -37,193 +32,168 @@ const experiments = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="A research and engineering project exploring visual SLAM, geometric motion estimation, PnP and ICP."
+      content="A research and implementation project exploring visual SLAM, geometric motion estimation, PnP and ICP."
     />
-    <title>Visual SLAM — Research Project</title>
+    <title>Visual SLAM | IIIT Hyderabad</title>
   </head>
 
   <body>
-    <header class="navbar">
-      <div class="container nav-inner">
-        <a class="brand" href="#home">
-          <span class="brand-icon">S</span>
-          SLAM Research
-        </a>
+    <main class="paper">
+      <header class="paper-header">
+        <h1>Visual SLAM: Camera Motion Estimation and Geometric Reconstruction</h1>
 
-        <nav>
-		<a href="/slam/">Home</a>
-		<a href="/slam/methodology/">Methodology</a>
-		<a href="/slam/experiments/">Experiments</a>
-		<a href="/slam/results/">Results</a>
-		<a href="/slam/reproducibility/">Reproducibility</a>
-		</nav>
+        <p class="authors">
+          Anushka, Mehrish
+        </p>
 
-        <a
-          class="nav-button"
-          href="https://github.com/mehr1sh/slam"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub ↗
-        </a>
-      </div>
-    </header>
+        <p class="affiliation">
+          Robotics Research Centre, IIIT-H
+        </p>
 
-    <main>
-      <section class="hero container" id="home">
-        <div class="hero-content">
-          <span class="eyebrow">
-            COMPUTER VISION · ROBOTICS · GEOMETRY
-          </span>
+        <p class="paper-links">
+          <a href="https://github.com/mehr1sh/slam" target="_blank" rel="noreferrer">
+            Code
+          </a>
+          <span>·</span>
+          <a href="#method">Method</a>
+          <span>·</span>
+          <a href="#results">Results</a>
+        </p>
+      </header>
 
-          <h1>
-            Visual SLAM<br />
-            <span>from First Principles.</span>
-          </h1>
+      <section>
+        <h2>Abstract</h2>
 
-          <p class="hero-description">
-            Exploring camera motion estimation and geometric reconstruction
-            through feature-based pose estimation, point-cloud registration
-            and trajectory analysis.
-          </p>
+        <p>
+          Simultaneous Localisation and Mapping (SLAM) involves estimating
+          the motion of a camera or robot while reconstructing its
+          surrounding environment. This project focuses on implementing
+          and evaluating geometric motion estimation techniques, with
+          particular attention to feature-based pose estimation,
+          point-cloud registration, and trajectory consistency.
+        </p>
 
-          <div class="hero-actions">
-            <a class="primary-button" href="#experiments">
-              Explore experiments →
-            </a>
-            <a class="secondary-button"
-              href="https://github.com/mehr1sh/slam"
-              target="_blank"
-              rel="noreferrer">
-              View source
-            </a>
+        <p>
+          The implementation investigates Perspective-n-Point (PnP)
+          estimation with RANSAC, multi-scale feature extraction, and
+          Iterative Closest Point (ICP) registration. Experiments include
+          controlled synthetic scenes and trajectory evaluation.
+        </p>
+      </section>
+
+      <section id="method">
+        <h2>Method</h2>
+
+        <p>
+          The system estimates camera motion from visual observations and
+          geometric correspondences. The pipeline consists of feature
+          extraction, feature matching, relative pose estimation, point-cloud
+          alignment, and trajectory accumulation.
+        </p>
+
+        <h3>Feature extraction and matching</h3>
+        <p>
+          Image features are detected and matched across successive frames.
+          Multi-scale image processing is investigated to improve feature
+          detection and matching under changes in image scale.
+        </p>
+
+        <h3>Camera pose estimation</h3>
+        <p>
+          Perspective-n-Point (PnP) estimates the relative camera pose from
+          2D–3D correspondences. RANSAC is used to reject outlier
+          correspondences and obtain a robust pose estimate.
+        </p>
+
+        <h3>Point-cloud registration</h3>
+        <p>
+          Iterative Closest Point (ICP) estimates relative motion by aligning
+          point clouds from successive observations. The estimated
+          transformation is used to update the camera trajectory.
+        </p>
+
+        <h3>Trajectory estimation</h3>
+        <p>
+          Relative transformations are accumulated to obtain the camera
+          trajectory. Consistent transformation conventions are necessary
+          when composing successive relative poses.
+        </p>
+
+        <p class="equation">
+          T<sub>wc,i+1</sub> =
+          T<sub>wc,i</sub> · T<sub>i+1←i</sub><sup>−1</sup>
+        </p>
+      </section>
+
+      <section id="experiments">
+        <h2>Experiments</h2>
+
+        <p>
+          The implementation is evaluated through a set of experiments
+          investigating different components of the geometric estimation
+          pipeline.
+        </p>
+
+        {experiments.map((experiment) => (
+          <div class="experiment">
+            <h3>{experiment.title}</h3>
+            <p>{experiment.description}</p>
           </div>
+        ))}
+      </section>
 
-          <div class="hero-meta">
-            <span>Research & Implementation</span>
-            <span>·</span>
-            <span>Reproducible Experiments</span>
-          </div>
-        </div>
+      <section id="visualisation">
+        <h2>Visualisation</h2>
 
-        <div class="hero-visual">
-          <div class="visual-topline">
-            <span>GEOMETRIC RECONSTRUCTION</span>
-            <span>3D VIEW</span>
-          </div>
+        <p>
+          A synthetic Bunny scene is used to inspect camera motion and
+          geometric reconstruction. The visualisation is intended to show
+          the estimated camera trajectory in relation to the reconstructed
+          scene.
+        </p>
 
+        <figure>
           <img
             src="/slam/images/bunny-hero.png"
-            alt="Synthetic Bunny point-cloud reconstruction"
-            onerror="this.style.display='none'"
+            alt="Synthetic Bunny scene used for SLAM visualisation"
           />
-
-          <div class="visual-placeholder">
-            <span class="placeholder-icon">◈</span>
-            <strong>3D Reconstruction</strong>
-            <span>Project visualisation will appear here</span>
-          </div>
-
-          <div class="visual-caption">
-            <span>01 / SYNTHETIC SCENE</span>
-            <span>CAMERA TRAJECTORY</span>
-          </div>
-        </div>
+          <figcaption>
+            Synthetic Bunny scene used for geometric estimation experiments.
+          </figcaption>
+        </figure>
       </section>
 
-      <section class="overview section" id="overview">
-        <div class="container overview-grid">
-          <div>
-            <span class="section-label">01 / OVERVIEW</span>
-            <h2 class="section-title">
-              Understanding motion through geometry.
-            </h2>
-          </div>
+      <section id="results">
+        <h2>Results</h2>
 
-          <div class="overview-text">
-            <p>
-              Simultaneous Localisation and Mapping (SLAM) involves
-              estimating the motion of a camera or robot while
-              reconstructing its surrounding environment.
-            </p>
-            <p>
-              This project focuses on implementing and evaluating
-              geometric motion estimation techniques, with particular
-              attention to pose estimation, point-cloud registration
-              and trajectory consistency.
-            </p>
-          </div>
-        </div>
+        <p>
+          The project evaluates estimated trajectories and geometric
+          reconstruction against reference data. Quantitative comparisons
+          and visual results will be presented here after the corresponding
+          experiments have been verified and reproduced.
+        </p>
       </section>
 
-      <section class="methodology section" id="methodology">
-        <div class="container">
-          <span class="section-label">02 / METHODOLOGY</span>
-          <h2 class="section-title">From observations to motion.</h2>
+      <section id="reproducibility">
+        <h2>Code and Reproducibility</h2>
 
-          <div class="pipeline">
-            {['Feature Extraction', 'Feature Matching', 'PnP / RANSAC',
-              'ICP Registration', 'Trajectory Estimation'].map((step, i) => (
-              <div class="pipeline-step">
-                <span>0{i + 1}</span>
-                <strong>{step}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <p>
+          The implementation and experiment code are available in the
+          project repository.
+        </p>
 
-      <section class="experiments section" id="experiments">
-        <div class="container">
-          <div class="section-heading">
-            <div>
-              <span class="section-label">03 / EXPERIMENTS</span>
-              <h2 class="section-title">Experiments and investigations.</h2>
-            </div>
-            <span class="muted">Implementation and evaluation</span>
-          </div>
-
-          <div class="experiment-grid">
-            {experiments.map((experiment) => (
-              <article class="experiment-card">
-                <span class="experiment-number">{experiment.number}</span>
-                <span class="experiment-tag">{experiment.tag}</span>
-                <h3>{experiment.title}</h3>
-                <p>{experiment.description}</p>
-                <a href="#contact">Explore experiment →</a>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section class="results section" id="results">
-        <div class="container results-inner">
-          <span class="section-label">04 / RESULTS</span>
-          <h2 class="section-title">Evaluating the estimates.</h2>
-          <p>
-            Quantitative comparisons, trajectory visualisations and
-            experiment-specific observations will be documented here.
-          </p>
-          <a class="secondary-button" href="#experiments">
-            Browse experiments
+        <p>
+          <a href="https://github.com/mehr1sh/slam" target="_blank" rel="noreferrer">
+            github.com/mehr1sh/slam
           </a>
-          <p class="results-note">
-            Detailed results will be published after configuration
-            and reproducibility verification.
-          </p>
-        </div>
+        </p>
       </section>
-    </main>
 
-    <footer id="contact">
-      <div class="container footer-inner">
-        <div>
-          <strong>SLAM Research Project</strong>
-          <p>Implementation · Experiments · Evaluation</p>
-        </div>
-        <a href="https://github.com/mehr1sh/slam">GitHub ↗</a>
-      </div>
-    </footer>
+      <footer>
+        <p>
+          Visual SLAM Research Project · IIIT Hyderabad
+        </p>
+      </footer>
+    </main>
   </body>
 </html>
