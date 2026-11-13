@@ -1,0 +1,229 @@
+
+---
+import '../styles/global.css';
+import '../styles/home.css';
+
+const experiments = [
+  {
+    number: '01',
+    title: 'PnP Pose Estimation',
+    description: 'Feature-based camera pose estimation using correspondences and RANSAC.',
+    tag: 'Visual Odometry',
+  },
+  {
+    number: '02',
+    title: 'Image Pyramid',
+    description: 'Investigating multi-scale feature detection and matching.',
+    tag: 'Feature Extraction',
+  },
+  {
+    number: '03',
+    title: 'ICP Registration',
+    description: 'Estimating relative motion through point-cloud alignment.',
+    tag: 'Point Clouds',
+  },
+  {
+    number: '04',
+    title: 'Synthetic Bunny',
+    description: 'Evaluating geometric estimation in a controlled synthetic scene.',
+    tag: 'Simulation',
+  },
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A research and engineering project exploring visual SLAM, geometric motion estimation, PnP and ICP."
+    />
+    <title>Visual SLAM — Research Project</title>
+  </head>
+
+  <body>
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="#home">
+          <span class="brand-icon">S</span>
+          SLAM Research
+        </a>
+
+        <nav>
+		<a href="/slam/">Home</a>
+		<a href="/slam/methodology/">Methodology</a>
+		<a href="/slam/experiments/">Experiments</a>
+		<a href="/slam/results/">Results</a>
+		<a href="/slam/reproducibility/">Reproducibility</a>
+		</nav>
+
+        <a
+          class="nav-button"
+          href="https://github.com/mehr1sh/slam"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub ↗
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container" id="home">
+        <div class="hero-content">
+          <span class="eyebrow">
+            COMPUTER VISION · ROBOTICS · GEOMETRY
+          </span>
+
+          <h1>
+            Visual SLAM<br />
+            <span>from First Principles.</span>
+          </h1>
+
+          <p class="hero-description">
+            Exploring camera motion estimation and geometric reconstruction
+            through feature-based pose estimation, point-cloud registration
+            and trajectory analysis.
+          </p>
+
+          <div class="hero-actions">
+            <a class="primary-button" href="#experiments">
+              Explore experiments →
+            </a>
+            <a class="secondary-button"
+              href="https://github.com/mehr1sh/slam"
+              target="_blank"
+              rel="noreferrer">
+              View source
+            </a>
+          </div>
+
+          <div class="hero-meta">
+            <span>Research & Implementation</span>
+            <span>·</span>
+            <span>Reproducible Experiments</span>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="visual-topline">
+            <span>GEOMETRIC RECONSTRUCTION</span>
+            <span>3D VIEW</span>
+          </div>
+
+          <img
+            src="/slam/images/bunny-hero.png"
+            alt="Synthetic Bunny point-cloud reconstruction"
+            onerror="this.style.display='none'"
+          />
+
+          <div class="visual-placeholder">
+            <span class="placeholder-icon">◈</span>
+            <strong>3D Reconstruction</strong>
+            <span>Project visualisation will appear here</span>
+          </div>
+
+          <div class="visual-caption">
+            <span>01 / SYNTHETIC SCENE</span>
+            <span>CAMERA TRAJECTORY</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="overview section" id="overview">
+        <div class="container overview-grid">
+          <div>
+            <span class="section-label">01 / OVERVIEW</span>
+            <h2 class="section-title">
+              Understanding motion through geometry.
+            </h2>
+          </div>
+
+          <div class="overview-text">
+            <p>
+              Simultaneous Localisation and Mapping (SLAM) involves
+              estimating the motion of a camera or robot while
+              reconstructing its surrounding environment.
+            </p>
+            <p>
+              This project focuses on implementing and evaluating
+              geometric motion estimation techniques, with particular
+              attention to pose estimation, point-cloud registration
+              and trajectory consistency.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="methodology section" id="methodology">
+        <div class="container">
+          <span class="section-label">02 / METHODOLOGY</span>
+          <h2 class="section-title">From observations to motion.</h2>
+
+          <div class="pipeline">
+            {['Feature Extraction', 'Feature Matching', 'PnP / RANSAC',
+              'ICP Registration', 'Trajectory Estimation'].map((step, i) => (
+              <div class="pipeline-step">
+                <span>0{i + 1}</span>
+                <strong>{step}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="experiments section" id="experiments">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <span class="section-label">03 / EXPERIMENTS</span>
+              <h2 class="section-title">Experiments and investigations.</h2>
+            </div>
+            <span class="muted">Implementation and evaluation</span>
+          </div>
+
+          <div class="experiment-grid">
+            {experiments.map((experiment) => (
+              <article class="experiment-card">
+                <span class="experiment-number">{experiment.number}</span>
+                <span class="experiment-tag">{experiment.tag}</span>
+                <h3>{experiment.title}</h3>
+                <p>{experiment.description}</p>
+                <a href="#contact">Explore experiment →</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="results section" id="results">
+        <div class="container results-inner">
+          <span class="section-label">04 / RESULTS</span>
+          <h2 class="section-title">Evaluating the estimates.</h2>
+          <p>
+            Quantitative comparisons, trajectory visualisations and
+            experiment-specific observations will be documented here.
+          </p>
+          <a class="secondary-button" href="#experiments">
+            Browse experiments
+          </a>
+          <p class="results-note">
+            Detailed results will be published after configuration
+            and reproducibility verification.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer id="contact">
+      <div class="container footer-inner">
+        <div>
+          <strong>SLAM Research Project</strong>
+          <p>Implementation · Experiments · Evaluation</p>
+        </div>
+        <a href="https://github.com/mehr1sh/slam">GitHub ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>
